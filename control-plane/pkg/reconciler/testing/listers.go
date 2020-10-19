@@ -23,6 +23,7 @@ import (
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
+	fakemessagingclientset "knative.dev/eventing-kafka/pkg/client/clientset/versioned/fake"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	fakeeventingclientset "knative.dev/eventing/pkg/client/clientset/versioned/fake"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
@@ -38,6 +39,7 @@ var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakekubeclientset.AddToScheme,
 	fakeapiextensionsclientset.AddToScheme,
 	fakeeventingkafkaclientset.AddToScheme,
+	fakemessagingclientset.AddToScheme,
 }
 
 type Listers struct {
@@ -69,6 +71,8 @@ func newListers(objs []runtime.Object) *Listers {
 func (l *Listers) GetAllObjects() []runtime.Object {
 	all := l.GetKubeObjects()
 	all = append(all, l.GetEventingObjects()...)
+	all = append(all, l.GetMessagingObjects()...)
+	all = append(all, l.GetEventingKafkaObjects()...)
 	return all
 }
 
@@ -82,6 +86,10 @@ func (l *Listers) GetEventingObjects() []runtime.Object {
 
 func (l *Listers) GetEventingKafkaObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(fakeeventingkafkaclientset.AddToScheme)
+}
+
+func (l *Listers) GetMessagingObjects() []runtime.Object {
+	return l.sorter.ObjectsForSchemeFunc(fakemessagingclientset.AddToScheme)
 }
 
 func (l *Listers) GetBrokerLister() eventinglisters.BrokerLister {

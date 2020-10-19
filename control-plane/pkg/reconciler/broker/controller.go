@@ -27,6 +27,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -35,11 +36,11 @@ import (
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
 	brokerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/broker"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
-	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/resource"
 )
 
 const (
@@ -58,17 +59,23 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 	configmapInformer := configmapinformer.Get(ctx)
 
 	reconciler := &Reconciler{
-		Reconciler: &base.Reconciler{
-			KubeClient:                  kubeclient.Get(ctx),
-			PodLister:                   podinformer.Get(ctx).Lister(),
-			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
-			DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
-			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
-			SystemNamespace:             configs.SystemNamespace,
-			DispatcherLabel:             base.BrokerDispatcherLabel,
-			ReceiverLabel:               base.BrokerReceiverLabel,
+		Reconciler: &resource.Reconciler{
+			Reconciler: &base.Reconciler{
+				KubeClient:                  kubeclient.Get(ctx),
+				PodLister:                   podinformer.Get(ctx).Lister(),
+				DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
+				DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
+				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
+				SystemNamespace:             configs.SystemNamespace,
+				DispatcherLabel:             base.BrokerDispatcherLabel,
+				ReceiverLabel:               base.BrokerReceiverLabel,
+			},
+			TopicConfigProvider: nil,
+			TopicPrefix:         "",
+			ResourceCreator:     nil,
+			ClusterAdmin:        sarama.NewClusterAdmin,
+			Configs:             &configs.Env,
 		},
-		ClusterAdmin: sarama.NewClusterAdmin,
 		KafkaDefaultTopicDetails: sarama.TopicDetail{
 			NumPartitions:     DefaultNumPartitions,
 			ReplicationFactor: DefaultReplicationFactor,
@@ -76,6 +83,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 		ConfigMapLister: configmapInformer.Lister(),
 		Configs:         configs,
 	}
+	reconciler.Reconciler.TopicConfigProvider = reconciler.TopicConfig
+	reconciler.Reconciler.TopicPrefix = TopicPrefix
+	reconciler.ResourceCreator = reconciler.GetBrokerResource
 
 	logger := logging.FromContext(ctx)
 

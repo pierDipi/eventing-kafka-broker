@@ -27,6 +27,7 @@ import (
 	"k8s.io/utils/pointer"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/resource"
 
 	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"
@@ -745,7 +746,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"failed to get contract configuration: failed to resolve broker.Spec.Deliver.DeadLetterSink: %v",
+					"failed to get contract configuration: failed to resolve Broker.Spec.Deliver.DeadLetterSink: %v",
 					"destination missing Ref and URI, expected at least one",
 				),
 			},
@@ -1631,30 +1632,40 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 		}
 
 		reconciler := &Reconciler{
-			Reconciler: &base.Reconciler{
-				KubeClient:                  kubeclient.Get(ctx),
-				PodLister:                   listers.GetPodLister(),
-				DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
-				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
-				SystemNamespace:             configs.SystemNamespace,
-				DispatcherLabel:             base.BrokerDispatcherLabel,
-				ReceiverLabel:               base.BrokerReceiverLabel,
+			Reconciler: &resource.Reconciler{
+				Reconciler: &base.Reconciler{
+					KubeClient:                  kubeclient.Get(ctx),
+					PodLister:                   listers.GetPodLister(),
+					DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
+					DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
+					DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
+					SystemNamespace:             configs.SystemNamespace,
+					DispatcherLabel:             base.BrokerDispatcherLabel,
+					ReceiverLabel:               base.BrokerReceiverLabel,
+				},
+				TopicConfigProvider: nil,
+				TopicPrefix:         "",
+				ResourceCreator:     nil,
+				ClusterAdmin: func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
+					return &kafkatesting.MockKafkaClusterAdmin{
+						ExpectedTopicName:   fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName),
+						ExpectedTopicDetail: expectedTopicDetail,
+						ErrorOnCreateTopic:  onCreateTopicError,
+						ErrorOnDeleteTopic:  onDeleteTopicError,
+						T:                   t,
+					}, nil
+				},
+				Configs:             &configs.Env,
 			},
 			KafkaDefaultTopicDetails:     defaultTopicDetail,
 			KafkaDefaultTopicDetailsLock: sync.RWMutex{},
 			ConfigMapLister:              listers.GetConfigMapLister(),
-			ClusterAdmin: func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error) {
-				return &kafkatesting.MockKafkaClusterAdmin{
-					ExpectedTopicName:   fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName),
-					ExpectedTopicDetail: expectedTopicDetail,
-					ErrorOnCreateTopic:  onCreateTopicError,
-					ErrorOnDeleteTopic:  onDeleteTopicError,
-					T:                   t,
-				}, nil
-			},
 			Configs: configs,
 		}
+		reconciler.Reconciler.TopicConfigProvider = reconciler.TopicConfig
+		reconciler.Reconciler.TopicPrefix = TopicPrefix
+		reconciler.ResourceCreator = reconciler.GetBrokerResource
+
 		reconciler.SetBootstrapServers(bootstrapServers)
 
 		r := brokerreconciler.NewReconciler(

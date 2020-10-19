@@ -17,7 +17,13 @@
 package config
 
 import (
+	"context"
+	"fmt"
+
 	"k8s.io/apimachinery/pkg/types"
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	"knative.dev/pkg/resolver"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 )
 
@@ -35,4 +41,44 @@ func FindEgress(egresses []*contract.Egress, egress types.UID) int {
 	}
 
 	return NoEgress
+}
+
+func EgressConfigFromDelivery(ctx context.Context, resolver *resolver.URIResolver, delivery *eventingduck.DeliverySpec, defaultBackoffDelay uint64, path string, parent interface{}) (*contract.EgressConfig, error) {
+	if delivery == nil {
+		return nil, nil
+	}
+
+	var egressConfig *contract.EgressConfig
+
+	if delivery.DeadLetterSink != nil {
+
+		deadLetterSinkURL, err := resolver.URIFromDestinationV1(ctx, *delivery.DeadLetterSink, parent)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve %s.DeadLetterSink: %w", path, err)
+		}
+
+		egressConfig = ensureNonNilEgressConfig(egressConfig)
+		egressConfig.DeadLetter = deadLetterSinkURL.String()
+	}
+
+	if delivery.Retry != nil {
+		egressConfig = ensureNonNilEgressConfig(egressConfig)
+		egressConfig.Retry = uint32(*delivery.Retry)
+		var err error
+		delay, err := BackoffDelayFromISO8601String(delivery.BackoffDelay, defaultBackoffDelay)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse %s.BackoffDelay: %w", path, err)
+		}
+		egressConfig.BackoffDelay = delay
+		egressConfig.BackoffPolicy = BackoffPolicyFromString(delivery.BackoffPolicy)
+	}
+
+	return egressConfig, nil
+}
+
+func ensureNonNilEgressConfig(config *contract.EgressConfig) *contract.EgressConfig {
+	if config == nil {
+		config = &contract.EgressConfig{}
+	}
+	return config
 }

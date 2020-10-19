@@ -63,6 +63,11 @@ message Egress {
   // Id of the egress
   // It's the same as the Kubernetes resource uid
   string uid = 6;
+
+  // Egress configuration.
+  //
+  // This egress configuration overrides the egress configuration on the Resource.
+  EgressConfig egressConfig = 7;
 }
 
 // CloudEvent content mode

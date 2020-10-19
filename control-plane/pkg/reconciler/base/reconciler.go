@@ -45,6 +45,10 @@ const (
 	BrokerDispatcherLabel = "kafka-broker-dispatcher"
 	// label for selecting receiver pods.
 	BrokerReceiverLabel = "kafka-broker-receiver"
+	// label for selecting dispatcher pods.
+	ChannelDispatcherLabel = "kafka-channel-dispatcher"
+	// label for selecting receiver pods.
+	ChannelReceiverLabel = "kafka-channel-receiver"
 	// label for selecting receiver pods.
 	SinkReceiverLabel = "kafka-sink-receiver"
 

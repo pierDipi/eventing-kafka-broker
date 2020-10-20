@@ -30,7 +30,7 @@ import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import java.util.Objects;
 
-public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpResponse<Buffer>> {
+public final class ReplyToTopicResponseHandler implements SinkResponseHandler<HttpResponse<Buffer>> {
 
   private final String topic;
   private final KafkaProducer<String, CloudEvent> producer;
@@ -41,7 +41,7 @@ public final class HttpSinkResponseHandler implements SinkResponseHandler<HttpRe
    * @param topic    topic to produce records.
    * @param producer Kafka producer.
    */
-  public HttpSinkResponseHandler(
+  public ReplyToTopicResponseHandler(
     final String topic,
     final KafkaProducer<String, CloudEvent> producer) {
 

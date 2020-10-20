@@ -121,7 +121,10 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
     final var consumerOffsetManager = consumerRecordOffsetStrategyFactory
       .get(consumer, resource, egress);
 
-    final var sinkResponseHandler = new HttpSinkResponseHandler(resource.topics().iterator().next(), producer);
+    final var sinkResponseHandler =
+      isReplyURL(egress)
+      ? new ReplyToURLResponseHandler(client, egress.replyUrl())
+      : new ReplyToTopicResponseHandler(resource.topics().iterator().next(), producer);
 
     final var consumerRecordHandler = new ConsumerRecordHandler<>(
       egressDestinationSender,
@@ -219,5 +222,9 @@ public class HttpConsumerVerticleFactory implements ConsumerVerticleFactory {
 
   private static Long linearRetryPolicy(final int retryCount, final long delay) {
     return delay * retryCount;
+  }
+
+  private static boolean isReplyURL(final Egress egress) {
+    return egress != null && egress.isReplyToUrl() && egress.replyUrl() != null && !egress.replyUrl().isEmpty();
   }
 }

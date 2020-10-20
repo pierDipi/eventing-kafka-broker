@@ -16,7 +16,6 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.http;
 
-import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -44,7 +43,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 
 @Execution(ExecutionMode.CONCURRENT)
 @ExtendWith(VertxExtension.class)
-public class HttpSinkResponseHandlerTest {
+public class ReplyToTopicResponseHandlerTest {
 
   private static final String TOPIC = "t1";
 
@@ -55,7 +54,7 @@ public class HttpSinkResponseHandlerTest {
       new StringSerializer(),
       new CloudEventSerializer()
     );
-    final var handler = new HttpSinkResponseHandler(
+    final var handler = new ReplyToTopicResponseHandler(
       TOPIC,
       KafkaProducer.create(vertx, producer)
     );
@@ -78,7 +77,7 @@ public class HttpSinkResponseHandlerTest {
       new StringSerializer(),
       new CloudEventSerializer()
     );
-    final var handler = new HttpSinkResponseHandler(
+    final var handler = new ReplyToTopicResponseHandler(
       TOPIC,
       KafkaProducer.create(vertx, producer)
     );
@@ -103,7 +102,7 @@ public class HttpSinkResponseHandlerTest {
       new StringSerializer(),
       new CloudEventSerializer()
     );
-    final var handler = new HttpSinkResponseHandler(
+    final var handler = new ReplyToTopicResponseHandler(
       TOPIC,
       KafkaProducer.create(vertx, producer)
     );
@@ -128,7 +127,7 @@ public class HttpSinkResponseHandlerTest {
       new StringSerializer(),
       new CloudEventSerializer()
     );
-    final var handler = new HttpSinkResponseHandler(
+    final var handler = new ReplyToTopicResponseHandler(
       TOPIC,
       KafkaProducer.create(vertx, producer)
     );

@@ -17,6 +17,7 @@
 readonly CONTROL_PLANE_DIR=control-plane
 readonly CONTROL_PLANE_CONFIG_DIR=${CONTROL_PLANE_DIR}/config
 readonly KAFKA_SINK_CONFIG_DIR=${CONTROL_PLANE_CONFIG_DIR}/sink
+readonly KAFKA_CHANNEL_CONFIG_DIR=${CONTROL_PLANE_CONFIG_DIR}/channel
 
 readonly DATA_PLANE_LOGGING_CONFIG_DIR=data-plane/config
 
@@ -33,6 +34,7 @@ fi
 function control_plane_setup() {
   ko resolve ${KO_FLAGS} --strict -f "${CONTROL_PLANE_CONFIG_DIR}" | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" &&
     ko resolve ${KO_FLAGS} --strict -f "${KAFKA_SINK_CONFIG_DIR}" | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" &&
+    ko resolve ${KO_FLAGS} --strict -f "${KAFKA_CHANNEL_CONFIG_DIR}" | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}" &&
     # Logging configuration are shared between sink and broker data plane, so we bundle them in the control plane artifact
     find ${DATA_PLANE_LOGGING_CONFIG_DIR} -name '*config-logging.yaml' -exec cat {} \; | "${LABEL_YAML_CMD[@]}" >>"${EVENTING_KAFKA_CONTROL_PLANE_ARTIFACT}"
 

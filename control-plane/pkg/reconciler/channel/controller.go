@@ -39,7 +39,7 @@ const (
 	cmConfig = "kafka-config"
 )
 
-func NewController(ctx context.Context, cmw configmap.Watcher, configs *config.Env) *controller.Impl {
+func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env) *controller.Impl {
 
 	configmapInformer := configmapinformer.Get(ctx)
 

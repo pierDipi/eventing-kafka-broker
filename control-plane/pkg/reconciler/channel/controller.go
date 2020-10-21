@@ -18,15 +18,13 @@ package channel
 
 import (
 	"context"
-	"sync"
 
 	"github.com/Shopify/sarama"
-	corev1 "k8s.io/api/core/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
+	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
 	"knative.dev/pkg/resolver"
 
 	channelinformer "knative.dev/eventing-kafka/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
@@ -42,6 +40,8 @@ const (
 )
 
 func NewController(ctx context.Context, cmw configmap.Watcher, configs *config.Env) *controller.Impl {
+
+	configmapInformer := configmapinformer.Get(ctx)
 
 	reconciler := &Reconciler{
 		Reconciler: &resource.Reconciler{
@@ -63,7 +63,7 @@ func NewController(ctx context.Context, cmw configmap.Watcher, configs *config.E
 		},
 		Resolver:        nil,
 		Configs:         configs,
-		kafkaConfigLock: sync.RWMutex{},
+		ConfigMapLister: configmapInformer.Lister(),
 	}
 
 	impl := channelreconciler.NewImpl(ctx, reconciler)
@@ -73,13 +73,7 @@ func NewController(ctx context.Context, cmw configmap.Watcher, configs *config.E
 	reconciler.Reconciler.TopicPrefix = TopicPrefix
 	reconciler.Resolver = resolver.NewURIResolver(ctx, impl.EnqueueKey)
 
-	logger := logging.FromContext(ctx)
-
 	channelinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
-
-	cmw.Watch(cmConfig, func(configMap *corev1.ConfigMap) {
-		reconciler.updateKafkaConfig(logger, configMap)
-	})
 
 	return impl
 }

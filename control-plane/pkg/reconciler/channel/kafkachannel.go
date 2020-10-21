@@ -3,13 +3,14 @@ package channel
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	corelisters "k8s.io/client-go/listers/core/v1"
 	messaging "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	"knative.dev/eventing-kafka/pkg/channel/consolidated/utils"
+	"knative.dev/eventing/pkg/apis/eventing"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -32,10 +33,9 @@ type Reconciler struct {
 
 	Resolver *resolver.URIResolver
 
-	Configs *config.Env
+	ConfigMapLister corelisters.ConfigMapLister
 
-	kafkaConfig     *utils.KafkaConfig
-	kafkaConfigLock sync.RWMutex
+	Configs *config.Env
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, kc *messaging.KafkaChannel) reconciler.Event {
@@ -49,13 +49,49 @@ func (r *Reconciler) FinalizeKind(ctx context.Context, kc *messaging.KafkaChanne
 func (r *Reconciler) topicConfig(_ *zap.Logger, obj base.Object) (*kafka.TopicConfig, error) {
 	kc := obj.(*messaging.KafkaChannel)
 
+	kafkaConfig, err := r.getKafkaConfig(obj)
+	if err != nil {
+		return nil, err
+	}
+
 	return &kafka.TopicConfig{
 		TopicDetail: sarama.TopicDetail{
 			NumPartitions:     kc.Spec.NumPartitions,
 			ReplicationFactor: kc.Spec.ReplicationFactor,
 		},
-		BootstrapServers: r.brokers(),
+		BootstrapServers: kafkaConfig.Brokers,
 	}, nil
+}
+
+func (r *Reconciler) getKafkaConfig(obj base.Object) (*utils.KafkaConfig, error) {
+	cm, err := r.getKafkaConfigMap(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	kafkaConfig, err := utils.GetKafkaConfig(cm.Data)
+	if err != nil {
+		return nil, fmt.Errorf("faile to extract configuration from ConfigMap %s/%s: %w", cm.Namespace, cm.Name, err)
+	}
+
+	return kafkaConfig, nil
+}
+
+func (r *Reconciler) getKafkaConfigMap(obj base.Object) (*corev1.ConfigMap, error) {
+	if scope, ok := obj.GetAnnotations()[eventing.ScopeAnnotationKey]; ok && scope == eventing.ScopeNamespace {
+		cm, err := r.ConfigMapLister.ConfigMaps(obj.GetNamespace()).Get(cmConfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get ConfigMap %s in %s namespace: %w", cmConfig, obj.GetNamespace(), err)
+		}
+		return cm, nil
+	}
+
+	var err error
+	cm, err := r.ConfigMapLister.ConfigMaps(r.Configs.SystemNamespace).Get(cmConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ConfigMap %s in %s namespace: %w", cmConfig, r.Configs.SystemNamespace, err)
+	}
+	return cm, nil
 }
 
 func (r *Reconciler) getChannelResource(ctx context.Context, topic string, obj base.Object, topicConfig *kafka.TopicConfig) (*contract.Resource, error) {
@@ -121,24 +157,4 @@ func (r *Reconciler) getChannelResource(ctx context.Context, topic string, obj b
 		EgressConfig: egressConfig,
 		Egresses:     egresses,
 	}, nil
-}
-
-func (r *Reconciler) updateKafkaConfig(logger *zap.SugaredLogger, configMap *corev1.ConfigMap) {
-	kafkaConfig, err := utils.GetKafkaConfig(configMap.Data)
-	if err != nil {
-		logger.Error("Error reading Kafka configuration", zap.Error(err))
-		return
-	}
-
-	r.kafkaConfigLock.Lock()
-	defer r.kafkaConfigLock.Unlock()
-
-	r.kafkaConfig = kafkaConfig
-}
-
-func (r *Reconciler) brokers() []string {
-	r.kafkaConfigLock.RLock()
-	defer r.kafkaConfigLock.RUnlock()
-
-	return r.kafkaConfig.Brokers
 }

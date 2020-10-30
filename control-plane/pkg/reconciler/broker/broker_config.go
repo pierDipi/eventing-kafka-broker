@@ -18,14 +18,37 @@ package broker
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	corelisters "k8s.io/client-go/listers/core/v1"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/pkg/configmap"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
+
+func ConfigMap(configMapLister corelisters.ConfigMapLister, logger *zap.Logger, broker *eventing.Broker) (*corev1.ConfigMap, error) {
+
+	logger.Debug("broker config", zap.Any("Broker.Spec.Config", broker.Spec.Config))
+
+	if strings.ToLower(broker.Spec.Config.Kind) != "configmap" { // TODO: is there any constant?
+		return nil, fmt.Errorf("supported config Kind: ConfigMap - got %s", broker.Spec.Config.Kind)
+	}
+
+	namespace := broker.Spec.Config.Namespace
+	if namespace == "" {
+		// Namespace not specified, use broker namespace.
+		namespace = broker.Namespace
+	}
+	cm, err := configMapLister.ConfigMaps(namespace).Get(broker.Spec.Config.Name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, err)
+	}
+	return cm, nil
+}
 
 func configFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*kafka.TopicConfig, error) {
 

@@ -99,7 +99,7 @@ func (m *statusConditionManager) reconciled() reconciler.Event {
 
 func (m *statusConditionManager) failedToResolveTriggerConfig(err error) reconciler.Event {
 
-	m.Trigger.Status.MarkSubscriberResolvedFailed(
+	m.Trigger.Status.MarkDependencyFailed(
 		"Failed to resolve trigger config",
 		"%v",
 		err,
@@ -124,4 +124,14 @@ func (m *statusConditionManager) failedToUpdateDispatcherPodsAnnotation(err erro
 
 func (m *statusConditionManager) subscriberResolved() {
 	m.Trigger.Status.MarkSubscriberResolvedSucceeded()
+}
+
+func (m *statusConditionManager) FailedToSendMessage(err error) reconciler.Event {
+
+	m.Trigger.Status.MarkDependencyFailed(
+		"Failed to propagate changes to data plane",
+		err.Error(),
+	)
+
+	return fmt.Errorf("failed to propagate changes to data plane: %w", err)
 }

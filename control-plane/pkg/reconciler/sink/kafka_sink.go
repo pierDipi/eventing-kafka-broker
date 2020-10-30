@@ -19,22 +19,21 @@ package sink
 import (
 	"context"
 	"fmt"
-	"math"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"sync"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"k8s.io/client-go/util/retry"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 
 	eventing "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/log"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
@@ -42,6 +41,8 @@ import (
 const (
 	ExternalTopicOwner   = "external"
 	ControllerTopicOwner = "kafkasink-controller"
+
+	InternalTopicName = "knative-internal-sinks"
 )
 
 type Reconciler struct {
@@ -49,20 +50,22 @@ type Reconciler struct {
 
 	ConfigMapLister corelisters.ConfigMapLister
 
+	// TODO change source CM to config-kafka
+	// TODO expand readiness check to check connectivity with Kafka
+	bootstrapServers     []string
+	bootstrapServersLock sync.RWMutex
+
 	// ClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
 	ClusterAdmin kafka.NewClusterAdminFunc
+	// Producer creates new sarama sarama.SyncProducer. It's convenient to add this as Reconciler field so that we can
+	// mock the function used during the reconciliation loop.
+	Producer kafka.NewProducerFunc
 
 	Configs *config.Env
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *eventing.KafkaSink) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		return r.reconcileKind(ctx, ks)
-	})
-}
-
-func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) error {
 
 	logger := log.Logger(ctx, "reconcile", ks)
 
@@ -77,6 +80,24 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		return statusConditionManager.DataPlaneNotAvailable()
 	}
 	statusConditionManager.DataPlaneAvailable()
+
+	r.bootstrapServersLock.RLock()
+	managementCluster := r.bootstrapServers
+	r.bootstrapServersLock.RUnlock()
+
+	// Create a log compacted topic. (see proto/def/contract.proto#Object)
+	tc := &kafka.TopicConfig{
+		TopicDetail: sarama.TopicDetail{
+			NumPartitions:     r.Configs.InternalTopicNumPartitions,
+			ReplicationFactor: r.Configs.InternalTopicReplicationFactor,
+		},
+		BootstrapServers: managementCluster,
+	}
+	internalTopic, err := r.ClusterAdmin.CreateLogCompactedTopic(logger, InternalTopicName, tc)
+	if err != nil {
+		return statusConditionManager.FailedToCreateInternalTopic(internalTopic, err)
+	}
+	statusConditionManager.InternalTopicCreated(internalTopic)
 
 	if ks.GetStatus().Annotations == nil {
 		ks.GetStatus().Annotations = make(map[string]string, 1)
@@ -111,78 +132,30 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	logger.Debug("Topic created", zap.Any("topic", ks.Spec.Topic))
 
-	// Get contract config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
-	if err != nil {
-		return statusConditionManager.FailedToGetConfigMap(err)
-	}
-
-	logger.Debug("Got contract config map")
-
-	// Get contract data.
-	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
-	if err != nil && ct == nil {
-		return statusConditionManager.FailedToGetDataFromConfigMap(err)
-	}
-	if ct == nil {
-		ct = &contract.Contract{}
-	}
-
-	logger.Debug(
-		"Got contract data from config map",
-		zap.Any("contract", (*log.ContractMarshaller)(ct)),
-	)
-
 	// Get sink configuration.
-	sinkConfig := &contract.Resource{
-		Uid:    string(ks.UID),
-		Topics: []string{ks.Spec.Topic},
-		Ingress: &contract.Ingress{
-			ContentMode: coreconfig.ContentModeFromString(*ks.Spec.ContentMode),
-			IngressType: &contract.Ingress_Path{Path: receiver.PathFromObject(ks)},
+	ct := &contract.Object{
+		Object: &contract.Object_Ingress{
+			Ingress: &contract.Ingress{
+				Uid:              string(ks.UID),
+				BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
+				ContentMode:      coreconfig.ContentModeFromString(*ks.Spec.ContentMode),
+				IngressType:      &contract.Ingress_Path{Path: receiver.PathFromObject(ks)},
+				Topic:            ks.Spec.Topic,
+			},
 		},
-		BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
 	}
 	statusConditionManager.ConfigResolved()
 
-	sinkIndex := coreconfig.FindResource(ct, ks.UID)
-	// Update contract data with the new sink configuration.
-	coreconfig.AddOrUpdateResourceConfig(ct, sinkConfig, sinkIndex, logger)
-
-	// Increment volumeGeneration
-	ct.Generation = incrementGeneration(ct.Generation)
-
-	// Update the configuration map with the new contract data.
-	if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-		logger.Error("failed to update data plane config map", zap.Error(
-			statusConditionManager.FailedToUpdateConfigMap(err),
-		))
-		return err
-	}
-	statusConditionManager.ConfigMapUpdated()
-
-	logger.Debug("Config map updated")
-
-	// After #37 we reject events to a non-existing Sink, which means that we cannot consider a Sink Ready if all
-	// receivers haven't got the Sink, so update failures to receiver pods is a hard failure.
-
-	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		return err
+	if err := r.Producer.Add(managementCluster, internalTopic, string(ks.UID), ct); err != nil {
+		return statusConditionManager.FailedToSendMessage(err)
 	}
 
-	logger.Debug("Updated receiver pod annotation")
+	logger.Debug("Resource send", zap.Any("resource", ct))
 
 	return statusConditionManager.Reconciled()
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, ks *eventing.KafkaSink) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		return r.finalizeKind(ctx, ks)
-	})
-}
-
-func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) error {
 
 	logger := log.Logger(ctx, "finalize", ks)
 
@@ -228,10 +201,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	}
 
 	return nil
-}
-
-func incrementGeneration(generation uint64) uint64 {
-	return (generation + 1) % (math.MaxUint64 - 1)
 }
 
 func topicConfigFromSinkSpec(kss *eventing.KafkaSinkSpec) *kafka.TopicConfig {

@@ -25,19 +25,11 @@ import (
 // NewClusterAdminFunc creates new sarama.ClusterAdmin.
 type NewClusterAdminFunc func(addrs []string, config *sarama.Config) (sarama.ClusterAdmin, error)
 
-// AdminConfig returns Kafka Admin configurations.
-func AdminConfig() *sarama.Config {
-	config := sarama.NewConfig()
-	config.Version = sarama.MaxVersion
-
-	return config
-}
-
 // GetClusterAdmin creates a new sarama.ClusterAdmin.
 //
 // The caller is responsible for closing the sarama.ClusterAdmin.
 func GetClusterAdmin(adminFunc NewClusterAdminFunc, bootstrapServers []string) (sarama.ClusterAdmin, error) {
-	return GetClusterAdminFromConfig(adminFunc, AdminConfig(), bootstrapServers)
+	return GetClusterAdminFromConfig(adminFunc, Config(), bootstrapServers)
 }
 
 // GetClusterAdminFromConfig creates a new sarama.ClusterAdmin.

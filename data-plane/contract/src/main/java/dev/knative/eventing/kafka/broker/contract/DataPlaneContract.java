@@ -2064,7 +2064,7 @@ public final class DataPlaneContract {
 
     /**
      * <pre>
-     * consumer group name
+     * Consumer group name.
      * </pre>
      *
      * <code>string consumerGroup = 1;</code>
@@ -2073,7 +2073,7 @@ public final class DataPlaneContract {
     java.lang.String getConsumerGroup();
     /**
      * <pre>
-     * consumer group name
+     * Consumer group name.
      * </pre>
      *
      * <code>string consumerGroup = 1;</code>
@@ -2084,7 +2084,7 @@ public final class DataPlaneContract {
 
     /**
      * <pre>
-     * destination is the sink where events are sent.
+     * Destination is the sink where events are sent.
      * </pre>
      *
      * <code>string destination = 2;</code>
@@ -2093,7 +2093,7 @@ public final class DataPlaneContract {
     java.lang.String getDestination();
     /**
      * <pre>
-     * destination is the sink where events are sent.
+     * Destination is the sink where events are sent.
      * </pre>
      *
      * <code>string destination = 2;</code>
@@ -2166,8 +2166,7 @@ public final class DataPlaneContract {
 
     /**
      * <pre>
-     * Id of the egress
-     * It's the same as the Kubernetes resource uid
+     * Id of the egress. It's the same as the Kubernetes resource uid.
      * </pre>
      *
      * <code>string uid = 6;</code>
@@ -2176,8 +2175,7 @@ public final class DataPlaneContract {
     java.lang.String getUid();
     /**
      * <pre>
-     * Id of the egress
-     * It's the same as the Kubernetes resource uid
+     * Id of the egress. It's the same as the Kubernetes resource uid.
      * </pre>
      *
      * <code>string uid = 6;</code>
@@ -2185,6 +2183,84 @@ public final class DataPlaneContract {
      */
     com.google.protobuf.ByteString
         getUidBytes();
+
+    /**
+     * <pre>
+     * Topic names.
+     * </pre>
+     *
+     * <code>repeated string topics = 7;</code>
+     * @return A list containing the topics.
+     */
+    java.util.List<java.lang.String>
+        getTopicsList();
+    /**
+     * <pre>
+     * Topic names.
+     * </pre>
+     *
+     * <code>repeated string topics = 7;</code>
+     * @return The count of topics.
+     */
+    int getTopicsCount();
+    /**
+     * <pre>
+     * Topic names.
+     * </pre>
+     *
+     * <code>repeated string topics = 7;</code>
+     * @param index The index of the element to return.
+     * @return The topics at the given index.
+     */
+    java.lang.String getTopics(int index);
+    /**
+     * <pre>
+     * Topic names.
+     * </pre>
+     *
+     * <code>repeated string topics = 7;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the topics at the given index.
+     */
+    com.google.protobuf.ByteString
+        getTopicsBytes(int index);
+
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 8;</code>
+     * @return The bootstrapServers.
+     */
+    java.lang.String getBootstrapServers();
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 8;</code>
+     * @return The bytes for bootstrapServers.
+     */
+    com.google.protobuf.ByteString
+        getBootstrapServersBytes();
+
+    /**
+     * <code>.EgressConfig egressConfig = 9;</code>
+     * @return Whether the egressConfig field is set.
+     */
+    boolean hasEgressConfig();
+    /**
+     * <code>.EgressConfig egressConfig = 9;</code>
+     * @return The egressConfig.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig getEgressConfig();
+    /**
+     * <code>.EgressConfig egressConfig = 9;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder getEgressConfigOrBuilder();
 
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.ReplyStrategyCase getReplyStrategyCase();
   }
@@ -2204,6 +2280,8 @@ public final class DataPlaneContract {
       consumerGroup_ = "";
       destination_ = "";
       uid_ = "";
+      topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      bootstrapServers_ = "";
     }
 
     @java.lang.Override
@@ -2226,6 +2304,7 @@ public final class DataPlaneContract {
       if (extensionRegistry == null) {
         throw new java.lang.NullPointerException();
       }
+      int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -2287,6 +2366,34 @@ public final class DataPlaneContract {
               uid_ = s;
               break;
             }
+            case 58: {
+              java.lang.String s = input.readStringRequireUtf8();
+              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+                topics_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              topics_.add(s);
+              break;
+            }
+            case 66: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              bootstrapServers_ = s;
+              break;
+            }
+            case 74: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder subBuilder = null;
+              if (egressConfig_ != null) {
+                subBuilder = egressConfig_.toBuilder();
+              }
+              egressConfig_ = input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(egressConfig_);
+                egressConfig_ = subBuilder.buildPartial();
+              }
+
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -2302,6 +2409,9 @@ public final class DataPlaneContract {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000001) != 0)) {
+          topics_ = topics_.getUnmodifiableView();
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -2364,7 +2474,7 @@ public final class DataPlaneContract {
     private volatile java.lang.Object consumerGroup_;
     /**
      * <pre>
-     * consumer group name
+     * Consumer group name.
      * </pre>
      *
      * <code>string consumerGroup = 1;</code>
@@ -2385,7 +2495,7 @@ public final class DataPlaneContract {
     }
     /**
      * <pre>
-     * consumer group name
+     * Consumer group name.
      * </pre>
      *
      * <code>string consumerGroup = 1;</code>
@@ -2410,7 +2520,7 @@ public final class DataPlaneContract {
     private volatile java.lang.Object destination_;
     /**
      * <pre>
-     * destination is the sink where events are sent.
+     * Destination is the sink where events are sent.
      * </pre>
      *
      * <code>string destination = 2;</code>
@@ -2431,7 +2541,7 @@ public final class DataPlaneContract {
     }
     /**
      * <pre>
-     * destination is the sink where events are sent.
+     * Destination is the sink where events are sent.
      * </pre>
      *
      * <code>string destination = 2;</code>
@@ -2578,8 +2688,7 @@ public final class DataPlaneContract {
     private volatile java.lang.Object uid_;
     /**
      * <pre>
-     * Id of the egress
-     * It's the same as the Kubernetes resource uid
+     * Id of the egress. It's the same as the Kubernetes resource uid.
      * </pre>
      *
      * <code>string uid = 6;</code>
@@ -2600,8 +2709,7 @@ public final class DataPlaneContract {
     }
     /**
      * <pre>
-     * Id of the egress
-     * It's the same as the Kubernetes resource uid
+     * Id of the egress. It's the same as the Kubernetes resource uid.
      * </pre>
      *
      * <code>string uid = 6;</code>
@@ -2620,6 +2728,131 @@ public final class DataPlaneContract {
       } else {
         return (com.google.protobuf.ByteString) ref;
       }
+    }
+
+    public static final int TOPICS_FIELD_NUMBER = 7;
+    private com.google.protobuf.LazyStringList topics_;
+    /**
+     * <pre>
+     * Topic names.
+     * </pre>
+     *
+     * <code>repeated string topics = 7;</code>
+     * @return A list containing the topics.
+     */
+    public com.google.protobuf.ProtocolStringList
+        getTopicsList() {
+      return topics_;
+    }
+    /**
+     * <pre>
+     * Topic names.
+     * </pre>
+     *
+     * <code>repeated string topics = 7;</code>
+     * @return The count of topics.
+     */
+    public int getTopicsCount() {
+      return topics_.size();
+    }
+    /**
+     * <pre>
+     * Topic names.
+     * </pre>
+     *
+     * <code>repeated string topics = 7;</code>
+     * @param index The index of the element to return.
+     * @return The topics at the given index.
+     */
+    public java.lang.String getTopics(int index) {
+      return topics_.get(index);
+    }
+    /**
+     * <pre>
+     * Topic names.
+     * </pre>
+     *
+     * <code>repeated string topics = 7;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the topics at the given index.
+     */
+    public com.google.protobuf.ByteString
+        getTopicsBytes(int index) {
+      return topics_.getByteString(index);
+    }
+
+    public static final int BOOTSTRAPSERVERS_FIELD_NUMBER = 8;
+    private volatile java.lang.Object bootstrapServers_;
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 8;</code>
+     * @return The bootstrapServers.
+     */
+    @java.lang.Override
+    public java.lang.String getBootstrapServers() {
+      java.lang.Object ref = bootstrapServers_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        bootstrapServers_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 8;</code>
+     * @return The bytes for bootstrapServers.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getBootstrapServersBytes() {
+      java.lang.Object ref = bootstrapServers_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        bootstrapServers_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int EGRESSCONFIG_FIELD_NUMBER = 9;
+    private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig egressConfig_;
+    /**
+     * <code>.EgressConfig egressConfig = 9;</code>
+     * @return Whether the egressConfig field is set.
+     */
+    @java.lang.Override
+    public boolean hasEgressConfig() {
+      return egressConfig_ != null;
+    }
+    /**
+     * <code>.EgressConfig egressConfig = 9;</code>
+     * @return The egressConfig.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig getEgressConfig() {
+      return egressConfig_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.getDefaultInstance() : egressConfig_;
+    }
+    /**
+     * <code>.EgressConfig egressConfig = 9;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder getEgressConfigOrBuilder() {
+      return getEgressConfig();
     }
 
     private byte memoizedIsInitialized = -1;
@@ -2654,6 +2887,15 @@ public final class DataPlaneContract {
       if (!getUidBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 6, uid_);
       }
+      for (int i = 0; i < topics_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, topics_.getRaw(i));
+      }
+      if (!getBootstrapServersBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 8, bootstrapServers_);
+      }
+      if (egressConfig_ != null) {
+        output.writeMessage(9, getEgressConfig());
+      }
       unknownFields.writeTo(output);
     }
 
@@ -2683,6 +2925,21 @@ public final class DataPlaneContract {
       if (!getUidBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, uid_);
       }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < topics_.size(); i++) {
+          dataSize += computeStringSizeNoTag(topics_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getTopicsList().size();
+      }
+      if (!getBootstrapServersBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, bootstrapServers_);
+      }
+      if (egressConfig_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(9, getEgressConfig());
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -2709,6 +2966,15 @@ public final class DataPlaneContract {
       }
       if (!getUid()
           .equals(other.getUid())) return false;
+      if (!getTopicsList()
+          .equals(other.getTopicsList())) return false;
+      if (!getBootstrapServers()
+          .equals(other.getBootstrapServers())) return false;
+      if (hasEgressConfig() != other.hasEgressConfig()) return false;
+      if (hasEgressConfig()) {
+        if (!getEgressConfig()
+            .equals(other.getEgressConfig())) return false;
+      }
       if (!getReplyStrategyCase().equals(other.getReplyStrategyCase())) return false;
       switch (replyStrategyCase_) {
         case 3:
@@ -2743,6 +3009,16 @@ public final class DataPlaneContract {
       }
       hash = (37 * hash) + UID_FIELD_NUMBER;
       hash = (53 * hash) + getUid().hashCode();
+      if (getTopicsCount() > 0) {
+        hash = (37 * hash) + TOPICS_FIELD_NUMBER;
+        hash = (53 * hash) + getTopicsList().hashCode();
+      }
+      hash = (37 * hash) + BOOTSTRAPSERVERS_FIELD_NUMBER;
+      hash = (53 * hash) + getBootstrapServers().hashCode();
+      if (hasEgressConfig()) {
+        hash = (37 * hash) + EGRESSCONFIG_FIELD_NUMBER;
+        hash = (53 * hash) + getEgressConfig().hashCode();
+      }
       switch (replyStrategyCase_) {
         case 3:
           hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
@@ -2900,6 +3176,16 @@ public final class DataPlaneContract {
         }
         uid_ = "";
 
+        topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        bootstrapServers_ = "";
+
+        if (egressConfigBuilder_ == null) {
+          egressConfig_ = null;
+        } else {
+          egressConfig_ = null;
+          egressConfigBuilder_ = null;
+        }
         replyStrategyCase_ = 0;
         replyStrategy_ = null;
         return this;
@@ -2928,6 +3214,7 @@ public final class DataPlaneContract {
       @java.lang.Override
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress buildPartial() {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress(this);
+        int from_bitField0_ = bitField0_;
         result.consumerGroup_ = consumerGroup_;
         result.destination_ = destination_;
         if (replyStrategyCase_ == 3) {
@@ -2946,6 +3233,17 @@ public final class DataPlaneContract {
           result.filter_ = filterBuilder_.build();
         }
         result.uid_ = uid_;
+        if (((bitField0_ & 0x00000001) != 0)) {
+          topics_ = topics_.getUnmodifiableView();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.topics_ = topics_;
+        result.bootstrapServers_ = bootstrapServers_;
+        if (egressConfigBuilder_ == null) {
+          result.egressConfig_ = egressConfig_;
+        } else {
+          result.egressConfig_ = egressConfigBuilder_.build();
+        }
         result.replyStrategyCase_ = replyStrategyCase_;
         onBuilt();
         return result;
@@ -3010,6 +3308,23 @@ public final class DataPlaneContract {
           uid_ = other.uid_;
           onChanged();
         }
+        if (!other.topics_.isEmpty()) {
+          if (topics_.isEmpty()) {
+            topics_ = other.topics_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensureTopicsIsMutable();
+            topics_.addAll(other.topics_);
+          }
+          onChanged();
+        }
+        if (!other.getBootstrapServers().isEmpty()) {
+          bootstrapServers_ = other.bootstrapServers_;
+          onChanged();
+        }
+        if (other.hasEgressConfig()) {
+          mergeEgressConfig(other.getEgressConfig());
+        }
         switch (other.getReplyStrategyCase()) {
           case REPLYURL: {
             replyStrategyCase_ = 3;
@@ -3068,11 +3383,12 @@ public final class DataPlaneContract {
         return this;
       }
 
+      private int bitField0_;
 
       private java.lang.Object consumerGroup_ = "";
       /**
        * <pre>
-       * consumer group name
+       * Consumer group name.
        * </pre>
        *
        * <code>string consumerGroup = 1;</code>
@@ -3092,7 +3408,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * consumer group name
+       * Consumer group name.
        * </pre>
        *
        * <code>string consumerGroup = 1;</code>
@@ -3113,7 +3429,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * consumer group name
+       * Consumer group name.
        * </pre>
        *
        * <code>string consumerGroup = 1;</code>
@@ -3132,7 +3448,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * consumer group name
+       * Consumer group name.
        * </pre>
        *
        * <code>string consumerGroup = 1;</code>
@@ -3146,7 +3462,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * consumer group name
+       * Consumer group name.
        * </pre>
        *
        * <code>string consumerGroup = 1;</code>
@@ -3168,7 +3484,7 @@ public final class DataPlaneContract {
       private java.lang.Object destination_ = "";
       /**
        * <pre>
-       * destination is the sink where events are sent.
+       * Destination is the sink where events are sent.
        * </pre>
        *
        * <code>string destination = 2;</code>
@@ -3188,7 +3504,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * destination is the sink where events are sent.
+       * Destination is the sink where events are sent.
        * </pre>
        *
        * <code>string destination = 2;</code>
@@ -3209,7 +3525,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * destination is the sink where events are sent.
+       * Destination is the sink where events are sent.
        * </pre>
        *
        * <code>string destination = 2;</code>
@@ -3228,7 +3544,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * destination is the sink where events are sent.
+       * Destination is the sink where events are sent.
        * </pre>
        *
        * <code>string destination = 2;</code>
@@ -3242,7 +3558,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * destination is the sink where events are sent.
+       * Destination is the sink where events are sent.
        * </pre>
        *
        * <code>string destination = 2;</code>
@@ -3669,8 +3985,7 @@ public final class DataPlaneContract {
       private java.lang.Object uid_ = "";
       /**
        * <pre>
-       * Id of the egress
-       * It's the same as the Kubernetes resource uid
+       * Id of the egress. It's the same as the Kubernetes resource uid.
        * </pre>
        *
        * <code>string uid = 6;</code>
@@ -3690,8 +4005,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * Id of the egress
-       * It's the same as the Kubernetes resource uid
+       * Id of the egress. It's the same as the Kubernetes resource uid.
        * </pre>
        *
        * <code>string uid = 6;</code>
@@ -3712,8 +4026,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * Id of the egress
-       * It's the same as the Kubernetes resource uid
+       * Id of the egress. It's the same as the Kubernetes resource uid.
        * </pre>
        *
        * <code>string uid = 6;</code>
@@ -3732,8 +4045,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * Id of the egress
-       * It's the same as the Kubernetes resource uid
+       * Id of the egress. It's the same as the Kubernetes resource uid.
        * </pre>
        *
        * <code>string uid = 6;</code>
@@ -3747,8 +4059,7 @@ public final class DataPlaneContract {
       }
       /**
        * <pre>
-       * Id of the egress
-       * It's the same as the Kubernetes resource uid
+       * Id of the egress. It's the same as the Kubernetes resource uid.
        * </pre>
        *
        * <code>string uid = 6;</code>
@@ -3765,6 +4076,372 @@ public final class DataPlaneContract {
         uid_ = value;
         onChanged();
         return this;
+      }
+
+      private com.google.protobuf.LazyStringList topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureTopicsIsMutable() {
+        if (!((bitField0_ & 0x00000001) != 0)) {
+          topics_ = new com.google.protobuf.LazyStringArrayList(topics_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+      /**
+       * <pre>
+       * Topic names.
+       * </pre>
+       *
+       * <code>repeated string topics = 7;</code>
+       * @return A list containing the topics.
+       */
+      public com.google.protobuf.ProtocolStringList
+          getTopicsList() {
+        return topics_.getUnmodifiableView();
+      }
+      /**
+       * <pre>
+       * Topic names.
+       * </pre>
+       *
+       * <code>repeated string topics = 7;</code>
+       * @return The count of topics.
+       */
+      public int getTopicsCount() {
+        return topics_.size();
+      }
+      /**
+       * <pre>
+       * Topic names.
+       * </pre>
+       *
+       * <code>repeated string topics = 7;</code>
+       * @param index The index of the element to return.
+       * @return The topics at the given index.
+       */
+      public java.lang.String getTopics(int index) {
+        return topics_.get(index);
+      }
+      /**
+       * <pre>
+       * Topic names.
+       * </pre>
+       *
+       * <code>repeated string topics = 7;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the topics at the given index.
+       */
+      public com.google.protobuf.ByteString
+          getTopicsBytes(int index) {
+        return topics_.getByteString(index);
+      }
+      /**
+       * <pre>
+       * Topic names.
+       * </pre>
+       *
+       * <code>repeated string topics = 7;</code>
+       * @param index The index to set the value at.
+       * @param value The topics to set.
+       * @return This builder for chaining.
+       */
+      public Builder setTopics(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureTopicsIsMutable();
+        topics_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Topic names.
+       * </pre>
+       *
+       * <code>repeated string topics = 7;</code>
+       * @param value The topics to add.
+       * @return This builder for chaining.
+       */
+      public Builder addTopics(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureTopicsIsMutable();
+        topics_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Topic names.
+       * </pre>
+       *
+       * <code>repeated string topics = 7;</code>
+       * @param values The topics to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllTopics(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureTopicsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, topics_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Topic names.
+       * </pre>
+       *
+       * <code>repeated string topics = 7;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearTopics() {
+        topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Topic names.
+       * </pre>
+       *
+       * <code>repeated string topics = 7;</code>
+       * @param value The bytes of the topics to add.
+       * @return This builder for chaining.
+       */
+      public Builder addTopicsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        ensureTopicsIsMutable();
+        topics_.add(value);
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object bootstrapServers_ = "";
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 8;</code>
+       * @return The bootstrapServers.
+       */
+      public java.lang.String getBootstrapServers() {
+        java.lang.Object ref = bootstrapServers_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          bootstrapServers_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 8;</code>
+       * @return The bytes for bootstrapServers.
+       */
+      public com.google.protobuf.ByteString
+          getBootstrapServersBytes() {
+        java.lang.Object ref = bootstrapServers_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          bootstrapServers_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 8;</code>
+       * @param value The bootstrapServers to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBootstrapServers(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        bootstrapServers_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 8;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearBootstrapServers() {
+        
+        bootstrapServers_ = getDefaultInstance().getBootstrapServers();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 8;</code>
+       * @param value The bytes for bootstrapServers to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBootstrapServersBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        bootstrapServers_ = value;
+        onChanged();
+        return this;
+      }
+
+      private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig egressConfig_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder> egressConfigBuilder_;
+      /**
+       * <code>.EgressConfig egressConfig = 9;</code>
+       * @return Whether the egressConfig field is set.
+       */
+      public boolean hasEgressConfig() {
+        return egressConfigBuilder_ != null || egressConfig_ != null;
+      }
+      /**
+       * <code>.EgressConfig egressConfig = 9;</code>
+       * @return The egressConfig.
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig getEgressConfig() {
+        if (egressConfigBuilder_ == null) {
+          return egressConfig_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.getDefaultInstance() : egressConfig_;
+        } else {
+          return egressConfigBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>.EgressConfig egressConfig = 9;</code>
+       */
+      public Builder setEgressConfig(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig value) {
+        if (egressConfigBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          egressConfig_ = value;
+          onChanged();
+        } else {
+          egressConfigBuilder_.setMessage(value);
+        }
+
+        return this;
+      }
+      /**
+       * <code>.EgressConfig egressConfig = 9;</code>
+       */
+      public Builder setEgressConfig(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder builderForValue) {
+        if (egressConfigBuilder_ == null) {
+          egressConfig_ = builderForValue.build();
+          onChanged();
+        } else {
+          egressConfigBuilder_.setMessage(builderForValue.build());
+        }
+
+        return this;
+      }
+      /**
+       * <code>.EgressConfig egressConfig = 9;</code>
+       */
+      public Builder mergeEgressConfig(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig value) {
+        if (egressConfigBuilder_ == null) {
+          if (egressConfig_ != null) {
+            egressConfig_ =
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.newBuilder(egressConfig_).mergeFrom(value).buildPartial();
+          } else {
+            egressConfig_ = value;
+          }
+          onChanged();
+        } else {
+          egressConfigBuilder_.mergeFrom(value);
+        }
+
+        return this;
+      }
+      /**
+       * <code>.EgressConfig egressConfig = 9;</code>
+       */
+      public Builder clearEgressConfig() {
+        if (egressConfigBuilder_ == null) {
+          egressConfig_ = null;
+          onChanged();
+        } else {
+          egressConfig_ = null;
+          egressConfigBuilder_ = null;
+        }
+
+        return this;
+      }
+      /**
+       * <code>.EgressConfig egressConfig = 9;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder getEgressConfigBuilder() {
+        
+        onChanged();
+        return getEgressConfigFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.EgressConfig egressConfig = 9;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder getEgressConfigOrBuilder() {
+        if (egressConfigBuilder_ != null) {
+          return egressConfigBuilder_.getMessageOrBuilder();
+        } else {
+          return egressConfig_ == null ?
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.getDefaultInstance() : egressConfig_;
+        }
+      }
+      /**
+       * <code>.EgressConfig egressConfig = 9;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder> 
+          getEgressConfigFieldBuilder() {
+        if (egressConfigBuilder_ == null) {
+          egressConfigBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder>(
+                  getEgressConfig(),
+                  getParentForChildren(),
+                  isClean());
+          egressConfig_ = null;
+        }
+        return egressConfigBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -3825,10 +4502,74 @@ public final class DataPlaneContract {
 
     /**
      * <pre>
+     * Id of the resource
+     * It's the same as the Kubernetes resource uid
+     * </pre>
+     *
+     * <code>string uid = 1;</code>
+     * @return The uid.
+     */
+    java.lang.String getUid();
+    /**
+     * <pre>
+     * Id of the resource
+     * It's the same as the Kubernetes resource uid
+     * </pre>
+     *
+     * <code>string uid = 1;</code>
+     * @return The bytes for uid.
+     */
+    com.google.protobuf.ByteString
+        getUidBytes();
+
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 2;</code>
+     * @return The bootstrapServers.
+     */
+    java.lang.String getBootstrapServers();
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 2;</code>
+     * @return The bytes for bootstrapServers.
+     */
+    com.google.protobuf.ByteString
+        getBootstrapServersBytes();
+
+    /**
+     * <pre>
+     * Topic name.
+     * </pre>
+     *
+     * <code>string topic = 4;</code>
+     * @return The topic.
+     */
+    java.lang.String getTopic();
+    /**
+     * <pre>
+     * Topic name.
+     * </pre>
+     *
+     * <code>string topic = 4;</code>
+     * @return The bytes for topic.
+     */
+    com.google.protobuf.ByteString
+        getTopicBytes();
+
+    /**
+     * <pre>
      * Optional content mode to use when pushing messages to Kafka
      * </pre>
      *
-     * <code>.ContentMode contentMode = 1;</code>
+     * <code>.ContentMode contentMode = 5;</code>
      * @return The enum numeric value on the wire for contentMode.
      */
     int getContentModeValue();
@@ -3837,7 +4578,7 @@ public final class DataPlaneContract {
      * Optional content mode to use when pushing messages to Kafka
      * </pre>
      *
-     * <code>.ContentMode contentMode = 1;</code>
+     * <code>.ContentMode contentMode = 5;</code>
      * @return The contentMode.
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode getContentMode();
@@ -3847,7 +4588,7 @@ public final class DataPlaneContract {
      * path to listen for incoming events.
      * </pre>
      *
-     * <code>string path = 2;</code>
+     * <code>string path = 6;</code>
      * @return The path.
      */
     java.lang.String getPath();
@@ -3856,7 +4597,7 @@ public final class DataPlaneContract {
      * path to listen for incoming events.
      * </pre>
      *
-     * <code>string path = 2;</code>
+     * <code>string path = 6;</code>
      * @return The bytes for path.
      */
     com.google.protobuf.ByteString
@@ -3867,7 +4608,7 @@ public final class DataPlaneContract {
      * host header to match
      * </pre>
      *
-     * <code>string host = 3;</code>
+     * <code>string host = 7;</code>
      * @return The host.
      */
     java.lang.String getHost();
@@ -3876,7 +4617,7 @@ public final class DataPlaneContract {
      * host header to match
      * </pre>
      *
-     * <code>string host = 3;</code>
+     * <code>string host = 7;</code>
      * @return The bytes for host.
      */
     com.google.protobuf.ByteString
@@ -3897,6 +4638,9 @@ public final class DataPlaneContract {
       super(builder);
     }
     private Ingress() {
+      uid_ = "";
+      bootstrapServers_ = "";
+      topic_ = "";
       contentMode_ = 0;
     }
 
@@ -3930,21 +4674,39 @@ public final class DataPlaneContract {
             case 0:
               done = true;
               break;
-            case 8: {
+            case 10: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              uid_ = s;
+              break;
+            }
+            case 18: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              bootstrapServers_ = s;
+              break;
+            }
+            case 34: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              topic_ = s;
+              break;
+            }
+            case 40: {
               int rawValue = input.readEnum();
 
               contentMode_ = rawValue;
               break;
             }
-            case 18: {
+            case 50: {
               java.lang.String s = input.readStringRequireUtf8();
-              ingressTypeCase_ = 2;
+              ingressTypeCase_ = 6;
               ingressType_ = s;
               break;
             }
-            case 26: {
+            case 58: {
               java.lang.String s = input.readStringRequireUtf8();
-              ingressTypeCase_ = 3;
+              ingressTypeCase_ = 7;
               ingressType_ = s;
               break;
             }
@@ -3985,8 +4747,8 @@ public final class DataPlaneContract {
     public enum IngressTypeCase
         implements com.google.protobuf.Internal.EnumLite,
             com.google.protobuf.AbstractMessage.InternalOneOfEnum {
-      PATH(2),
-      HOST(3),
+      PATH(6),
+      HOST(7),
       INGRESSTYPE_NOT_SET(0);
       private final int value;
       private IngressTypeCase(int value) {
@@ -4004,8 +4766,8 @@ public final class DataPlaneContract {
 
       public static IngressTypeCase forNumber(int value) {
         switch (value) {
-          case 2: return PATH;
-          case 3: return HOST;
+          case 6: return PATH;
+          case 7: return HOST;
           case 0: return INGRESSTYPE_NOT_SET;
           default: return null;
         }
@@ -4021,14 +4783,156 @@ public final class DataPlaneContract {
           ingressTypeCase_);
     }
 
-    public static final int CONTENTMODE_FIELD_NUMBER = 1;
+    public static final int UID_FIELD_NUMBER = 1;
+    private volatile java.lang.Object uid_;
+    /**
+     * <pre>
+     * Id of the resource
+     * It's the same as the Kubernetes resource uid
+     * </pre>
+     *
+     * <code>string uid = 1;</code>
+     * @return The uid.
+     */
+    @java.lang.Override
+    public java.lang.String getUid() {
+      java.lang.Object ref = uid_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        uid_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Id of the resource
+     * It's the same as the Kubernetes resource uid
+     * </pre>
+     *
+     * <code>string uid = 1;</code>
+     * @return The bytes for uid.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getUidBytes() {
+      java.lang.Object ref = uid_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        uid_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int BOOTSTRAPSERVERS_FIELD_NUMBER = 2;
+    private volatile java.lang.Object bootstrapServers_;
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 2;</code>
+     * @return The bootstrapServers.
+     */
+    @java.lang.Override
+    public java.lang.String getBootstrapServers() {
+      java.lang.Object ref = bootstrapServers_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        bootstrapServers_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 2;</code>
+     * @return The bytes for bootstrapServers.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getBootstrapServersBytes() {
+      java.lang.Object ref = bootstrapServers_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        bootstrapServers_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int TOPIC_FIELD_NUMBER = 4;
+    private volatile java.lang.Object topic_;
+    /**
+     * <pre>
+     * Topic name.
+     * </pre>
+     *
+     * <code>string topic = 4;</code>
+     * @return The topic.
+     */
+    @java.lang.Override
+    public java.lang.String getTopic() {
+      java.lang.Object ref = topic_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        topic_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Topic name.
+     * </pre>
+     *
+     * <code>string topic = 4;</code>
+     * @return The bytes for topic.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getTopicBytes() {
+      java.lang.Object ref = topic_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        topic_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int CONTENTMODE_FIELD_NUMBER = 5;
     private int contentMode_;
     /**
      * <pre>
      * Optional content mode to use when pushing messages to Kafka
      * </pre>
      *
-     * <code>.ContentMode contentMode = 1;</code>
+     * <code>.ContentMode contentMode = 5;</code>
      * @return The enum numeric value on the wire for contentMode.
      */
     @java.lang.Override public int getContentModeValue() {
@@ -4039,7 +4943,7 @@ public final class DataPlaneContract {
      * Optional content mode to use when pushing messages to Kafka
      * </pre>
      *
-     * <code>.ContentMode contentMode = 1;</code>
+     * <code>.ContentMode contentMode = 5;</code>
      * @return The contentMode.
      */
     @java.lang.Override public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode getContentMode() {
@@ -4048,18 +4952,18 @@ public final class DataPlaneContract {
       return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.UNRECOGNIZED : result;
     }
 
-    public static final int PATH_FIELD_NUMBER = 2;
+    public static final int PATH_FIELD_NUMBER = 6;
     /**
      * <pre>
      * path to listen for incoming events.
      * </pre>
      *
-     * <code>string path = 2;</code>
+     * <code>string path = 6;</code>
      * @return The path.
      */
     public java.lang.String getPath() {
       java.lang.Object ref = "";
-      if (ingressTypeCase_ == 2) {
+      if (ingressTypeCase_ == 6) {
         ref = ingressType_;
       }
       if (ref instanceof java.lang.String) {
@@ -4068,7 +4972,7 @@ public final class DataPlaneContract {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (ingressTypeCase_ == 2) {
+        if (ingressTypeCase_ == 6) {
           ingressType_ = s;
         }
         return s;
@@ -4079,20 +4983,20 @@ public final class DataPlaneContract {
      * path to listen for incoming events.
      * </pre>
      *
-     * <code>string path = 2;</code>
+     * <code>string path = 6;</code>
      * @return The bytes for path.
      */
     public com.google.protobuf.ByteString
         getPathBytes() {
       java.lang.Object ref = "";
-      if (ingressTypeCase_ == 2) {
+      if (ingressTypeCase_ == 6) {
         ref = ingressType_;
       }
       if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        if (ingressTypeCase_ == 2) {
+        if (ingressTypeCase_ == 6) {
           ingressType_ = b;
         }
         return b;
@@ -4101,18 +5005,18 @@ public final class DataPlaneContract {
       }
     }
 
-    public static final int HOST_FIELD_NUMBER = 3;
+    public static final int HOST_FIELD_NUMBER = 7;
     /**
      * <pre>
      * host header to match
      * </pre>
      *
-     * <code>string host = 3;</code>
+     * <code>string host = 7;</code>
      * @return The host.
      */
     public java.lang.String getHost() {
       java.lang.Object ref = "";
-      if (ingressTypeCase_ == 3) {
+      if (ingressTypeCase_ == 7) {
         ref = ingressType_;
       }
       if (ref instanceof java.lang.String) {
@@ -4121,7 +5025,7 @@ public final class DataPlaneContract {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (ingressTypeCase_ == 3) {
+        if (ingressTypeCase_ == 7) {
           ingressType_ = s;
         }
         return s;
@@ -4132,20 +5036,20 @@ public final class DataPlaneContract {
      * host header to match
      * </pre>
      *
-     * <code>string host = 3;</code>
+     * <code>string host = 7;</code>
      * @return The bytes for host.
      */
     public com.google.protobuf.ByteString
         getHostBytes() {
       java.lang.Object ref = "";
-      if (ingressTypeCase_ == 3) {
+      if (ingressTypeCase_ == 7) {
         ref = ingressType_;
       }
       if (ref instanceof java.lang.String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        if (ingressTypeCase_ == 3) {
+        if (ingressTypeCase_ == 7) {
           ingressType_ = b;
         }
         return b;
@@ -4168,14 +5072,23 @@ public final class DataPlaneContract {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      if (!getUidBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, uid_);
+      }
+      if (!getBootstrapServersBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, bootstrapServers_);
+      }
+      if (!getTopicBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, topic_);
+      }
       if (contentMode_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.BINARY.getNumber()) {
-        output.writeEnum(1, contentMode_);
+        output.writeEnum(5, contentMode_);
       }
-      if (ingressTypeCase_ == 2) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, ingressType_);
+      if (ingressTypeCase_ == 6) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, ingressType_);
       }
-      if (ingressTypeCase_ == 3) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, ingressType_);
+      if (ingressTypeCase_ == 7) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, ingressType_);
       }
       unknownFields.writeTo(output);
     }
@@ -4186,15 +5099,24 @@ public final class DataPlaneContract {
       if (size != -1) return size;
 
       size = 0;
+      if (!getUidBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, uid_);
+      }
+      if (!getBootstrapServersBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, bootstrapServers_);
+      }
+      if (!getTopicBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, topic_);
+      }
       if (contentMode_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.BINARY.getNumber()) {
         size += com.google.protobuf.CodedOutputStream
-          .computeEnumSize(1, contentMode_);
+          .computeEnumSize(5, contentMode_);
       }
-      if (ingressTypeCase_ == 2) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, ingressType_);
+      if (ingressTypeCase_ == 6) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, ingressType_);
       }
-      if (ingressTypeCase_ == 3) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, ingressType_);
+      if (ingressTypeCase_ == 7) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, ingressType_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -4211,14 +5133,20 @@ public final class DataPlaneContract {
       }
       dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress) obj;
 
+      if (!getUid()
+          .equals(other.getUid())) return false;
+      if (!getBootstrapServers()
+          .equals(other.getBootstrapServers())) return false;
+      if (!getTopic()
+          .equals(other.getTopic())) return false;
       if (contentMode_ != other.contentMode_) return false;
       if (!getIngressTypeCase().equals(other.getIngressTypeCase())) return false;
       switch (ingressTypeCase_) {
-        case 2:
+        case 6:
           if (!getPath()
               .equals(other.getPath())) return false;
           break;
-        case 3:
+        case 7:
           if (!getHost()
               .equals(other.getHost())) return false;
           break;
@@ -4236,14 +5164,20 @@ public final class DataPlaneContract {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + UID_FIELD_NUMBER;
+      hash = (53 * hash) + getUid().hashCode();
+      hash = (37 * hash) + BOOTSTRAPSERVERS_FIELD_NUMBER;
+      hash = (53 * hash) + getBootstrapServers().hashCode();
+      hash = (37 * hash) + TOPIC_FIELD_NUMBER;
+      hash = (53 * hash) + getTopic().hashCode();
       hash = (37 * hash) + CONTENTMODE_FIELD_NUMBER;
       hash = (53 * hash) + contentMode_;
       switch (ingressTypeCase_) {
-        case 2:
+        case 6:
           hash = (37 * hash) + PATH_FIELD_NUMBER;
           hash = (53 * hash) + getPath().hashCode();
           break;
-        case 3:
+        case 7:
           hash = (37 * hash) + HOST_FIELD_NUMBER;
           hash = (53 * hash) + getHost().hashCode();
           break;
@@ -4383,6 +5317,12 @@ public final class DataPlaneContract {
       @java.lang.Override
       public Builder clear() {
         super.clear();
+        uid_ = "";
+
+        bootstrapServers_ = "";
+
+        topic_ = "";
+
         contentMode_ = 0;
 
         ingressTypeCase_ = 0;
@@ -4413,11 +5353,14 @@ public final class DataPlaneContract {
       @java.lang.Override
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress buildPartial() {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress(this);
+        result.uid_ = uid_;
+        result.bootstrapServers_ = bootstrapServers_;
+        result.topic_ = topic_;
         result.contentMode_ = contentMode_;
-        if (ingressTypeCase_ == 2) {
+        if (ingressTypeCase_ == 6) {
           result.ingressType_ = ingressType_;
         }
-        if (ingressTypeCase_ == 3) {
+        if (ingressTypeCase_ == 7) {
           result.ingressType_ = ingressType_;
         }
         result.ingressTypeCase_ = ingressTypeCase_;
@@ -4469,18 +5412,30 @@ public final class DataPlaneContract {
 
       public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress other) {
         if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.getDefaultInstance()) return this;
+        if (!other.getUid().isEmpty()) {
+          uid_ = other.uid_;
+          onChanged();
+        }
+        if (!other.getBootstrapServers().isEmpty()) {
+          bootstrapServers_ = other.bootstrapServers_;
+          onChanged();
+        }
+        if (!other.getTopic().isEmpty()) {
+          topic_ = other.topic_;
+          onChanged();
+        }
         if (other.contentMode_ != 0) {
           setContentModeValue(other.getContentModeValue());
         }
         switch (other.getIngressTypeCase()) {
           case PATH: {
-            ingressTypeCase_ = 2;
+            ingressTypeCase_ = 6;
             ingressType_ = other.ingressType_;
             onChanged();
             break;
           }
           case HOST: {
-            ingressTypeCase_ = 3;
+            ingressTypeCase_ = 7;
             ingressType_ = other.ingressType_;
             onChanged();
             break;
@@ -4532,1450 +5487,6 @@ public final class DataPlaneContract {
         return this;
       }
 
-
-      private int contentMode_ = 0;
-      /**
-       * <pre>
-       * Optional content mode to use when pushing messages to Kafka
-       * </pre>
-       *
-       * <code>.ContentMode contentMode = 1;</code>
-       * @return The enum numeric value on the wire for contentMode.
-       */
-      @java.lang.Override public int getContentModeValue() {
-        return contentMode_;
-      }
-      /**
-       * <pre>
-       * Optional content mode to use when pushing messages to Kafka
-       * </pre>
-       *
-       * <code>.ContentMode contentMode = 1;</code>
-       * @param value The enum numeric value on the wire for contentMode to set.
-       * @return This builder for chaining.
-       */
-      public Builder setContentModeValue(int value) {
-        
-        contentMode_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Optional content mode to use when pushing messages to Kafka
-       * </pre>
-       *
-       * <code>.ContentMode contentMode = 1;</code>
-       * @return The contentMode.
-       */
-      @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode getContentMode() {
-        @SuppressWarnings("deprecation")
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.valueOf(contentMode_);
-        return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.UNRECOGNIZED : result;
-      }
-      /**
-       * <pre>
-       * Optional content mode to use when pushing messages to Kafka
-       * </pre>
-       *
-       * <code>.ContentMode contentMode = 1;</code>
-       * @param value The contentMode to set.
-       * @return This builder for chaining.
-       */
-      public Builder setContentMode(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode value) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        
-        contentMode_ = value.getNumber();
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Optional content mode to use when pushing messages to Kafka
-       * </pre>
-       *
-       * <code>.ContentMode contentMode = 1;</code>
-       * @return This builder for chaining.
-       */
-      public Builder clearContentMode() {
-        
-        contentMode_ = 0;
-        onChanged();
-        return this;
-      }
-
-      /**
-       * <pre>
-       * path to listen for incoming events.
-       * </pre>
-       *
-       * <code>string path = 2;</code>
-       * @return The path.
-       */
-      @java.lang.Override
-      public java.lang.String getPath() {
-        java.lang.Object ref = "";
-        if (ingressTypeCase_ == 2) {
-          ref = ingressType_;
-        }
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (ingressTypeCase_ == 2) {
-            ingressType_ = s;
-          }
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <pre>
-       * path to listen for incoming events.
-       * </pre>
-       *
-       * <code>string path = 2;</code>
-       * @return The bytes for path.
-       */
-      @java.lang.Override
-      public com.google.protobuf.ByteString
-          getPathBytes() {
-        java.lang.Object ref = "";
-        if (ingressTypeCase_ == 2) {
-          ref = ingressType_;
-        }
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          if (ingressTypeCase_ == 2) {
-            ingressType_ = b;
-          }
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <pre>
-       * path to listen for incoming events.
-       * </pre>
-       *
-       * <code>string path = 2;</code>
-       * @param value The path to set.
-       * @return This builder for chaining.
-       */
-      public Builder setPath(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ingressTypeCase_ = 2;
-        ingressType_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * path to listen for incoming events.
-       * </pre>
-       *
-       * <code>string path = 2;</code>
-       * @return This builder for chaining.
-       */
-      public Builder clearPath() {
-        if (ingressTypeCase_ == 2) {
-          ingressTypeCase_ = 0;
-          ingressType_ = null;
-          onChanged();
-        }
-        return this;
-      }
-      /**
-       * <pre>
-       * path to listen for incoming events.
-       * </pre>
-       *
-       * <code>string path = 2;</code>
-       * @param value The bytes for path to set.
-       * @return This builder for chaining.
-       */
-      public Builder setPathBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        ingressTypeCase_ = 2;
-        ingressType_ = value;
-        onChanged();
-        return this;
-      }
-
-      /**
-       * <pre>
-       * host header to match
-       * </pre>
-       *
-       * <code>string host = 3;</code>
-       * @return The host.
-       */
-      @java.lang.Override
-      public java.lang.String getHost() {
-        java.lang.Object ref = "";
-        if (ingressTypeCase_ == 3) {
-          ref = ingressType_;
-        }
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          if (ingressTypeCase_ == 3) {
-            ingressType_ = s;
-          }
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <pre>
-       * host header to match
-       * </pre>
-       *
-       * <code>string host = 3;</code>
-       * @return The bytes for host.
-       */
-      @java.lang.Override
-      public com.google.protobuf.ByteString
-          getHostBytes() {
-        java.lang.Object ref = "";
-        if (ingressTypeCase_ == 3) {
-          ref = ingressType_;
-        }
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          if (ingressTypeCase_ == 3) {
-            ingressType_ = b;
-          }
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <pre>
-       * host header to match
-       * </pre>
-       *
-       * <code>string host = 3;</code>
-       * @param value The host to set.
-       * @return This builder for chaining.
-       */
-      public Builder setHost(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ingressTypeCase_ = 3;
-        ingressType_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * host header to match
-       * </pre>
-       *
-       * <code>string host = 3;</code>
-       * @return This builder for chaining.
-       */
-      public Builder clearHost() {
-        if (ingressTypeCase_ == 3) {
-          ingressTypeCase_ = 0;
-          ingressType_ = null;
-          onChanged();
-        }
-        return this;
-      }
-      /**
-       * <pre>
-       * host header to match
-       * </pre>
-       *
-       * <code>string host = 3;</code>
-       * @param value The bytes for host to set.
-       * @return This builder for chaining.
-       */
-      public Builder setHostBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        ingressTypeCase_ = 3;
-        ingressType_ = value;
-        onChanged();
-        return this;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:Ingress)
-    }
-
-    // @@protoc_insertion_point(class_scope:Ingress)
-    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress();
-    }
-
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    private static final com.google.protobuf.Parser<Ingress>
-        PARSER = new com.google.protobuf.AbstractParser<Ingress>() {
-      @java.lang.Override
-      public Ingress parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Ingress(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<Ingress> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<Ingress> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
-  public interface ResourceOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:Resource)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <pre>
-     * Id of the resource
-     * It's the same as the Kubernetes resource uid
-     * </pre>
-     *
-     * <code>string uid = 1;</code>
-     * @return The uid.
-     */
-    java.lang.String getUid();
-    /**
-     * <pre>
-     * Id of the resource
-     * It's the same as the Kubernetes resource uid
-     * </pre>
-     *
-     * <code>string uid = 1;</code>
-     * @return The bytes for uid.
-     */
-    com.google.protobuf.ByteString
-        getUidBytes();
-
-    /**
-     * <pre>
-     * Topics name
-     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-     * </pre>
-     *
-     * <code>repeated string topics = 2;</code>
-     * @return A list containing the topics.
-     */
-    java.util.List<java.lang.String>
-        getTopicsList();
-    /**
-     * <pre>
-     * Topics name
-     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-     * </pre>
-     *
-     * <code>repeated string topics = 2;</code>
-     * @return The count of topics.
-     */
-    int getTopicsCount();
-    /**
-     * <pre>
-     * Topics name
-     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-     * </pre>
-     *
-     * <code>repeated string topics = 2;</code>
-     * @param index The index of the element to return.
-     * @return The topics at the given index.
-     */
-    java.lang.String getTopics(int index);
-    /**
-     * <pre>
-     * Topics name
-     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-     * </pre>
-     *
-     * <code>repeated string topics = 2;</code>
-     * @param index The index of the value to return.
-     * @return The bytes of the topics at the given index.
-     */
-    com.google.protobuf.ByteString
-        getTopicsBytes(int index);
-
-    /**
-     * <pre>
-     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
-     * </pre>
-     *
-     * <code>string bootstrapServers = 3;</code>
-     * @return The bootstrapServers.
-     */
-    java.lang.String getBootstrapServers();
-    /**
-     * <pre>
-     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
-     * </pre>
-     *
-     * <code>string bootstrapServers = 3;</code>
-     * @return The bytes for bootstrapServers.
-     */
-    com.google.protobuf.ByteString
-        getBootstrapServersBytes();
-
-    /**
-     * <pre>
-     * Optional ingress for this topic
-     * </pre>
-     *
-     * <code>.Ingress ingress = 4;</code>
-     * @return Whether the ingress field is set.
-     */
-    boolean hasIngress();
-    /**
-     * <pre>
-     * Optional ingress for this topic
-     * </pre>
-     *
-     * <code>.Ingress ingress = 4;</code>
-     * @return The ingress.
-     */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress getIngress();
-    /**
-     * <pre>
-     * Optional ingress for this topic
-     * </pre>
-     *
-     * <code>.Ingress ingress = 4;</code>
-     */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder getIngressOrBuilder();
-
-    /**
-     * <pre>
-     * Optional configuration of egress valid for the whole resource
-     * </pre>
-     *
-     * <code>.EgressConfig egressConfig = 5;</code>
-     * @return Whether the egressConfig field is set.
-     */
-    boolean hasEgressConfig();
-    /**
-     * <pre>
-     * Optional configuration of egress valid for the whole resource
-     * </pre>
-     *
-     * <code>.EgressConfig egressConfig = 5;</code>
-     * @return The egressConfig.
-     */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig getEgressConfig();
-    /**
-     * <pre>
-     * Optional configuration of egress valid for the whole resource
-     * </pre>
-     *
-     * <code>.EgressConfig egressConfig = 5;</code>
-     */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder getEgressConfigOrBuilder();
-
-    /**
-     * <pre>
-     * Optional egresses for this topic
-     * </pre>
-     *
-     * <code>repeated .Egress egresses = 6;</code>
-     */
-    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress> 
-        getEgressesList();
-    /**
-     * <pre>
-     * Optional egresses for this topic
-     * </pre>
-     *
-     * <code>repeated .Egress egresses = 6;</code>
-     */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress getEgresses(int index);
-    /**
-     * <pre>
-     * Optional egresses for this topic
-     * </pre>
-     *
-     * <code>repeated .Egress egresses = 6;</code>
-     */
-    int getEgressesCount();
-    /**
-     * <pre>
-     * Optional egresses for this topic
-     * </pre>
-     *
-     * <code>repeated .Egress egresses = 6;</code>
-     */
-    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder> 
-        getEgressesOrBuilderList();
-    /**
-     * <pre>
-     * Optional egresses for this topic
-     * </pre>
-     *
-     * <code>repeated .Egress egresses = 6;</code>
-     */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder getEgressesOrBuilder(
-        int index);
-  }
-  /**
-   * Protobuf type {@code Resource}
-   */
-  public static final class Resource extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:Resource)
-      ResourceOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use Resource.newBuilder() to construct.
-    private Resource(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private Resource() {
-      uid_ = "";
-      topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bootstrapServers_ = "";
-      egresses_ = java.util.Collections.emptyList();
-    }
-
-    @java.lang.Override
-    @SuppressWarnings({"unused"})
-    protected java.lang.Object newInstance(
-        UnusedPrivateParameter unused) {
-      return new Resource();
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private Resource(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              uid_ = s;
-              break;
-            }
-            case 18: {
-              java.lang.String s = input.readStringRequireUtf8();
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                topics_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000001;
-              }
-              topics_.add(s);
-              break;
-            }
-            case 26: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              bootstrapServers_ = s;
-              break;
-            }
-            case 34: {
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder subBuilder = null;
-              if (ingress_ != null) {
-                subBuilder = ingress_.toBuilder();
-              }
-              ingress_ = input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(ingress_);
-                ingress_ = subBuilder.buildPartial();
-              }
-
-              break;
-            }
-            case 42: {
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder subBuilder = null;
-              if (egressConfig_ != null) {
-                subBuilder = egressConfig_.toBuilder();
-              }
-              egressConfig_ = input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(egressConfig_);
-                egressConfig_ = subBuilder.buildPartial();
-              }
-
-              break;
-            }
-            case 50: {
-              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
-                egresses_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress>();
-                mutable_bitField0_ |= 0x00000002;
-              }
-              egresses_.add(
-                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.parser(), extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        if (((mutable_bitField0_ & 0x00000001) != 0)) {
-          topics_ = topics_.getUnmodifiableView();
-        }
-        if (((mutable_bitField0_ & 0x00000002) != 0)) {
-          egresses_ = java.util.Collections.unmodifiableList(egresses_);
-        }
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Resource_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Resource_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder.class);
-    }
-
-    public static final int UID_FIELD_NUMBER = 1;
-    private volatile java.lang.Object uid_;
-    /**
-     * <pre>
-     * Id of the resource
-     * It's the same as the Kubernetes resource uid
-     * </pre>
-     *
-     * <code>string uid = 1;</code>
-     * @return The uid.
-     */
-    @java.lang.Override
-    public java.lang.String getUid() {
-      java.lang.Object ref = uid_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        uid_ = s;
-        return s;
-      }
-    }
-    /**
-     * <pre>
-     * Id of the resource
-     * It's the same as the Kubernetes resource uid
-     * </pre>
-     *
-     * <code>string uid = 1;</code>
-     * @return The bytes for uid.
-     */
-    @java.lang.Override
-    public com.google.protobuf.ByteString
-        getUidBytes() {
-      java.lang.Object ref = uid_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        uid_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    public static final int TOPICS_FIELD_NUMBER = 2;
-    private com.google.protobuf.LazyStringList topics_;
-    /**
-     * <pre>
-     * Topics name
-     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-     * </pre>
-     *
-     * <code>repeated string topics = 2;</code>
-     * @return A list containing the topics.
-     */
-    public com.google.protobuf.ProtocolStringList
-        getTopicsList() {
-      return topics_;
-    }
-    /**
-     * <pre>
-     * Topics name
-     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-     * </pre>
-     *
-     * <code>repeated string topics = 2;</code>
-     * @return The count of topics.
-     */
-    public int getTopicsCount() {
-      return topics_.size();
-    }
-    /**
-     * <pre>
-     * Topics name
-     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-     * </pre>
-     *
-     * <code>repeated string topics = 2;</code>
-     * @param index The index of the element to return.
-     * @return The topics at the given index.
-     */
-    public java.lang.String getTopics(int index) {
-      return topics_.get(index);
-    }
-    /**
-     * <pre>
-     * Topics name
-     * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-     *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-     * </pre>
-     *
-     * <code>repeated string topics = 2;</code>
-     * @param index The index of the value to return.
-     * @return The bytes of the topics at the given index.
-     */
-    public com.google.protobuf.ByteString
-        getTopicsBytes(int index) {
-      return topics_.getByteString(index);
-    }
-
-    public static final int BOOTSTRAPSERVERS_FIELD_NUMBER = 3;
-    private volatile java.lang.Object bootstrapServers_;
-    /**
-     * <pre>
-     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
-     * </pre>
-     *
-     * <code>string bootstrapServers = 3;</code>
-     * @return The bootstrapServers.
-     */
-    @java.lang.Override
-    public java.lang.String getBootstrapServers() {
-      java.lang.Object ref = bootstrapServers_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        bootstrapServers_ = s;
-        return s;
-      }
-    }
-    /**
-     * <pre>
-     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
-     * </pre>
-     *
-     * <code>string bootstrapServers = 3;</code>
-     * @return The bytes for bootstrapServers.
-     */
-    @java.lang.Override
-    public com.google.protobuf.ByteString
-        getBootstrapServersBytes() {
-      java.lang.Object ref = bootstrapServers_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        bootstrapServers_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    public static final int INGRESS_FIELD_NUMBER = 4;
-    private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress ingress_;
-    /**
-     * <pre>
-     * Optional ingress for this topic
-     * </pre>
-     *
-     * <code>.Ingress ingress = 4;</code>
-     * @return Whether the ingress field is set.
-     */
-    @java.lang.Override
-    public boolean hasIngress() {
-      return ingress_ != null;
-    }
-    /**
-     * <pre>
-     * Optional ingress for this topic
-     * </pre>
-     *
-     * <code>.Ingress ingress = 4;</code>
-     * @return The ingress.
-     */
-    @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress getIngress() {
-      return ingress_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.getDefaultInstance() : ingress_;
-    }
-    /**
-     * <pre>
-     * Optional ingress for this topic
-     * </pre>
-     *
-     * <code>.Ingress ingress = 4;</code>
-     */
-    @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder getIngressOrBuilder() {
-      return getIngress();
-    }
-
-    public static final int EGRESSCONFIG_FIELD_NUMBER = 5;
-    private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig egressConfig_;
-    /**
-     * <pre>
-     * Optional configuration of egress valid for the whole resource
-     * </pre>
-     *
-     * <code>.EgressConfig egressConfig = 5;</code>
-     * @return Whether the egressConfig field is set.
-     */
-    @java.lang.Override
-    public boolean hasEgressConfig() {
-      return egressConfig_ != null;
-    }
-    /**
-     * <pre>
-     * Optional configuration of egress valid for the whole resource
-     * </pre>
-     *
-     * <code>.EgressConfig egressConfig = 5;</code>
-     * @return The egressConfig.
-     */
-    @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig getEgressConfig() {
-      return egressConfig_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.getDefaultInstance() : egressConfig_;
-    }
-    /**
-     * <pre>
-     * Optional configuration of egress valid for the whole resource
-     * </pre>
-     *
-     * <code>.EgressConfig egressConfig = 5;</code>
-     */
-    @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder getEgressConfigOrBuilder() {
-      return getEgressConfig();
-    }
-
-    public static final int EGRESSES_FIELD_NUMBER = 6;
-    private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress> egresses_;
-    /**
-     * <pre>
-     * Optional egresses for this topic
-     * </pre>
-     *
-     * <code>repeated .Egress egresses = 6;</code>
-     */
-    @java.lang.Override
-    public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress> getEgressesList() {
-      return egresses_;
-    }
-    /**
-     * <pre>
-     * Optional egresses for this topic
-     * </pre>
-     *
-     * <code>repeated .Egress egresses = 6;</code>
-     */
-    @java.lang.Override
-    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder> 
-        getEgressesOrBuilderList() {
-      return egresses_;
-    }
-    /**
-     * <pre>
-     * Optional egresses for this topic
-     * </pre>
-     *
-     * <code>repeated .Egress egresses = 6;</code>
-     */
-    @java.lang.Override
-    public int getEgressesCount() {
-      return egresses_.size();
-    }
-    /**
-     * <pre>
-     * Optional egresses for this topic
-     * </pre>
-     *
-     * <code>repeated .Egress egresses = 6;</code>
-     */
-    @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress getEgresses(int index) {
-      return egresses_.get(index);
-    }
-    /**
-     * <pre>
-     * Optional egresses for this topic
-     * </pre>
-     *
-     * <code>repeated .Egress egresses = 6;</code>
-     */
-    @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder getEgressesOrBuilder(
-        int index) {
-      return egresses_.get(index);
-    }
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (!getUidBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, uid_);
-      }
-      for (int i = 0; i < topics_.size(); i++) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, topics_.getRaw(i));
-      }
-      if (!getBootstrapServersBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, bootstrapServers_);
-      }
-      if (ingress_ != null) {
-        output.writeMessage(4, getIngress());
-      }
-      if (egressConfig_ != null) {
-        output.writeMessage(5, getEgressConfig());
-      }
-      for (int i = 0; i < egresses_.size(); i++) {
-        output.writeMessage(6, egresses_.get(i));
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (!getUidBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, uid_);
-      }
-      {
-        int dataSize = 0;
-        for (int i = 0; i < topics_.size(); i++) {
-          dataSize += computeStringSizeNoTag(topics_.getRaw(i));
-        }
-        size += dataSize;
-        size += 1 * getTopicsList().size();
-      }
-      if (!getBootstrapServersBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, bootstrapServers_);
-      }
-      if (ingress_ != null) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(4, getIngress());
-      }
-      if (egressConfig_ != null) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(5, getEgressConfig());
-      }
-      for (int i = 0; i < egresses_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(6, egresses_.get(i));
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource)) {
-        return super.equals(obj);
-      }
-      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource) obj;
-
-      if (!getUid()
-          .equals(other.getUid())) return false;
-      if (!getTopicsList()
-          .equals(other.getTopicsList())) return false;
-      if (!getBootstrapServers()
-          .equals(other.getBootstrapServers())) return false;
-      if (hasIngress() != other.hasIngress()) return false;
-      if (hasIngress()) {
-        if (!getIngress()
-            .equals(other.getIngress())) return false;
-      }
-      if (hasEgressConfig() != other.hasEgressConfig()) return false;
-      if (hasEgressConfig()) {
-        if (!getEgressConfig()
-            .equals(other.getEgressConfig())) return false;
-      }
-      if (!getEgressesList()
-          .equals(other.getEgressesList())) return false;
-      if (!unknownFields.equals(other.unknownFields)) return false;
-      return true;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + UID_FIELD_NUMBER;
-      hash = (53 * hash) + getUid().hashCode();
-      if (getTopicsCount() > 0) {
-        hash = (37 * hash) + TOPICS_FIELD_NUMBER;
-        hash = (53 * hash) + getTopicsList().hashCode();
-      }
-      hash = (37 * hash) + BOOTSTRAPSERVERS_FIELD_NUMBER;
-      hash = (53 * hash) + getBootstrapServers().hashCode();
-      if (hasIngress()) {
-        hash = (37 * hash) + INGRESS_FIELD_NUMBER;
-        hash = (53 * hash) + getIngress().hashCode();
-      }
-      if (hasEgressConfig()) {
-        hash = (37 * hash) + EGRESSCONFIG_FIELD_NUMBER;
-        hash = (53 * hash) + getEgressConfig().hashCode();
-      }
-      if (getEgressesCount() > 0) {
-        hash = (37 * hash) + EGRESSES_FIELD_NUMBER;
-        hash = (53 * hash) + getEgressesList().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * Protobuf type {@code Resource}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:Resource)
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Resource_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Resource_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder.class);
-      }
-
-      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-          getEgressesFieldBuilder();
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        uid_ = "";
-
-        topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000001);
-        bootstrapServers_ = "";
-
-        if (ingressBuilder_ == null) {
-          ingress_ = null;
-        } else {
-          ingress_ = null;
-          ingressBuilder_ = null;
-        }
-        if (egressConfigBuilder_ == null) {
-          egressConfig_ = null;
-        } else {
-          egressConfig_ = null;
-          egressConfigBuilder_ = null;
-        }
-        if (egressesBuilder_ == null) {
-          egresses_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000002);
-        } else {
-          egressesBuilder_.clear();
-        }
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Resource_descriptor;
-      }
-
-      @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource getDefaultInstanceForType() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource build() {
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource buildPartial() {
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource(this);
-        int from_bitField0_ = bitField0_;
-        result.uid_ = uid_;
-        if (((bitField0_ & 0x00000001) != 0)) {
-          topics_ = topics_.getUnmodifiableView();
-          bitField0_ = (bitField0_ & ~0x00000001);
-        }
-        result.topics_ = topics_;
-        result.bootstrapServers_ = bootstrapServers_;
-        if (ingressBuilder_ == null) {
-          result.ingress_ = ingress_;
-        } else {
-          result.ingress_ = ingressBuilder_.build();
-        }
-        if (egressConfigBuilder_ == null) {
-          result.egressConfig_ = egressConfig_;
-        } else {
-          result.egressConfig_ = egressConfigBuilder_.build();
-        }
-        if (egressesBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) != 0)) {
-            egresses_ = java.util.Collections.unmodifiableList(egresses_);
-            bitField0_ = (bitField0_ & ~0x00000002);
-          }
-          result.egresses_ = egresses_;
-        } else {
-          result.egresses_ = egressesBuilder_.build();
-        }
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource) {
-          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource other) {
-        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.getDefaultInstance()) return this;
-        if (!other.getUid().isEmpty()) {
-          uid_ = other.uid_;
-          onChanged();
-        }
-        if (!other.topics_.isEmpty()) {
-          if (topics_.isEmpty()) {
-            topics_ = other.topics_;
-            bitField0_ = (bitField0_ & ~0x00000001);
-          } else {
-            ensureTopicsIsMutable();
-            topics_.addAll(other.topics_);
-          }
-          onChanged();
-        }
-        if (!other.getBootstrapServers().isEmpty()) {
-          bootstrapServers_ = other.bootstrapServers_;
-          onChanged();
-        }
-        if (other.hasIngress()) {
-          mergeIngress(other.getIngress());
-        }
-        if (other.hasEgressConfig()) {
-          mergeEgressConfig(other.getEgressConfig());
-        }
-        if (egressesBuilder_ == null) {
-          if (!other.egresses_.isEmpty()) {
-            if (egresses_.isEmpty()) {
-              egresses_ = other.egresses_;
-              bitField0_ = (bitField0_ & ~0x00000002);
-            } else {
-              ensureEgressesIsMutable();
-              egresses_.addAll(other.egresses_);
-            }
-            onChanged();
-          }
-        } else {
-          if (!other.egresses_.isEmpty()) {
-            if (egressesBuilder_.isEmpty()) {
-              egressesBuilder_.dispose();
-              egressesBuilder_ = null;
-              egresses_ = other.egresses_;
-              bitField0_ = (bitField0_ & ~0x00000002);
-              egressesBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getEgressesFieldBuilder() : null;
-            } else {
-              egressesBuilder_.addAllMessages(other.egresses_);
-            }
-          }
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
 
       private java.lang.Object uid_ = "";
       /**
@@ -6078,170 +5589,6 @@ public final class DataPlaneContract {
         return this;
       }
 
-      private com.google.protobuf.LazyStringList topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      private void ensureTopicsIsMutable() {
-        if (!((bitField0_ & 0x00000001) != 0)) {
-          topics_ = new com.google.protobuf.LazyStringArrayList(topics_);
-          bitField0_ |= 0x00000001;
-         }
-      }
-      /**
-       * <pre>
-       * Topics name
-       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-       * </pre>
-       *
-       * <code>repeated string topics = 2;</code>
-       * @return A list containing the topics.
-       */
-      public com.google.protobuf.ProtocolStringList
-          getTopicsList() {
-        return topics_.getUnmodifiableView();
-      }
-      /**
-       * <pre>
-       * Topics name
-       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-       * </pre>
-       *
-       * <code>repeated string topics = 2;</code>
-       * @return The count of topics.
-       */
-      public int getTopicsCount() {
-        return topics_.size();
-      }
-      /**
-       * <pre>
-       * Topics name
-       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-       * </pre>
-       *
-       * <code>repeated string topics = 2;</code>
-       * @param index The index of the element to return.
-       * @return The topics at the given index.
-       */
-      public java.lang.String getTopics(int index) {
-        return topics_.get(index);
-      }
-      /**
-       * <pre>
-       * Topics name
-       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-       * </pre>
-       *
-       * <code>repeated string topics = 2;</code>
-       * @param index The index of the value to return.
-       * @return The bytes of the topics at the given index.
-       */
-      public com.google.protobuf.ByteString
-          getTopicsBytes(int index) {
-        return topics_.getByteString(index);
-      }
-      /**
-       * <pre>
-       * Topics name
-       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-       * </pre>
-       *
-       * <code>repeated string topics = 2;</code>
-       * @param index The index to set the value at.
-       * @param value The topics to set.
-       * @return This builder for chaining.
-       */
-      public Builder setTopics(
-          int index, java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureTopicsIsMutable();
-        topics_.set(index, value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Topics name
-       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-       * </pre>
-       *
-       * <code>repeated string topics = 2;</code>
-       * @param value The topics to add.
-       * @return This builder for chaining.
-       */
-      public Builder addTopics(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureTopicsIsMutable();
-        topics_.add(value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Topics name
-       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-       * </pre>
-       *
-       * <code>repeated string topics = 2;</code>
-       * @param values The topics to add.
-       * @return This builder for chaining.
-       */
-      public Builder addAllTopics(
-          java.lang.Iterable<java.lang.String> values) {
-        ensureTopicsIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, topics_);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Topics name
-       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-       * </pre>
-       *
-       * <code>repeated string topics = 2;</code>
-       * @return This builder for chaining.
-       */
-      public Builder clearTopics() {
-        topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000001);
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Topics name
-       * Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-       *  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-       * </pre>
-       *
-       * <code>repeated string topics = 2;</code>
-       * @param value The bytes of the topics to add.
-       * @return This builder for chaining.
-       */
-      public Builder addTopicsBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        ensureTopicsIsMutable();
-        topics_.add(value);
-        onChanged();
-        return this;
-      }
-
       private java.lang.Object bootstrapServers_ = "";
       /**
        * <pre>
@@ -6249,7 +5596,7 @@ public final class DataPlaneContract {
        * Note: we're using a comma separated list simply because that's how java kafka client likes it.
        * </pre>
        *
-       * <code>string bootstrapServers = 3;</code>
+       * <code>string bootstrapServers = 2;</code>
        * @return The bootstrapServers.
        */
       public java.lang.String getBootstrapServers() {
@@ -6270,7 +5617,7 @@ public final class DataPlaneContract {
        * Note: we're using a comma separated list simply because that's how java kafka client likes it.
        * </pre>
        *
-       * <code>string bootstrapServers = 3;</code>
+       * <code>string bootstrapServers = 2;</code>
        * @return The bytes for bootstrapServers.
        */
       public com.google.protobuf.ByteString
@@ -6292,7 +5639,7 @@ public final class DataPlaneContract {
        * Note: we're using a comma separated list simply because that's how java kafka client likes it.
        * </pre>
        *
-       * <code>string bootstrapServers = 3;</code>
+       * <code>string bootstrapServers = 2;</code>
        * @param value The bootstrapServers to set.
        * @return This builder for chaining.
        */
@@ -6312,7 +5659,7 @@ public final class DataPlaneContract {
        * Note: we're using a comma separated list simply because that's how java kafka client likes it.
        * </pre>
        *
-       * <code>string bootstrapServers = 3;</code>
+       * <code>string bootstrapServers = 2;</code>
        * @return This builder for chaining.
        */
       public Builder clearBootstrapServers() {
@@ -6327,7 +5674,7 @@ public final class DataPlaneContract {
        * Note: we're using a comma separated list simply because that's how java kafka client likes it.
        * </pre>
        *
-       * <code>string bootstrapServers = 3;</code>
+       * <code>string bootstrapServers = 2;</code>
        * @param value The bytes for bootstrapServers to set.
        * @return This builder for chaining.
        */
@@ -6343,626 +5690,392 @@ public final class DataPlaneContract {
         return this;
       }
 
-      private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress ingress_;
-      private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder> ingressBuilder_;
+      private java.lang.Object topic_ = "";
       /**
        * <pre>
-       * Optional ingress for this topic
+       * Topic name.
        * </pre>
        *
-       * <code>.Ingress ingress = 4;</code>
-       * @return Whether the ingress field is set.
+       * <code>string topic = 4;</code>
+       * @return The topic.
        */
-      public boolean hasIngress() {
-        return ingressBuilder_ != null || ingress_ != null;
-      }
-      /**
-       * <pre>
-       * Optional ingress for this topic
-       * </pre>
-       *
-       * <code>.Ingress ingress = 4;</code>
-       * @return The ingress.
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress getIngress() {
-        if (ingressBuilder_ == null) {
-          return ingress_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.getDefaultInstance() : ingress_;
+      public java.lang.String getTopic() {
+        java.lang.Object ref = topic_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          topic_ = s;
+          return s;
         } else {
-          return ingressBuilder_.getMessage();
+          return (java.lang.String) ref;
         }
       }
       /**
        * <pre>
-       * Optional ingress for this topic
+       * Topic name.
        * </pre>
        *
-       * <code>.Ingress ingress = 4;</code>
+       * <code>string topic = 4;</code>
+       * @return The bytes for topic.
        */
-      public Builder setIngress(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress value) {
-        if (ingressBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ingress_ = value;
-          onChanged();
+      public com.google.protobuf.ByteString
+          getTopicBytes() {
+        java.lang.Object ref = topic_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          topic_ = b;
+          return b;
         } else {
-          ingressBuilder_.setMessage(value);
+          return (com.google.protobuf.ByteString) ref;
         }
-
-        return this;
       }
       /**
        * <pre>
-       * Optional ingress for this topic
+       * Topic name.
        * </pre>
        *
-       * <code>.Ingress ingress = 4;</code>
+       * <code>string topic = 4;</code>
+       * @param value The topic to set.
+       * @return This builder for chaining.
        */
-      public Builder setIngress(
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder builderForValue) {
-        if (ingressBuilder_ == null) {
-          ingress_ = builderForValue.build();
-          onChanged();
-        } else {
-          ingressBuilder_.setMessage(builderForValue.build());
-        }
-
-        return this;
-      }
-      /**
-       * <pre>
-       * Optional ingress for this topic
-       * </pre>
-       *
-       * <code>.Ingress ingress = 4;</code>
-       */
-      public Builder mergeIngress(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress value) {
-        if (ingressBuilder_ == null) {
-          if (ingress_ != null) {
-            ingress_ =
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.newBuilder(ingress_).mergeFrom(value).buildPartial();
-          } else {
-            ingress_ = value;
-          }
-          onChanged();
-        } else {
-          ingressBuilder_.mergeFrom(value);
-        }
-
-        return this;
-      }
-      /**
-       * <pre>
-       * Optional ingress for this topic
-       * </pre>
-       *
-       * <code>.Ingress ingress = 4;</code>
-       */
-      public Builder clearIngress() {
-        if (ingressBuilder_ == null) {
-          ingress_ = null;
-          onChanged();
-        } else {
-          ingress_ = null;
-          ingressBuilder_ = null;
-        }
-
-        return this;
-      }
-      /**
-       * <pre>
-       * Optional ingress for this topic
-       * </pre>
-       *
-       * <code>.Ingress ingress = 4;</code>
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder getIngressBuilder() {
-        
+      public Builder setTopic(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        topic_ = value;
         onChanged();
-        return getIngressFieldBuilder().getBuilder();
-      }
-      /**
-       * <pre>
-       * Optional ingress for this topic
-       * </pre>
-       *
-       * <code>.Ingress ingress = 4;</code>
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder getIngressOrBuilder() {
-        if (ingressBuilder_ != null) {
-          return ingressBuilder_.getMessageOrBuilder();
-        } else {
-          return ingress_ == null ?
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.getDefaultInstance() : ingress_;
-        }
-      }
-      /**
-       * <pre>
-       * Optional ingress for this topic
-       * </pre>
-       *
-       * <code>.Ingress ingress = 4;</code>
-       */
-      private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder> 
-          getIngressFieldBuilder() {
-        if (ingressBuilder_ == null) {
-          ingressBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder>(
-                  getIngress(),
-                  getParentForChildren(),
-                  isClean());
-          ingress_ = null;
-        }
-        return ingressBuilder_;
-      }
-
-      private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig egressConfig_;
-      private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder> egressConfigBuilder_;
-      /**
-       * <pre>
-       * Optional configuration of egress valid for the whole resource
-       * </pre>
-       *
-       * <code>.EgressConfig egressConfig = 5;</code>
-       * @return Whether the egressConfig field is set.
-       */
-      public boolean hasEgressConfig() {
-        return egressConfigBuilder_ != null || egressConfig_ != null;
-      }
-      /**
-       * <pre>
-       * Optional configuration of egress valid for the whole resource
-       * </pre>
-       *
-       * <code>.EgressConfig egressConfig = 5;</code>
-       * @return The egressConfig.
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig getEgressConfig() {
-        if (egressConfigBuilder_ == null) {
-          return egressConfig_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.getDefaultInstance() : egressConfig_;
-        } else {
-          return egressConfigBuilder_.getMessage();
-        }
-      }
-      /**
-       * <pre>
-       * Optional configuration of egress valid for the whole resource
-       * </pre>
-       *
-       * <code>.EgressConfig egressConfig = 5;</code>
-       */
-      public Builder setEgressConfig(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig value) {
-        if (egressConfigBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          egressConfig_ = value;
-          onChanged();
-        } else {
-          egressConfigBuilder_.setMessage(value);
-        }
-
         return this;
       }
       /**
        * <pre>
-       * Optional configuration of egress valid for the whole resource
+       * Topic name.
        * </pre>
        *
-       * <code>.EgressConfig egressConfig = 5;</code>
+       * <code>string topic = 4;</code>
+       * @return This builder for chaining.
        */
-      public Builder setEgressConfig(
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder builderForValue) {
-        if (egressConfigBuilder_ == null) {
-          egressConfig_ = builderForValue.build();
-          onChanged();
-        } else {
-          egressConfigBuilder_.setMessage(builderForValue.build());
-        }
-
-        return this;
-      }
-      /**
-       * <pre>
-       * Optional configuration of egress valid for the whole resource
-       * </pre>
-       *
-       * <code>.EgressConfig egressConfig = 5;</code>
-       */
-      public Builder mergeEgressConfig(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig value) {
-        if (egressConfigBuilder_ == null) {
-          if (egressConfig_ != null) {
-            egressConfig_ =
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.newBuilder(egressConfig_).mergeFrom(value).buildPartial();
-          } else {
-            egressConfig_ = value;
-          }
-          onChanged();
-        } else {
-          egressConfigBuilder_.mergeFrom(value);
-        }
-
-        return this;
-      }
-      /**
-       * <pre>
-       * Optional configuration of egress valid for the whole resource
-       * </pre>
-       *
-       * <code>.EgressConfig egressConfig = 5;</code>
-       */
-      public Builder clearEgressConfig() {
-        if (egressConfigBuilder_ == null) {
-          egressConfig_ = null;
-          onChanged();
-        } else {
-          egressConfig_ = null;
-          egressConfigBuilder_ = null;
-        }
-
-        return this;
-      }
-      /**
-       * <pre>
-       * Optional configuration of egress valid for the whole resource
-       * </pre>
-       *
-       * <code>.EgressConfig egressConfig = 5;</code>
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder getEgressConfigBuilder() {
+      public Builder clearTopic() {
         
+        topic_ = getDefaultInstance().getTopic();
         onChanged();
-        return getEgressConfigFieldBuilder().getBuilder();
+        return this;
       }
       /**
        * <pre>
-       * Optional configuration of egress valid for the whole resource
+       * Topic name.
        * </pre>
        *
-       * <code>.EgressConfig egressConfig = 5;</code>
+       * <code>string topic = 4;</code>
+       * @param value The bytes for topic to set.
+       * @return This builder for chaining.
        */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder getEgressConfigOrBuilder() {
-        if (egressConfigBuilder_ != null) {
-          return egressConfigBuilder_.getMessageOrBuilder();
-        } else {
-          return egressConfig_ == null ?
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.getDefaultInstance() : egressConfig_;
-        }
-      }
-      /**
-       * <pre>
-       * Optional configuration of egress valid for the whole resource
-       * </pre>
-       *
-       * <code>.EgressConfig egressConfig = 5;</code>
-       */
-      private com.google.protobuf.SingleFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder> 
-          getEgressConfigFieldBuilder() {
-        if (egressConfigBuilder_ == null) {
-          egressConfigBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfigOrBuilder>(
-                  getEgressConfig(),
-                  getParentForChildren(),
-                  isClean());
-          egressConfig_ = null;
-        }
-        return egressConfigBuilder_;
+      public Builder setTopicBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        topic_ = value;
+        onChanged();
+        return this;
       }
 
-      private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress> egresses_ =
-        java.util.Collections.emptyList();
-      private void ensureEgressesIsMutable() {
-        if (!((bitField0_ & 0x00000002) != 0)) {
-          egresses_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress>(egresses_);
-          bitField0_ |= 0x00000002;
-         }
+      private int contentMode_ = 0;
+      /**
+       * <pre>
+       * Optional content mode to use when pushing messages to Kafka
+       * </pre>
+       *
+       * <code>.ContentMode contentMode = 5;</code>
+       * @return The enum numeric value on the wire for contentMode.
+       */
+      @java.lang.Override public int getContentModeValue() {
+        return contentMode_;
+      }
+      /**
+       * <pre>
+       * Optional content mode to use when pushing messages to Kafka
+       * </pre>
+       *
+       * <code>.ContentMode contentMode = 5;</code>
+       * @param value The enum numeric value on the wire for contentMode to set.
+       * @return This builder for chaining.
+       */
+      public Builder setContentModeValue(int value) {
+        
+        contentMode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Optional content mode to use when pushing messages to Kafka
+       * </pre>
+       *
+       * <code>.ContentMode contentMode = 5;</code>
+       * @return The contentMode.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode getContentMode() {
+        @SuppressWarnings("deprecation")
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.valueOf(contentMode_);
+        return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.UNRECOGNIZED : result;
+      }
+      /**
+       * <pre>
+       * Optional content mode to use when pushing messages to Kafka
+       * </pre>
+       *
+       * <code>.ContentMode contentMode = 5;</code>
+       * @param value The contentMode to set.
+       * @return This builder for chaining.
+       */
+      public Builder setContentMode(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        
+        contentMode_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Optional content mode to use when pushing messages to Kafka
+       * </pre>
+       *
+       * <code>.ContentMode contentMode = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearContentMode() {
+        
+        contentMode_ = 0;
+        onChanged();
+        return this;
       }
 
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder> egressesBuilder_;
+      /**
+       * <pre>
+       * path to listen for incoming events.
+       * </pre>
+       *
+       * <code>string path = 6;</code>
+       * @return The path.
+       */
+      @java.lang.Override
+      public java.lang.String getPath() {
+        java.lang.Object ref = "";
+        if (ingressTypeCase_ == 6) {
+          ref = ingressType_;
+        }
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (ingressTypeCase_ == 6) {
+            ingressType_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * path to listen for incoming events.
+       * </pre>
+       *
+       * <code>string path = 6;</code>
+       * @return The bytes for path.
+       */
+      @java.lang.Override
+      public com.google.protobuf.ByteString
+          getPathBytes() {
+        java.lang.Object ref = "";
+        if (ingressTypeCase_ == 6) {
+          ref = ingressType_;
+        }
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          if (ingressTypeCase_ == 6) {
+            ingressType_ = b;
+          }
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * path to listen for incoming events.
+       * </pre>
+       *
+       * <code>string path = 6;</code>
+       * @param value The path to set.
+       * @return This builder for chaining.
+       */
+      public Builder setPath(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ingressTypeCase_ = 6;
+        ingressType_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * path to listen for incoming events.
+       * </pre>
+       *
+       * <code>string path = 6;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearPath() {
+        if (ingressTypeCase_ == 6) {
+          ingressTypeCase_ = 0;
+          ingressType_ = null;
+          onChanged();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * path to listen for incoming events.
+       * </pre>
+       *
+       * <code>string path = 6;</code>
+       * @param value The bytes for path to set.
+       * @return This builder for chaining.
+       */
+      public Builder setPathBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        ingressTypeCase_ = 6;
+        ingressType_ = value;
+        onChanged();
+        return this;
+      }
 
       /**
        * <pre>
-       * Optional egresses for this topic
+       * host header to match
        * </pre>
        *
-       * <code>repeated .Egress egresses = 6;</code>
+       * <code>string host = 7;</code>
+       * @return The host.
        */
-      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress> getEgressesList() {
-        if (egressesBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(egresses_);
-        } else {
-          return egressesBuilder_.getMessageList();
+      @java.lang.Override
+      public java.lang.String getHost() {
+        java.lang.Object ref = "";
+        if (ingressTypeCase_ == 7) {
+          ref = ingressType_;
         }
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public int getEgressesCount() {
-        if (egressesBuilder_ == null) {
-          return egresses_.size();
-        } else {
-          return egressesBuilder_.getCount();
-        }
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress getEgresses(int index) {
-        if (egressesBuilder_ == null) {
-          return egresses_.get(index);
-        } else {
-          return egressesBuilder_.getMessage(index);
-        }
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public Builder setEgresses(
-          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress value) {
-        if (egressesBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (ingressTypeCase_ == 7) {
+            ingressType_ = s;
           }
-          ensureEgressesIsMutable();
-          egresses_.set(index, value);
-          onChanged();
+          return s;
         } else {
-          egressesBuilder_.setMessage(index, value);
+          return (java.lang.String) ref;
         }
-        return this;
       }
       /**
        * <pre>
-       * Optional egresses for this topic
+       * host header to match
        * </pre>
        *
-       * <code>repeated .Egress egresses = 6;</code>
+       * <code>string host = 7;</code>
+       * @return The bytes for host.
        */
-      public Builder setEgresses(
-          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder builderForValue) {
-        if (egressesBuilder_ == null) {
-          ensureEgressesIsMutable();
-          egresses_.set(index, builderForValue.build());
-          onChanged();
-        } else {
-          egressesBuilder_.setMessage(index, builderForValue.build());
+      @java.lang.Override
+      public com.google.protobuf.ByteString
+          getHostBytes() {
+        java.lang.Object ref = "";
+        if (ingressTypeCase_ == 7) {
+          ref = ingressType_;
         }
-        return this;
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public Builder addEgresses(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress value) {
-        if (egressesBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          if (ingressTypeCase_ == 7) {
+            ingressType_ = b;
           }
-          ensureEgressesIsMutable();
-          egresses_.add(value);
-          onChanged();
+          return b;
         } else {
-          egressesBuilder_.addMessage(value);
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * host header to match
+       * </pre>
+       *
+       * <code>string host = 7;</code>
+       * @param value The host to set.
+       * @return This builder for chaining.
+       */
+      public Builder setHost(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ingressTypeCase_ = 7;
+        ingressType_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * host header to match
+       * </pre>
+       *
+       * <code>string host = 7;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearHost() {
+        if (ingressTypeCase_ == 7) {
+          ingressTypeCase_ = 0;
+          ingressType_ = null;
+          onChanged();
         }
         return this;
       }
       /**
        * <pre>
-       * Optional egresses for this topic
+       * host header to match
        * </pre>
        *
-       * <code>repeated .Egress egresses = 6;</code>
+       * <code>string host = 7;</code>
+       * @param value The bytes for host to set.
+       * @return This builder for chaining.
        */
-      public Builder addEgresses(
-          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress value) {
-        if (egressesBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureEgressesIsMutable();
-          egresses_.add(index, value);
-          onChanged();
-        } else {
-          egressesBuilder_.addMessage(index, value);
-        }
+      public Builder setHostBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        ingressTypeCase_ = 7;
+        ingressType_ = value;
+        onChanged();
         return this;
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public Builder addEgresses(
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder builderForValue) {
-        if (egressesBuilder_ == null) {
-          ensureEgressesIsMutable();
-          egresses_.add(builderForValue.build());
-          onChanged();
-        } else {
-          egressesBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public Builder addEgresses(
-          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder builderForValue) {
-        if (egressesBuilder_ == null) {
-          ensureEgressesIsMutable();
-          egresses_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          egressesBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public Builder addAllEgresses(
-          java.lang.Iterable<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress> values) {
-        if (egressesBuilder_ == null) {
-          ensureEgressesIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, egresses_);
-          onChanged();
-        } else {
-          egressesBuilder_.addAllMessages(values);
-        }
-        return this;
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public Builder clearEgresses() {
-        if (egressesBuilder_ == null) {
-          egresses_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000002);
-          onChanged();
-        } else {
-          egressesBuilder_.clear();
-        }
-        return this;
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public Builder removeEgresses(int index) {
-        if (egressesBuilder_ == null) {
-          ensureEgressesIsMutable();
-          egresses_.remove(index);
-          onChanged();
-        } else {
-          egressesBuilder_.remove(index);
-        }
-        return this;
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder getEgressesBuilder(
-          int index) {
-        return getEgressesFieldBuilder().getBuilder(index);
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder getEgressesOrBuilder(
-          int index) {
-        if (egressesBuilder_ == null) {
-          return egresses_.get(index);  } else {
-          return egressesBuilder_.getMessageOrBuilder(index);
-        }
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder> 
-           getEgressesOrBuilderList() {
-        if (egressesBuilder_ != null) {
-          return egressesBuilder_.getMessageOrBuilderList();
-        } else {
-          return java.util.Collections.unmodifiableList(egresses_);
-        }
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder addEgressesBuilder() {
-        return getEgressesFieldBuilder().addBuilder(
-            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.getDefaultInstance());
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder addEgressesBuilder(
-          int index) {
-        return getEgressesFieldBuilder().addBuilder(
-            index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.getDefaultInstance());
-      }
-      /**
-       * <pre>
-       * Optional egresses for this topic
-       * </pre>
-       *
-       * <code>repeated .Egress egresses = 6;</code>
-       */
-      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder> 
-           getEgressesBuilderList() {
-        return getEgressesFieldBuilder().getBuilderList();
-      }
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder> 
-          getEgressesFieldBuilder() {
-        if (egressesBuilder_ == null) {
-          egressesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder>(
-                  egresses_,
-                  ((bitField0_ & 0x00000002) != 0),
-                  getParentForChildren(),
-                  isClean());
-          egresses_ = null;
-        }
-        return egressesBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -6977,106 +6090,114 @@ public final class DataPlaneContract {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:Resource)
+      // @@protoc_insertion_point(builder_scope:Ingress)
     }
 
-    // @@protoc_insertion_point(class_scope:Resource)
-    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:Ingress)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource();
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress();
     }
 
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource getDefaultInstance() {
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<Resource>
-        PARSER = new com.google.protobuf.AbstractParser<Resource>() {
+    private static final com.google.protobuf.Parser<Ingress>
+        PARSER = new com.google.protobuf.AbstractParser<Ingress>() {
       @java.lang.Override
-      public Resource parsePartialFrom(
+      public Ingress parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Resource(input, extensionRegistry);
+        return new Ingress(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<Resource> parser() {
+    public static com.google.protobuf.Parser<Ingress> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<Resource> getParserForType() {
+    public com.google.protobuf.Parser<Ingress> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource getDefaultInstanceForType() {
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
   }
 
-  public interface ContractOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:Contract)
+  public interface ObjectOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:Object)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <pre>
-     * Count each contract update.
-     * Make sure each data plane pod has the same contract generation number.
-     * </pre>
-     *
-     * <code>uint64 generation = 1;</code>
-     * @return The generation.
+     * <code>.Ingress ingress = 1;</code>
+     * @return Whether the ingress field is set.
      */
-    long getGeneration();
+    boolean hasIngress();
+    /**
+     * <code>.Ingress ingress = 1;</code>
+     * @return The ingress.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress getIngress();
+    /**
+     * <code>.Ingress ingress = 1;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder getIngressOrBuilder();
 
     /**
-     * <code>repeated .Resource resources = 2;</code>
+     * <code>.Egress egress = 2;</code>
+     * @return Whether the egress field is set.
      */
-    java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource> 
-        getResourcesList();
+    boolean hasEgress();
     /**
-     * <code>repeated .Resource resources = 2;</code>
+     * <code>.Egress egress = 2;</code>
+     * @return The egress.
      */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource getResources(int index);
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress getEgress();
     /**
-     * <code>repeated .Resource resources = 2;</code>
+     * <code>.Egress egress = 2;</code>
      */
-    int getResourcesCount();
-    /**
-     * <code>repeated .Resource resources = 2;</code>
-     */
-    java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder> 
-        getResourcesOrBuilderList();
-    /**
-     * <code>repeated .Resource resources = 2;</code>
-     */
-    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder getResourcesOrBuilder(
-        int index);
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder getEgressOrBuilder();
+
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object.ObjectCase getObjectCase();
   }
   /**
-   * Protobuf type {@code Contract}
+   * <pre>
+   * For communicating changes between data plane and control plane we use an internal topic.
+   * The internal topic is configured to be log compacted so that Apache Kafka keeps only the last message for any given
+   * key.
+   * For each object we sent a message in the following form:
+   * Key:   &lt;resource UID&gt;
+   * Value: &lt;Object&gt;
+   * where &lt;Object&gt; can be:
+   *  - Ingress: an Ingress is the minimal configuration for a Broker, a Channel, or a KafkaSink.
+   *  - Egress: an Egress is the minimal configuration for a Subscription, a Trigger or a KafkaSource.
+   * </pre>
+   *
+   * Protobuf type {@code Object}
    */
-  public static final class Contract extends
+  public static final class Object extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:Contract)
-      ContractOrBuilder {
+      // @@protoc_insertion_point(message_implements:Object)
+      ObjectOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use Contract.newBuilder() to construct.
-    private Contract(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use Object.newBuilder() to construct.
+    private Object(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private Contract() {
-      resources_ = java.util.Collections.emptyList();
+    private Object() {
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
     protected java.lang.Object newInstance(
         UnusedPrivateParameter unused) {
-      return new Contract();
+      return new Object();
     }
 
     @java.lang.Override
@@ -7084,7 +6205,7 @@ public final class DataPlaneContract {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private Contract(
+    private Object(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -7092,7 +6213,6 @@ public final class DataPlaneContract {
       if (extensionRegistry == null) {
         throw new java.lang.NullPointerException();
       }
-      int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -7103,18 +6223,32 @@ public final class DataPlaneContract {
             case 0:
               done = true;
               break;
-            case 8: {
-
-              generation_ = input.readUInt64();
+            case 10: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder subBuilder = null;
+              if (objectCase_ == 1) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress) object_).toBuilder();
+              }
+              object_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress) object_);
+                object_ = subBuilder.buildPartial();
+              }
+              objectCase_ = 1;
               break;
             }
             case 18: {
-              if (!((mutable_bitField0_ & 0x00000001) != 0)) {
-                resources_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource>();
-                mutable_bitField0_ |= 0x00000001;
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder subBuilder = null;
+              if (objectCase_ == 2) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress) object_).toBuilder();
               }
-              resources_.add(
-                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.parser(), extensionRegistry));
+              object_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress) object_);
+                object_ = subBuilder.buildPartial();
+              }
+              objectCase_ = 2;
               break;
             }
             default: {
@@ -7132,80 +6266,124 @@ public final class DataPlaneContract {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) != 0)) {
-          resources_ = java.util.Collections.unmodifiableList(resources_);
-        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Contract_descriptor;
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Object_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Contract_fieldAccessorTable
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Object_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract.Builder.class);
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object.Builder.class);
     }
 
-    public static final int GENERATION_FIELD_NUMBER = 1;
-    private long generation_;
-    /**
-     * <pre>
-     * Count each contract update.
-     * Make sure each data plane pod has the same contract generation number.
-     * </pre>
-     *
-     * <code>uint64 generation = 1;</code>
-     * @return The generation.
-     */
-    @java.lang.Override
-    public long getGeneration() {
-      return generation_;
+    private int objectCase_ = 0;
+    private java.lang.Object object_;
+    public enum ObjectCase
+        implements com.google.protobuf.Internal.EnumLite,
+            com.google.protobuf.AbstractMessage.InternalOneOfEnum {
+      INGRESS(1),
+      EGRESS(2),
+      OBJECT_NOT_SET(0);
+      private final int value;
+      private ObjectCase(int value) {
+        this.value = value;
+      }
+      /**
+       * @param value The number of the enum to look for.
+       * @return The enum associated with the given number.
+       * @deprecated Use {@link #forNumber(int)} instead.
+       */
+      @java.lang.Deprecated
+      public static ObjectCase valueOf(int value) {
+        return forNumber(value);
+      }
+
+      public static ObjectCase forNumber(int value) {
+        switch (value) {
+          case 1: return INGRESS;
+          case 2: return EGRESS;
+          case 0: return OBJECT_NOT_SET;
+          default: return null;
+        }
+      }
+      public int getNumber() {
+        return this.value;
+      }
+    };
+
+    public ObjectCase
+    getObjectCase() {
+      return ObjectCase.forNumber(
+          objectCase_);
     }
 
-    public static final int RESOURCES_FIELD_NUMBER = 2;
-    private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource> resources_;
+    public static final int INGRESS_FIELD_NUMBER = 1;
     /**
-     * <code>repeated .Resource resources = 2;</code>
+     * <code>.Ingress ingress = 1;</code>
+     * @return Whether the ingress field is set.
      */
     @java.lang.Override
-    public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource> getResourcesList() {
-      return resources_;
+    public boolean hasIngress() {
+      return objectCase_ == 1;
     }
     /**
-     * <code>repeated .Resource resources = 2;</code>
+     * <code>.Ingress ingress = 1;</code>
+     * @return The ingress.
      */
     @java.lang.Override
-    public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder> 
-        getResourcesOrBuilderList() {
-      return resources_;
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress getIngress() {
+      if (objectCase_ == 1) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress) object_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.getDefaultInstance();
     }
     /**
-     * <code>repeated .Resource resources = 2;</code>
+     * <code>.Ingress ingress = 1;</code>
      */
     @java.lang.Override
-    public int getResourcesCount() {
-      return resources_.size();
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder getIngressOrBuilder() {
+      if (objectCase_ == 1) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress) object_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.getDefaultInstance();
+    }
+
+    public static final int EGRESS_FIELD_NUMBER = 2;
+    /**
+     * <code>.Egress egress = 2;</code>
+     * @return Whether the egress field is set.
+     */
+    @java.lang.Override
+    public boolean hasEgress() {
+      return objectCase_ == 2;
     }
     /**
-     * <code>repeated .Resource resources = 2;</code>
+     * <code>.Egress egress = 2;</code>
+     * @return The egress.
      */
     @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource getResources(int index) {
-      return resources_.get(index);
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress getEgress() {
+      if (objectCase_ == 2) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress) object_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.getDefaultInstance();
     }
     /**
-     * <code>repeated .Resource resources = 2;</code>
+     * <code>.Egress egress = 2;</code>
      */
     @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder getResourcesOrBuilder(
-        int index) {
-      return resources_.get(index);
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder getEgressOrBuilder() {
+      if (objectCase_ == 2) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress) object_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.getDefaultInstance();
     }
 
     private byte memoizedIsInitialized = -1;
@@ -7222,11 +6400,11 @@ public final class DataPlaneContract {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (generation_ != 0L) {
-        output.writeUInt64(1, generation_);
+      if (objectCase_ == 1) {
+        output.writeMessage(1, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress) object_);
       }
-      for (int i = 0; i < resources_.size(); i++) {
-        output.writeMessage(2, resources_.get(i));
+      if (objectCase_ == 2) {
+        output.writeMessage(2, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress) object_);
       }
       unknownFields.writeTo(output);
     }
@@ -7237,13 +6415,13 @@ public final class DataPlaneContract {
       if (size != -1) return size;
 
       size = 0;
-      if (generation_ != 0L) {
+      if (objectCase_ == 1) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt64Size(1, generation_);
+          .computeMessageSize(1, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress) object_);
       }
-      for (int i = 0; i < resources_.size(); i++) {
+      if (objectCase_ == 2) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, resources_.get(i));
+          .computeMessageSize(2, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress) object_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -7255,15 +6433,24 @@ public final class DataPlaneContract {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract)) {
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object)) {
         return super.equals(obj);
       }
-      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract) obj;
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object) obj;
 
-      if (getGeneration()
-          != other.getGeneration()) return false;
-      if (!getResourcesList()
-          .equals(other.getResourcesList())) return false;
+      if (!getObjectCase().equals(other.getObjectCase())) return false;
+      switch (objectCase_) {
+        case 1:
+          if (!getIngress()
+              .equals(other.getIngress())) return false;
+          break;
+        case 2:
+          if (!getEgress()
+              .equals(other.getEgress())) return false;
+          break;
+        case 0:
+        default:
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -7275,81 +6462,86 @@ public final class DataPlaneContract {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + GENERATION_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
-          getGeneration());
-      if (getResourcesCount() > 0) {
-        hash = (37 * hash) + RESOURCES_FIELD_NUMBER;
-        hash = (53 * hash) + getResourcesList().hashCode();
+      switch (objectCase_) {
+        case 1:
+          hash = (37 * hash) + INGRESS_FIELD_NUMBER;
+          hash = (53 * hash) + getIngress().hashCode();
+          break;
+        case 2:
+          hash = (37 * hash) + EGRESS_FIELD_NUMBER;
+          hash = (53 * hash) + getEgress().hashCode();
+          break;
+        case 0:
+        default:
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
     }
 
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract parseFrom(byte[] data)
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract parseFrom(java.io.InputStream input)
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract parseDelimitedFrom(java.io.InputStream input)
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract parseDelimitedFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract parseFrom(
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -7362,7 +6554,7 @@ public final class DataPlaneContract {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract prototype) {
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -7378,26 +6570,38 @@ public final class DataPlaneContract {
       return builder;
     }
     /**
-     * Protobuf type {@code Contract}
+     * <pre>
+     * For communicating changes between data plane and control plane we use an internal topic.
+     * The internal topic is configured to be log compacted so that Apache Kafka keeps only the last message for any given
+     * key.
+     * For each object we sent a message in the following form:
+     * Key:   &lt;resource UID&gt;
+     * Value: &lt;Object&gt;
+     * where &lt;Object&gt; can be:
+     *  - Ingress: an Ingress is the minimal configuration for a Broker, a Channel, or a KafkaSink.
+     *  - Egress: an Egress is the minimal configuration for a Subscription, a Trigger or a KafkaSource.
+     * </pre>
+     *
+     * Protobuf type {@code Object}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:Contract)
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContractOrBuilder {
+        // @@protoc_insertion_point(builder_implements:Object)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ObjectOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Contract_descriptor;
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Object_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Contract_fieldAccessorTable
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Object_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract.Builder.class);
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object.Builder.class);
       }
 
-      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract.newBuilder()
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -7410,37 +6614,30 @@ public final class DataPlaneContract {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
-          getResourcesFieldBuilder();
         }
       }
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        generation_ = 0L;
-
-        if (resourcesBuilder_ == null) {
-          resources_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000001);
-        } else {
-          resourcesBuilder_.clear();
-        }
+        objectCase_ = 0;
+        object_ = null;
         return this;
       }
 
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Contract_descriptor;
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Object_descriptor;
       }
 
       @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract getDefaultInstanceForType() {
-        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract.getDefaultInstance();
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object.getDefaultInstance();
       }
 
       @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract build() {
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract result = buildPartial();
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -7448,19 +6645,23 @@ public final class DataPlaneContract {
       }
 
       @java.lang.Override
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract buildPartial() {
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract(this);
-        int from_bitField0_ = bitField0_;
-        result.generation_ = generation_;
-        if (resourcesBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) != 0)) {
-            resources_ = java.util.Collections.unmodifiableList(resources_);
-            bitField0_ = (bitField0_ & ~0x00000001);
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object(this);
+        if (objectCase_ == 1) {
+          if (ingressBuilder_ == null) {
+            result.object_ = object_;
+          } else {
+            result.object_ = ingressBuilder_.build();
           }
-          result.resources_ = resources_;
-        } else {
-          result.resources_ = resourcesBuilder_.build();
         }
+        if (objectCase_ == 2) {
+          if (egressBuilder_ == null) {
+            result.object_ = object_;
+          } else {
+            result.object_ = egressBuilder_.build();
+          }
+        }
+        result.objectCase_ = objectCase_;
         onBuilt();
         return result;
       }
@@ -7499,43 +6700,27 @@ public final class DataPlaneContract {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract) {
-          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract)other);
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract other) {
-        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract.getDefaultInstance()) return this;
-        if (other.getGeneration() != 0L) {
-          setGeneration(other.getGeneration());
-        }
-        if (resourcesBuilder_ == null) {
-          if (!other.resources_.isEmpty()) {
-            if (resources_.isEmpty()) {
-              resources_ = other.resources_;
-              bitField0_ = (bitField0_ & ~0x00000001);
-            } else {
-              ensureResourcesIsMutable();
-              resources_.addAll(other.resources_);
-            }
-            onChanged();
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object.getDefaultInstance()) return this;
+        switch (other.getObjectCase()) {
+          case INGRESS: {
+            mergeIngress(other.getIngress());
+            break;
           }
-        } else {
-          if (!other.resources_.isEmpty()) {
-            if (resourcesBuilder_.isEmpty()) {
-              resourcesBuilder_.dispose();
-              resourcesBuilder_ = null;
-              resources_ = other.resources_;
-              bitField0_ = (bitField0_ & ~0x00000001);
-              resourcesBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getResourcesFieldBuilder() : null;
-            } else {
-              resourcesBuilder_.addAllMessages(other.resources_);
-            }
+          case EGRESS: {
+            mergeEgress(other.getEgress());
+            break;
+          }
+          case OBJECT_NOT_SET: {
+            break;
           }
         }
         this.mergeUnknownFields(other.unknownFields);
@@ -7553,11 +6738,11 @@ public final class DataPlaneContract {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract parsedMessage = null;
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract) e.getUnfinishedMessage();
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -7566,292 +6751,302 @@ public final class DataPlaneContract {
         }
         return this;
       }
-      private int bitField0_;
+      private int objectCase_ = 0;
+      private java.lang.Object object_;
+      public ObjectCase
+          getObjectCase() {
+        return ObjectCase.forNumber(
+            objectCase_);
+      }
 
-      private long generation_ ;
+      public Builder clearObject() {
+        objectCase_ = 0;
+        object_ = null;
+        onChanged();
+        return this;
+      }
+
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder> ingressBuilder_;
       /**
-       * <pre>
-       * Count each contract update.
-       * Make sure each data plane pod has the same contract generation number.
-       * </pre>
-       *
-       * <code>uint64 generation = 1;</code>
-       * @return The generation.
+       * <code>.Ingress ingress = 1;</code>
+       * @return Whether the ingress field is set.
        */
       @java.lang.Override
-      public long getGeneration() {
-        return generation_;
+      public boolean hasIngress() {
+        return objectCase_ == 1;
       }
       /**
-       * <pre>
-       * Count each contract update.
-       * Make sure each data plane pod has the same contract generation number.
-       * </pre>
-       *
-       * <code>uint64 generation = 1;</code>
-       * @param value The generation to set.
-       * @return This builder for chaining.
+       * <code>.Ingress ingress = 1;</code>
+       * @return The ingress.
        */
-      public Builder setGeneration(long value) {
-        
-        generation_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Count each contract update.
-       * Make sure each data plane pod has the same contract generation number.
-       * </pre>
-       *
-       * <code>uint64 generation = 1;</code>
-       * @return This builder for chaining.
-       */
-      public Builder clearGeneration() {
-        
-        generation_ = 0L;
-        onChanged();
-        return this;
-      }
-
-      private java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource> resources_ =
-        java.util.Collections.emptyList();
-      private void ensureResourcesIsMutable() {
-        if (!((bitField0_ & 0x00000001) != 0)) {
-          resources_ = new java.util.ArrayList<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource>(resources_);
-          bitField0_ |= 0x00000001;
-         }
-      }
-
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder> resourcesBuilder_;
-
-      /**
-       * <code>repeated .Resource resources = 2;</code>
-       */
-      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource> getResourcesList() {
-        if (resourcesBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(resources_);
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress getIngress() {
+        if (ingressBuilder_ == null) {
+          if (objectCase_ == 1) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress) object_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.getDefaultInstance();
         } else {
-          return resourcesBuilder_.getMessageList();
+          if (objectCase_ == 1) {
+            return ingressBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.getDefaultInstance();
         }
       }
       /**
-       * <code>repeated .Resource resources = 2;</code>
+       * <code>.Ingress ingress = 1;</code>
        */
-      public int getResourcesCount() {
-        if (resourcesBuilder_ == null) {
-          return resources_.size();
-        } else {
-          return resourcesBuilder_.getCount();
-        }
-      }
-      /**
-       * <code>repeated .Resource resources = 2;</code>
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource getResources(int index) {
-        if (resourcesBuilder_ == null) {
-          return resources_.get(index);
-        } else {
-          return resourcesBuilder_.getMessage(index);
-        }
-      }
-      /**
-       * <code>repeated .Resource resources = 2;</code>
-       */
-      public Builder setResources(
-          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource value) {
-        if (resourcesBuilder_ == null) {
+      public Builder setIngress(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress value) {
+        if (ingressBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          ensureResourcesIsMutable();
-          resources_.set(index, value);
+          object_ = value;
           onChanged();
         } else {
-          resourcesBuilder_.setMessage(index, value);
+          ingressBuilder_.setMessage(value);
         }
+        objectCase_ = 1;
         return this;
       }
       /**
-       * <code>repeated .Resource resources = 2;</code>
+       * <code>.Ingress ingress = 1;</code>
        */
-      public Builder setResources(
-          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder builderForValue) {
-        if (resourcesBuilder_ == null) {
-          ensureResourcesIsMutable();
-          resources_.set(index, builderForValue.build());
+      public Builder setIngress(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder builderForValue) {
+        if (ingressBuilder_ == null) {
+          object_ = builderForValue.build();
           onChanged();
         } else {
-          resourcesBuilder_.setMessage(index, builderForValue.build());
+          ingressBuilder_.setMessage(builderForValue.build());
         }
+        objectCase_ = 1;
         return this;
       }
       /**
-       * <code>repeated .Resource resources = 2;</code>
+       * <code>.Ingress ingress = 1;</code>
        */
-      public Builder addResources(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource value) {
-        if (resourcesBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
+      public Builder mergeIngress(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress value) {
+        if (ingressBuilder_ == null) {
+          if (objectCase_ == 1 &&
+              object_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.getDefaultInstance()) {
+            object_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress) object_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            object_ = value;
           }
-          ensureResourcesIsMutable();
-          resources_.add(value);
           onChanged();
         } else {
-          resourcesBuilder_.addMessage(value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .Resource resources = 2;</code>
-       */
-      public Builder addResources(
-          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource value) {
-        if (resourcesBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
+          if (objectCase_ == 1) {
+            ingressBuilder_.mergeFrom(value);
           }
-          ensureResourcesIsMutable();
-          resources_.add(index, value);
-          onChanged();
+          ingressBuilder_.setMessage(value);
+        }
+        objectCase_ = 1;
+        return this;
+      }
+      /**
+       * <code>.Ingress ingress = 1;</code>
+       */
+      public Builder clearIngress() {
+        if (ingressBuilder_ == null) {
+          if (objectCase_ == 1) {
+            objectCase_ = 0;
+            object_ = null;
+            onChanged();
+          }
         } else {
-          resourcesBuilder_.addMessage(index, value);
+          if (objectCase_ == 1) {
+            objectCase_ = 0;
+            object_ = null;
+          }
+          ingressBuilder_.clear();
         }
         return this;
       }
       /**
-       * <code>repeated .Resource resources = 2;</code>
+       * <code>.Ingress ingress = 1;</code>
        */
-      public Builder addResources(
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder builderForValue) {
-        if (resourcesBuilder_ == null) {
-          ensureResourcesIsMutable();
-          resources_.add(builderForValue.build());
-          onChanged();
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder getIngressBuilder() {
+        return getIngressFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.Ingress ingress = 1;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder getIngressOrBuilder() {
+        if ((objectCase_ == 1) && (ingressBuilder_ != null)) {
+          return ingressBuilder_.getMessageOrBuilder();
         } else {
-          resourcesBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .Resource resources = 2;</code>
-       */
-      public Builder addResources(
-          int index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder builderForValue) {
-        if (resourcesBuilder_ == null) {
-          ensureResourcesIsMutable();
-          resources_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          resourcesBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .Resource resources = 2;</code>
-       */
-      public Builder addAllResources(
-          java.lang.Iterable<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource> values) {
-        if (resourcesBuilder_ == null) {
-          ensureResourcesIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, resources_);
-          onChanged();
-        } else {
-          resourcesBuilder_.addAllMessages(values);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .Resource resources = 2;</code>
-       */
-      public Builder clearResources() {
-        if (resourcesBuilder_ == null) {
-          resources_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000001);
-          onChanged();
-        } else {
-          resourcesBuilder_.clear();
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .Resource resources = 2;</code>
-       */
-      public Builder removeResources(int index) {
-        if (resourcesBuilder_ == null) {
-          ensureResourcesIsMutable();
-          resources_.remove(index);
-          onChanged();
-        } else {
-          resourcesBuilder_.remove(index);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .Resource resources = 2;</code>
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder getResourcesBuilder(
-          int index) {
-        return getResourcesFieldBuilder().getBuilder(index);
-      }
-      /**
-       * <code>repeated .Resource resources = 2;</code>
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder getResourcesOrBuilder(
-          int index) {
-        if (resourcesBuilder_ == null) {
-          return resources_.get(index);  } else {
-          return resourcesBuilder_.getMessageOrBuilder(index);
+          if (objectCase_ == 1) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress) object_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.getDefaultInstance();
         }
       }
       /**
-       * <code>repeated .Resource resources = 2;</code>
+       * <code>.Ingress ingress = 1;</code>
        */
-      public java.util.List<? extends dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder> 
-           getResourcesOrBuilderList() {
-        if (resourcesBuilder_ != null) {
-          return resourcesBuilder_.getMessageOrBuilderList();
-        } else {
-          return java.util.Collections.unmodifiableList(resources_);
-        }
-      }
-      /**
-       * <code>repeated .Resource resources = 2;</code>
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder addResourcesBuilder() {
-        return getResourcesFieldBuilder().addBuilder(
-            dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .Resource resources = 2;</code>
-       */
-      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder addResourcesBuilder(
-          int index) {
-        return getResourcesFieldBuilder().addBuilder(
-            index, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .Resource resources = 2;</code>
-       */
-      public java.util.List<dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder> 
-           getResourcesBuilderList() {
-        return getResourcesFieldBuilder().getBuilderList();
-      }
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder> 
-          getResourcesFieldBuilder() {
-        if (resourcesBuilder_ == null) {
-          resourcesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ResourceOrBuilder>(
-                  resources_,
-                  ((bitField0_ & 0x00000001) != 0),
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder> 
+          getIngressFieldBuilder() {
+        if (ingressBuilder_ == null) {
+          if (!(objectCase_ == 1)) {
+            object_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.getDefaultInstance();
+          }
+          ingressBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.IngressOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress) object_,
                   getParentForChildren(),
                   isClean());
-          resources_ = null;
+          object_ = null;
         }
-        return resourcesBuilder_;
+        objectCase_ = 1;
+        onChanged();;
+        return ingressBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder> egressBuilder_;
+      /**
+       * <code>.Egress egress = 2;</code>
+       * @return Whether the egress field is set.
+       */
+      @java.lang.Override
+      public boolean hasEgress() {
+        return objectCase_ == 2;
+      }
+      /**
+       * <code>.Egress egress = 2;</code>
+       * @return The egress.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress getEgress() {
+        if (egressBuilder_ == null) {
+          if (objectCase_ == 2) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress) object_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.getDefaultInstance();
+        } else {
+          if (objectCase_ == 2) {
+            return egressBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.Egress egress = 2;</code>
+       */
+      public Builder setEgress(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress value) {
+        if (egressBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          object_ = value;
+          onChanged();
+        } else {
+          egressBuilder_.setMessage(value);
+        }
+        objectCase_ = 2;
+        return this;
+      }
+      /**
+       * <code>.Egress egress = 2;</code>
+       */
+      public Builder setEgress(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder builderForValue) {
+        if (egressBuilder_ == null) {
+          object_ = builderForValue.build();
+          onChanged();
+        } else {
+          egressBuilder_.setMessage(builderForValue.build());
+        }
+        objectCase_ = 2;
+        return this;
+      }
+      /**
+       * <code>.Egress egress = 2;</code>
+       */
+      public Builder mergeEgress(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress value) {
+        if (egressBuilder_ == null) {
+          if (objectCase_ == 2 &&
+              object_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.getDefaultInstance()) {
+            object_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress) object_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            object_ = value;
+          }
+          onChanged();
+        } else {
+          if (objectCase_ == 2) {
+            egressBuilder_.mergeFrom(value);
+          }
+          egressBuilder_.setMessage(value);
+        }
+        objectCase_ = 2;
+        return this;
+      }
+      /**
+       * <code>.Egress egress = 2;</code>
+       */
+      public Builder clearEgress() {
+        if (egressBuilder_ == null) {
+          if (objectCase_ == 2) {
+            objectCase_ = 0;
+            object_ = null;
+            onChanged();
+          }
+        } else {
+          if (objectCase_ == 2) {
+            objectCase_ = 0;
+            object_ = null;
+          }
+          egressBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.Egress egress = 2;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder getEgressBuilder() {
+        return getEgressFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.Egress egress = 2;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder getEgressOrBuilder() {
+        if ((objectCase_ == 2) && (egressBuilder_ != null)) {
+          return egressBuilder_.getMessageOrBuilder();
+        } else {
+          if (objectCase_ == 2) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress) object_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.Egress egress = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder> 
+          getEgressFieldBuilder() {
+        if (egressBuilder_ == null) {
+          if (!(objectCase_ == 2)) {
+            object_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.getDefaultInstance();
+          }
+          egressBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress) object_,
+                  getParentForChildren(),
+                  isClean());
+          object_ = null;
+        }
+        objectCase_ = 2;
+        onChanged();;
+        return egressBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -7866,41 +7061,41 @@ public final class DataPlaneContract {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:Contract)
+      // @@protoc_insertion_point(builder_scope:Object)
     }
 
-    // @@protoc_insertion_point(class_scope:Contract)
-    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:Object)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract();
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object();
     }
 
-    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract getDefaultInstance() {
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<Contract>
-        PARSER = new com.google.protobuf.AbstractParser<Contract>() {
+    private static final com.google.protobuf.Parser<Object>
+        PARSER = new com.google.protobuf.AbstractParser<Object>() {
       @java.lang.Override
-      public Contract parsePartialFrom(
+      public Object parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Contract(input, extensionRegistry);
+        return new Object(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<Contract> parser() {
+    public static com.google.protobuf.Parser<Object> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<Contract> getParserForType() {
+    public com.google.protobuf.Parser<Object> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Contract getDefaultInstanceForType() {
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Object getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -7932,15 +7127,10 @@ public final class DataPlaneContract {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Ingress_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Resource_descriptor;
+    internal_static_Object_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Resource_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Contract_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Contract_fieldAccessorTable;
+      internal_static_Object_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -7956,25 +7146,24 @@ public final class DataPlaneContract {
       "utesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028" +
       "\001\"n\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022\r\n" +
       "\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.Ba" +
-      "ckoffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\"\267\001\n\006Eg" +
+      "ckoffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\"\206\002\n\006Eg" +
       "ress\022\025\n\rconsumerGroup\030\001 \001(\t\022\023\n\013destinati" +
       "on\030\002 \001(\t\022\022\n\010replyUrl\030\003 \001(\tH\000\0226\n\024replyToO" +
       "riginalTopic\030\004 \001(\0132\026.google.protobuf.Emp" +
       "tyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001" +
-      "(\tB\017\n\rreplyStrategy\"[\n\007Ingress\022!\n\013conten" +
-      "tMode\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002 \001(\tH" +
-      "\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"\234\001\n\010Res" +
-      "ource\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bo" +
-      "otstrapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010." +
-      "Ingress\022#\n\014egressConfig\030\005 \001(\0132\r.EgressCo" +
-      "nfig\022\031\n\010egresses\030\006 \003(\0132\007.Egress\"<\n\010Contr" +
-      "act\022\022\n\ngeneration\030\001 \001(\004\022\034\n\tresources\030\002 \003" +
-      "(\0132\t.Resource*,\n\rBackoffPolicy\022\017\n\013Expone" +
-      "ntial\020\000\022\n\n\006Linear\020\001*)\n\013ContentMode\022\n\n\006BI" +
-      "NARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n*dev.knative.ev" +
-      "enting.kafka.broker.contractB\021DataPlaneC" +
-      "ontractZ\032control-plane/pkg/contractb\006pro" +
-      "to3"
+      "(\t\022\016\n\006topics\030\007 \003(\t\022\030\n\020bootstrapServers\030\010" +
+      " \001(\t\022#\n\014egressConfig\030\t \001(\0132\r.EgressConfi" +
+      "gB\017\n\rreplyStrategy\"\221\001\n\007Ingress\022\013\n\003uid\030\001 " +
+      "\001(\t\022\030\n\020bootstrapServers\030\002 \001(\t\022\r\n\005topic\030\004" +
+      " \001(\t\022!\n\013contentMode\030\005 \001(\0162\014.ContentMode\022" +
+      "\016\n\004path\030\006 \001(\tH\000\022\016\n\004host\030\007 \001(\tH\000B\r\n\013ingre" +
+      "ssType\"J\n\006Object\022\033\n\007ingress\030\001 \001(\0132\010.Ingr" +
+      "essH\000\022\031\n\006egress\030\002 \001(\0132\007.EgressH\000B\010\n\006Obje" +
+      "ct*,\n\rBackoffPolicy\022\017\n\013Exponential\020\000\022\n\n\006" +
+      "Linear\020\001*)\n\013ContentMode\022\n\n\006BINARY\020\000\022\016\n\nS" +
+      "TRUCTURED\020\001B[\n*dev.knative.eventing.kafk" +
+      "a.broker.contractB\021DataPlaneContractZ\032co" +
+      "ntrol-plane/pkg/contractb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -8004,25 +7193,19 @@ public final class DataPlaneContract {
     internal_static_Egress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Egress_descriptor,
-        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "Filter", "Uid", "ReplyStrategy", });
+        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "Filter", "Uid", "Topics", "BootstrapServers", "EgressConfig", "ReplyStrategy", });
     internal_static_Ingress_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_Ingress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Ingress_descriptor,
-        new java.lang.String[] { "ContentMode", "Path", "Host", "IngressType", });
-    internal_static_Resource_descriptor =
+        new java.lang.String[] { "Uid", "BootstrapServers", "Topic", "ContentMode", "Path", "Host", "IngressType", });
+    internal_static_Object_descriptor =
       getDescriptor().getMessageTypes().get(4);
-    internal_static_Resource_fieldAccessorTable = new
+    internal_static_Object_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Resource_descriptor,
-        new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", });
-    internal_static_Contract_descriptor =
-      getDescriptor().getMessageTypes().get(5);
-    internal_static_Contract_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Contract_descriptor,
-        new java.lang.String[] { "Generation", "Resources", });
+        internal_static_Object_descriptor,
+        new java.lang.String[] { "Ingress", "Egress", "Object", });
     com.google.protobuf.EmptyProto.getDescriptor();
   }
 

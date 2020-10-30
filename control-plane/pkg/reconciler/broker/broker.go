@@ -19,8 +19,6 @@ package broker
 import (
 	"context"
 	"fmt"
-	"math"
-	"strings"
 	"sync"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -29,7 +27,6 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
-	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -37,7 +34,6 @@ import (
 	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/log"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -47,6 +43,8 @@ import (
 const (
 	// TopicPrefix is the Kafka Broker topic prefix - (topic name: knative-broker-<broker-namespace>-<broker-name>).
 	TopicPrefix = "knative-broker-"
+
+	InternalTopicName = "knative-internal-broker"
 )
 
 type Configs struct {
@@ -62,24 +60,25 @@ type Reconciler struct {
 
 	KafkaDefaultTopicDetails     sarama.TopicDetail
 	KafkaDefaultTopicDetailsLock sync.RWMutex
-	bootstrapServers             []string
-	bootstrapServersLock         sync.RWMutex
-	ConfigMapLister              corelisters.ConfigMapLister
+
+	// TODO change source CM to config-kafka
+	// TODO expand liveness probe to check connectivity with Kafka
+	bootstrapServers     []string
+	bootstrapServersLock sync.RWMutex
+
+	ConfigMapLister corelisters.ConfigMapLister
 
 	// ClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
 	ClusterAdmin kafka.NewClusterAdminFunc
+	// Producer creates new sarama sarama.SyncProducer. It's convenient to add this as Reconciler field so that we can
+	// mock the function used during the reconciliation loop.
+	Producer kafka.NewProducerFunc
 
 	Configs *Configs
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		return r.reconcileKind(ctx, broker)
-	})
-}
-
-func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 
 	logger := log.Logger(ctx, "reconcile", broker)
 
@@ -103,6 +102,26 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger.Debug("config resolved", zap.Any("config", topicConfig))
 
+	r.bootstrapServersLock.RLock()
+	managementCluster := r.bootstrapServers
+	r.bootstrapServersLock.RUnlock()
+
+	// Create a log compacted topic. (see proto/def/contract.proto)
+	tc := &kafka.TopicConfig{
+		TopicDetail: sarama.TopicDetail{
+			NumPartitions:     r.Configs.InternalTopicNumPartitions,
+			ReplicationFactor: r.Configs.InternalTopicReplicationFactor,
+		},
+		BootstrapServers: managementCluster,
+	}
+	internalTopic, err := r.ClusterAdmin.CreateLogCompactedTopic(logger, InternalTopicName, tc)
+	if err != nil {
+		return statusConditionManager.FailedToCreateInternalTopic(internalTopic, err)
+	}
+	statusConditionManager.InternalTopicCreated(internalTopic)
+
+	logger.Debug("Internal topic created", zap.Any("topic", internalTopic))
+
 	topic, err := r.ClusterAdmin.CreateTopic(logger, kafka.Topic(TopicPrefix, broker), topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topic, err)
@@ -111,128 +130,44 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger.Debug("Topic created", zap.Any("topic", topic))
 
-	// Get contract config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
-	if err != nil {
-		return statusConditionManager.FailedToGetConfigMap(err)
-	}
-
-	logger.Debug("Got contract config map")
-
-	// Get contract data.
-	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
-	if err != nil && ct == nil {
-		return statusConditionManager.FailedToGetDataFromConfigMap(err)
-	}
-
-	logger.Debug(
-		"Got contract data from config map",
-		zap.Any(base.ContractLogKey, (*log.ContractMarshaller)(ct)),
-	)
-
 	// Get resource configuration.
-	brokerResource, err := r.getBrokerResource(ctx, topic, broker, topicConfig)
-	if err != nil {
-		return statusConditionManager.FailedToGetConfig(err)
+
+	ct := &contract.Object{
+		Object: &contract.Object_Ingress{
+			Ingress: &contract.Ingress{
+				Uid:   string(broker.UID),
+				Topic: topic,
+				IngressType: &contract.Ingress_Path{
+					Path: receiver.PathFromObject(broker),
+				},
+				ContentMode:      contract.ContentMode_BINARY,
+				BootstrapServers: topicConfig.GetBootstrapServers(),
+			},
+		},
 	}
 
-	brokerIndex := coreconfig.FindResource(ct, broker.UID)
-	// Update contract data with the new contract configuration
-	coreconfig.AddOrUpdateResourceConfig(ct, brokerResource, brokerIndex, logger)
-
-	// Increment volumeGeneration
-	ct.Generation = incrementContractGeneration(ct.Generation)
-
-	// Update the configuration map with the new contract data.
-	if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-		logger.Error("failed to update data plane config map", zap.Error(
-			statusConditionManager.FailedToUpdateConfigMap(err),
-		))
-		return err
-	}
-	statusConditionManager.ConfigMapUpdated()
-
-	logger.Debug("Contract config map updated")
-
-	// After #37 we reject events to a non-existing Broker, which means that we cannot consider a Broker Ready if all
-	// receivers haven't got the Broker, so update failures to receiver pods is a hard failure.
-	// On the other side, dispatcher pods care about Triggers, and the Broker object is used as a configuration
-	// prototype for all associated Triggers, so we consider that it's fine on the dispatcher side to receive eventually
-	// the update even if here eventually means seconds or minutes after the actual update.
-
-	// Update volume generation annotation of receiver pods
-	if err := r.UpdateReceiverPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		logger.Error("Failed to update receiver pod annotation", zap.Error(
-			statusConditionManager.FailedToUpdateReceiverPodsAnnotation(err),
-		))
-		return err
+	if err := r.Producer.Add(managementCluster, internalTopic, string(broker.UID), ct); err != nil {
+		return statusConditionManager.FailedToSendMessage(err)
 	}
 
-	logger.Debug("Updated receiver pod annotation")
-
-	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Broker
-		// ready. So, log out the error and move on to the next step.
-		logger.Warn(
-			"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
-			zap.Error(err),
-		)
-
-		statusConditionManager.FailedToUpdateDispatcherPodsAnnotation(err)
-	} else {
-		logger.Debug("Updated dispatcher pod annotation")
-	}
+	logger.Debug("Resource send", zap.Any("resource", ct))
 
 	return statusConditionManager.Reconciled()
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		return r.finalizeKind(ctx, broker)
-	})
-}
-
-func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
 
 	logger := log.Logger(ctx, "finalize", broker)
 
-	// Get contract config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get contract config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
+	r.bootstrapServersLock.RLock()
+	managementCluster := r.bootstrapServers
+	r.bootstrapServersLock.RUnlock()
+
+	if err := r.Producer.Remove(managementCluster, InternalTopicName, string(broker.UID)); err != nil {
+		return fmt.Errorf("failed to propagate broker deletion: %w", err)
 	}
 
-	logger.Debug("Got contract config map")
-
-	// Get contract data.
-	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
-	if err != nil {
-		return fmt.Errorf("failed to get contract: %w", err)
-	}
-
-	logger.Debug(
-		"Got contract data from config map",
-		zap.Any(base.ContractLogKey, (*log.ContractMarshaller)(ct)),
-	)
-
-	brokerIndex := coreconfig.FindResource(ct, broker.UID)
-	if brokerIndex != coreconfig.NoResource {
-		coreconfig.DeleteResource(ct, brokerIndex)
-
-		logger.Debug("Broker deleted", zap.Int("index", brokerIndex))
-
-		// Update the configuration map with the new contract data.
-		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-			return err
-		}
-
-		logger.Debug("Contract config map updated")
-
-		// There is no need to update volume generation and dispatcher pod annotation, updates to the config map will
-		// eventually be seen by the dispatcher pod and resources will be deleted accordingly.
-	}
+	logger.Debug("Resource deletion propagated")
 
 	topicConfig, err := r.topicConfig(logger, broker)
 	if err != nil {
@@ -250,30 +185,15 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	return nil
 }
 
-func incrementContractGeneration(generation uint64) uint64 {
-	return (generation + 1) % (math.MaxUint64 - 1)
-}
-
 func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*kafka.TopicConfig, error) {
-
-	logger.Debug("broker config", zap.Any("broker.spec.config", broker.Spec.Config))
 
 	if broker.Spec.Config == nil {
 		return r.defaultConfig()
 	}
 
-	if strings.ToLower(broker.Spec.Config.Kind) != "configmap" { // TODO: is there any constant?
-		return nil, fmt.Errorf("supported config Kind: ConfigMap - got %s", broker.Spec.Config.Kind)
-	}
-
-	namespace := broker.Spec.Config.Namespace
-	if namespace == "" {
-		// Namespace not specified, use broker namespace.
-		namespace = broker.Namespace
-	}
-	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(broker.Spec.Config.Name)
+	cm, err := ConfigMap(r.ConfigMapLister, logger, broker)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, err)
+		return nil, fmt.Errorf("failed to get config: %w", err)
 	}
 
 	brokerConfig, err := configFromConfigMap(logger, cm)
@@ -303,54 +223,6 @@ func (r *Reconciler) defaultConfig() (*kafka.TopicConfig, error) {
 		TopicDetail:      r.defaultTopicDetail(),
 		BootstrapServers: bootstrapServers,
 	}, nil
-}
-
-func (r *Reconciler) getBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, config *kafka.TopicConfig) (*contract.Resource, error) {
-	res := &contract.Resource{
-		Uid:    string(broker.UID),
-		Topics: []string{topic},
-		Ingress: &contract.Ingress{
-			IngressType: &contract.Ingress_Path{
-				Path: receiver.PathFromObject(broker),
-			},
-		},
-		BootstrapServers: config.GetBootstrapServers(),
-	}
-
-	delivery := broker.Spec.Delivery
-	if delivery != nil {
-
-		if delivery.DeadLetterSink != nil {
-
-			deadLetterSinkURL, err := r.Resolver.URIFromDestinationV1(ctx, *delivery.DeadLetterSink, broker)
-			if err != nil {
-				return nil, fmt.Errorf("failed to resolve broker.Spec.Deliver.DeadLetterSink: %w", err)
-			}
-
-			ensureEgressConfig(res)
-			res.EgressConfig.DeadLetter = deadLetterSinkURL.String()
-		}
-
-		if delivery.Retry != nil {
-			ensureEgressConfig(res)
-			res.EgressConfig.Retry = uint32(*delivery.Retry)
-			var err error
-			delay, err := coreconfig.BackoffDelayFromISO8601String(delivery.BackoffDelay, r.Configs.DefaultBackoffDelayMs)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse backoff delay: %w", err)
-			}
-			res.EgressConfig.BackoffDelay = delay
-			res.EgressConfig.BackoffPolicy = coreconfig.BackoffPolicyFromString(delivery.BackoffPolicy)
-		}
-	}
-
-	return res, nil
-}
-
-func ensureEgressConfig(res *contract.Resource) {
-	if res.EgressConfig == nil {
-		res.EgressConfig = &contract.EgressConfig{}
-	}
 }
 
 func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev1.ConfigMap) {

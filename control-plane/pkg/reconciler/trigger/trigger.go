@@ -19,7 +19,11 @@ package trigger
 import (
 	"context"
 	"fmt"
-	"math"
+	"sync"
+
+	"github.com/golang/protobuf/ptypes/empty"
+	corelisters "k8s.io/client-go/listers/core/v1"
+	"knative.dev/pkg/configmap"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
@@ -27,7 +31,6 @@ import (
 	"go.uber.org/zap"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	eventingclientset "knative.dev/eventing/pkg/client/clientset/versioned"
 	eventinglisters "knative.dev/eventing/pkg/client/listers/eventing/v1"
@@ -39,6 +42,7 @@ import (
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/log"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 )
 
 type Reconciler struct {
@@ -48,137 +52,21 @@ type Reconciler struct {
 	EventingClient eventingclientset.Interface
 	Resolver       *resolver.URIResolver
 
+	// TODO change source CM to config-kafka
+	// TODO expand liveness probe to check connectivity with Kafka
+	bootstrapServers     []string
+	bootstrapServersLock sync.RWMutex
+
+	ConfigMapLister corelisters.ConfigMapLister
+
+	// Producer creates new sarama sarama.SyncProducer. It's convenient to add this as Reconciler field so that we can
+	// mock the function used during the reconciliation loop.
+	Producer kafka.NewProducerFunc
+
 	Configs *config.Env
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		return r.reconcileKind(ctx, trigger)
-	})
-}
-
-func (r *Reconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		return r.finalizeKind(ctx, trigger)
-	})
-}
-
-func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
-
-	logger := log.Logger(ctx, "finalize", trigger)
-
-	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
-	if err != nil && !apierrors.IsNotFound(err) {
-		return fmt.Errorf("failed to get broker from lister: %w", err)
-	}
-
-	if apierrors.IsNotFound(err) {
-		// If the broker is deleted, resources associated with the Trigger will be deleted.
-		return nil
-	}
-
-	// Get data plane config map.
-	dataPlaneConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get data plane config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
-	}
-
-	logger.Debug("Got data plane config map")
-
-	// Get contract data.
-	ct, err := r.GetDataPlaneConfigMapData(logger, dataPlaneConfigMap)
-	if err != nil {
-		return fmt.Errorf("failed to get contract: %w", err)
-	}
-
-	logger.Debug(
-		"Got contract data from data plane config map",
-		zap.Any(base.ContractLogKey, (*log.ContractMarshaller)(ct)),
-	)
-
-	brokerIndex := coreconfig.FindResource(ct, broker.UID)
-	if brokerIndex == coreconfig.NoResource {
-		// If the broker is not there, resources associated with the Trigger are deleted accordingly.
-		return nil
-	}
-
-	logger.Debug("Found Broker", zap.Int("brokerIndex", brokerIndex))
-
-	egresses := ct.Resources[brokerIndex].Egresses
-	triggerIndex := coreconfig.FindEgress(egresses, trigger.UID)
-	if triggerIndex == coreconfig.NoEgress {
-		// The trigger is not there, resources associated with the Trigger are deleted accordingly.
-		logger.Debug("trigger not found in config map")
-
-		return nil
-	}
-
-	logger.Debug("Found Trigger", zap.Int("triggerIndex", brokerIndex))
-
-	// Delete the Trigger from the config map data.
-	ct.Resources[brokerIndex].Egresses = deleteTrigger(egresses, triggerIndex)
-
-	// Increment volume generation
-	ct.Generation = incrementGeneration(ct.Generation)
-
-	// Update data plane config map.
-	err = r.UpdateDataPlaneConfigMap(ctx, ct, dataPlaneConfigMap)
-	if err != nil {
-		return err
-	}
-
-	logger.Debug("Updated data plane config map", zap.String("configmap", r.Configs.DataPlaneConfigMapAsString()))
-
-	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-		// The delete trigger will eventually be seen by the data plane pods, so log out the error and move on to the
-		// next step.
-		logger.Warn(
-			"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
-			zap.Error(err),
-		)
-	} else {
-		logger.Debug("Updated dispatcher pod annotation successfully")
-	}
-
-	return nil
-}
-
-func (r *Reconciler) getTriggerConfig(ctx context.Context, trigger *eventing.Trigger) (*contract.Egress, error) {
-	destination, err := r.Resolver.URIFromDestinationV1(ctx, trigger.Spec.Subscriber, trigger)
-	if err != nil {
-		return nil, fmt.Errorf("failed to resolve Trigger.Spec.Subscriber: %w", err)
-	}
-	trigger.Status.SubscriberURI = destination
-
-	egress := &contract.Egress{
-		Destination:   destination.String(),
-		ConsumerGroup: string(trigger.UID),
-		Uid:           string(trigger.UID),
-	}
-
-	if trigger.Spec.Filter != nil && trigger.Spec.Filter.Attributes != nil {
-		egress.Filter = &contract.Filter{
-			Attributes: trigger.Spec.Filter.Attributes,
-		}
-	}
-
-	return egress, nil
-}
-
-func deleteTrigger(egresses []*contract.Egress, index int) []*contract.Egress {
-	if len(egresses) == 1 {
-		return nil
-	}
-
-	// replace the trigger to be deleted with the last one.
-	egresses[index] = egresses[len(egresses)-1]
-	// truncate the array.
-	return egresses[:len(egresses)-1]
-}
-
-func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
 
 	logger := log.Logger(ctx, "reconcile", trigger)
 
@@ -220,77 +108,122 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		// The associated broker doesn't exist anymore, so clean up Trigger resources.
 		return r.FinalizeKind(ctx, trigger)
 	}
-
 	statusConditionManager.propagateBrokerCondition(broker)
 
-	// Get data plane config map.
-	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
-	if err != nil {
-		return statusConditionManager.failedToGetDataPlaneConfigMap(err)
+	if !broker.Status.IsReady() {
+		return nil
 	}
 
-	logger.Debug("Got contract config map")
-
-	// Get data plane config data.
-	ct, err := r.GetDataPlaneConfigMapData(logger, contractConfigMap)
-	if err != nil || ct == nil {
-		return statusConditionManager.failedToGetDataPlaneConfigFromConfigMap(err)
-	}
-
-	logger.Debug(
-		"Got contract data from config map",
-		zap.Any(base.ContractLogKey, (*log.ContractMarshaller)(ct)),
-	)
-
-	brokerIndex := coreconfig.FindResource(ct, broker.UID)
-	if brokerIndex == coreconfig.NoResource {
-		return statusConditionManager.brokerNotFoundInDataPlaneConfigMap()
-	}
-	triggerIndex := coreconfig.FindEgress(ct.Resources[brokerIndex].Egresses, trigger.UID)
-
-	triggerConfig, err := r.getTriggerConfig(ctx, trigger)
+	ct, err := r.getTriggerConfig(ctx, logger, broker, trigger)
 	if err != nil {
 		return statusConditionManager.failedToResolveTriggerConfig(err)
 	}
 
-	statusConditionManager.subscriberResolved()
+	r.bootstrapServersLock.RLock()
+	managementCluster := r.bootstrapServers
+	r.bootstrapServersLock.RUnlock()
 
-	if triggerIndex == coreconfig.NoEgress {
-		ct.Resources[brokerIndex].Egresses = append(
-			ct.Resources[brokerIndex].Egresses,
-			triggerConfig,
-		)
-	} else {
-		ct.Resources[brokerIndex].Egresses[triggerIndex] = triggerConfig
+	if err := r.Producer.Add(managementCluster, brokerreconciler.InternalTopicName, string(trigger.UID), ct); err != nil {
+		return statusConditionManager.FailedToSendMessage(err)
 	}
-
-	// Increment volumeGeneration
-	ct.Generation = incrementGeneration(ct.Generation)
-
-	// Update the configuration map with the new dataPlaneConfig data.
-	if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
-		trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), err.Error())
-		return err
-	}
-
-	// Update volume generation annotation of dispatcher pods
-	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
-		// ready. So, log out the error and move on to the next step.
-		logger.Warn(
-			"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
-			zap.Error(err),
-		)
-
-		statusConditionManager.failedToUpdateDispatcherPodsAnnotation(err)
-	} else {
-		logger.Debug("Updated dispatcher pod annotation")
-	}
-
-	logger.Debug("Contract config map updated")
 
 	return statusConditionManager.reconciled()
+}
+
+func (r *Reconciler) FinalizeKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
+
+	logger := log.Logger(ctx, "finalize", trigger)
+
+	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return fmt.Errorf("failed to get broker from lister: %w", err)
+	}
+
+	r.bootstrapServersLock.RLock()
+	managementCluster := r.bootstrapServers
+	r.bootstrapServersLock.RUnlock()
+
+	if err := r.Producer.Remove(managementCluster, brokerreconciler.InternalTopicName, string(broker.UID)); err != nil {
+		return fmt.Errorf("failed to propagate trigger deletion: %w", err)
+	}
+
+	logger.Debug("Resource deletion propagated")
+
+	return nil
+}
+
+func (r *Reconciler) getTriggerConfig(ctx context.Context, logger *zap.Logger, broker *eventing.Broker, trigger *eventing.Trigger) (*contract.Object, error) {
+	destination, err := r.Resolver.URIFromDestinationV1(ctx, trigger.Spec.Subscriber, trigger)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve Trigger.Spec.Subscriber: %w", err)
+	}
+	trigger.Status.SubscriberURI = destination
+
+	var filter *contract.Filter
+	if trigger.Spec.Filter != nil && trigger.Spec.Filter.Attributes != nil {
+		filter = &contract.Filter{
+			Attributes: trigger.Spec.Filter.Attributes,
+		}
+	}
+
+	deadLetterSinkURL := ""
+	retry := r.Configs.DefaultRetry
+	backoffPolicy := contract.BackoffPolicy_Exponential
+	backoffDelay := r.Configs.DefaultBackoffDelayMs
+
+	if broker.Spec.Delivery != nil {
+		if broker.Spec.Delivery.DeadLetterSink != nil {
+			deadLetter, err := r.Resolver.URIFromDestinationV1(ctx, *broker.Spec.Delivery.DeadLetterSink, broker)
+			if err != nil {
+				return nil, fmt.Errorf("failed to resolve Broker.Spec.Delivery.DeadLetterSink: %w", err)
+			}
+			deadLetterSinkURL = deadLetter.String()
+		}
+
+		if broker.Spec.Delivery.Retry != nil {
+			retry = *broker.Spec.Delivery.Retry
+		}
+
+		if broker.Spec.Delivery.BackoffPolicy != nil {
+			backoffPolicy = coreconfig.BackoffPolicyFromString(broker.Spec.Delivery.BackoffPolicy)
+		}
+
+		backoffDelay, err = coreconfig.BackoffDelayFromISO8601String(broker.Spec.Delivery.BackoffDelay, r.Configs.DefaultBackoffDelayMs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve Broker.Spec.Delivery.BackoffDelay: %w", err)
+		}
+	}
+
+	cm, err := brokerreconciler.ConfigMap(r.ConfigMapLister, logger, broker)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get broker config: %w", err)
+	}
+
+	bootstrapServers := ""
+	err = configmap.Parse(cm.Data,
+		configmap.AsString(brokerreconciler.BootstrapServersConfigMapKey, &bootstrapServers),
+	)
+	if err != nil || bootstrapServers == "" {
+		return nil, fmt.Errorf("failed to parse broker config (%s: %s): %w", brokerreconciler.BootstrapServersConfigMapKey, bootstrapServers, err)
+	}
+
+	egress := &contract.Egress{
+		ConsumerGroup:    string(trigger.UID),
+		Destination:      destination.String(),
+		ReplyStrategy:    &contract.Egress_ReplyToOriginalTopic{ReplyToOriginalTopic: &empty.Empty{}},
+		Filter:           filter,
+		Uid:              string(trigger.UID),
+		Topics:           []string{kafka.Topic(brokerreconciler.TopicPrefix, broker)},
+		BootstrapServers: bootstrapServers,
+		EgressConfig: &contract.EgressConfig{
+			DeadLetter:    deadLetterSinkURL,
+			Retry:         uint32(retry),
+			BackoffPolicy: backoffPolicy,
+			BackoffDelay:  backoffDelay,
+		},
+	}
+
+	return &contract.Object{Object: &contract.Object_Egress{Egress: egress}}, nil
 }
 
 func isOurBroker(broker *eventing.Broker) (bool, string) {
@@ -298,6 +231,17 @@ func isOurBroker(broker *eventing.Broker) (bool, string) {
 	return brokerClass == kafka.BrokerClass, brokerClass
 }
 
-func incrementGeneration(generation uint64) uint64 {
-	return (generation + 1) % (math.MaxUint64 - 1)
+// SetBootstrapServers change kafka bootstrap brokers addresses.
+// servers: a comma separated list of brokers to connect to.
+func (r *Reconciler) SetBootstrapServers(servers string) {
+	if servers == "" {
+		return
+	}
+
+	addrs := kafka.BootstrapServersArray(servers)
+
+	r.bootstrapServersLock.Lock()
+	r.bootstrapServers = addrs
+	r.bootstrapServersLock.Unlock()
 }
+

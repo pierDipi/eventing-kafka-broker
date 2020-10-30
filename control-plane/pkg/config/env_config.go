@@ -29,7 +29,14 @@ type Env struct {
 	IngressName                 string `required:"true" split_words:"true"`
 	SystemNamespace             string `required:"true" split_words:"true"`
 	DataPlaneConfigFormat       string `required:"true" split_words:"true"`
-	DefaultBackoffDelayMs       uint64 `required:"false" split_words:"true"`
+
+	DefaultRetry          int32  `required:"false" split_words:"true"`
+	DefaultBackoffDelayMs uint64 `required:"false" split_words:"true"`
+
+	// InternalTopicNumPartitions is the number of partitions for the internal topic.
+	InternalTopicNumPartitions int32 `required:"true" split_words:"true"`
+	// InternalTopicReplicationFactor is the replication factor for the internal topic.
+	InternalTopicReplicationFactor int16 `required:"true" split_words:"true"`
 }
 
 // ValidationOption represents a function to validate the Env configurations.

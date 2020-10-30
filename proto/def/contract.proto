@@ -44,10 +44,10 @@ message EgressConfig {
 }
 
 message Egress {
-  // consumer group name
+  // Consumer group name.
   string consumerGroup = 1;
 
-  // destination is the sink where events are sent.
+  // Destination is the sink where events are sent.
   string destination = 2;
 
   oneof replyStrategy {
@@ -60,9 +60,17 @@ message Egress {
 
   Filter filter = 5;
 
-  // Id of the egress
-  // It's the same as the Kubernetes resource uid
+  // Id of the egress. It's the same as the Kubernetes resource uid.
   string uid = 6;
+
+  // Topic names.
+  repeated string topics = 7;
+
+  // A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+  // Note: we're using a comma separated list simply because that's how java kafka client likes it.
+  string bootstrapServers = 8;
+
+  EgressConfig egressConfig = 9;
 }
 
 // CloudEvent content mode
@@ -72,48 +80,46 @@ enum ContentMode {
 }
 
 message Ingress {
+  // Id of the resource
+  // It's the same as the Kubernetes resource uid
+  string uid = 1;
+
+  // A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+  // Note: we're using a comma separated list simply because that's how java kafka client likes it.
+  string bootstrapServers = 2;
+
+  // Topic name.
+  string topic = 4;
+
   // Optional content mode to use when pushing messages to Kafka
-  ContentMode contentMode = 1;
+  ContentMode contentMode = 5;
 
   // Ingress can both listen on a specific HTTP path
   // or listen to the / path but match the Host header
   oneof ingressType {
     // path to listen for incoming events.
-    string path = 2;
+    string path = 6;
 
     // host header to match
-    string host = 3;
+    string host = 7;
   }
 }
 
-message Resource {
-  // Id of the resource
-  // It's the same as the Kubernetes resource uid
-  string uid = 1;
+// For communicating changes between data plane and control plane we use an internal topic.
+// The internal topic is configured to be log compacted so that Apache Kafka keeps only the last message for any given
+// key.
+//
+// For each object we sent a message in the following form:
+// Key:   <resource UID>
+// Value: <Object>
+// where <Object> can be:
+//  - Ingress: an Ingress is the minimal configuration for a Broker, a Channel, or a KafkaSink.
+//  - Egress: an Egress is the minimal configuration for a Subscription, a Trigger or a KafkaSource.
+message Object {
+  oneof Object {
 
-  // Topics name
-  // Note: If there is an ingress configured, then this field must have exactly 1 element otherwise,
-  //  if the resource does just dispatch from Kafka, then this topic list can contain multiple elements
-  repeated string topics = 2;
+    Ingress ingress = 1;
 
-  // A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
-  // Note: we're using a comma separated list simply because that's how java kafka client likes it.
-  string bootstrapServers = 3;
-
-  // Optional ingress for this topic
-  Ingress ingress = 4;
-
-  // Optional configuration of egress valid for the whole resource
-  EgressConfig egressConfig = 5;
-
-  // Optional egresses for this topic
-  repeated Egress egresses = 6;
-}
-
-message Contract {
-  // Count each contract update.
-  // Make sure each data plane pod has the same contract generation number.
-  uint64 generation = 1;
-
-  repeated Resource resources = 2;
+    Egress egress = 2;
+  }
 }

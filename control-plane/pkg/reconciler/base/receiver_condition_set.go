@@ -20,7 +20,6 @@ package base
 import (
 	"fmt"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"knative.dev/eventing/pkg/reconciler/names"
@@ -32,19 +31,21 @@ import (
 )
 
 const (
-	ConditionAddressable        apis.ConditionType = "Addressable"
-	ConditionDataPlaneAvailable apis.ConditionType = "DataPlaneAvailable"
-	ConditionTopicReady         apis.ConditionType = "TopicReady"
-	ConditionConfigMapUpdated   apis.ConditionType = "ConfigMapUpdated"
-	ConditionConfigParsed       apis.ConditionType = "ConfigParsed"
+	ConditionAddressable             apis.ConditionType = "Addressable"
+	ConditionDataPlaneAvailable      apis.ConditionType = "DataPlaneAvailable"
+	ConditionTopicReady              apis.ConditionType = "TopicReady"
+	ConditionConfigParsed            apis.ConditionType = "ConfigParsed"
+	ConditionInternalTopicCreated    apis.ConditionType = "InternalTopicReady"
+	ConditionConfigChangedPropagated apis.ConditionType = "ConfigPropagated"
 )
 
 var ConditionSet = apis.NewLivingConditionSet(
 	ConditionAddressable,
 	ConditionDataPlaneAvailable,
 	ConditionTopicReady,
-	ConditionConfigMapUpdated,
 	ConditionConfigParsed,
+	ConditionInternalTopicCreated,
+	ConditionConfigChangedPropagated,
 )
 
 const (
@@ -84,57 +85,6 @@ func (manager *StatusConditionManager) DataPlaneNotAvailable() reconciler.Event 
 	)
 
 	return fmt.Errorf("%s: %s", ReasonDataPlaneNotAvailable, MessageDataPlaneNotAvailable)
-}
-
-func (manager *StatusConditionManager) FailedToGetConfigMap(err error) reconciler.Event {
-
-	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
-		ConditionConfigMapUpdated,
-		fmt.Sprintf(
-			"Failed to get ConfigMap: %s",
-			manager.Configs.DataPlaneConfigMapAsString(),
-		),
-		"%v",
-		err,
-	)
-
-	return fmt.Errorf("failed to get contract config map %s: %w", manager.Configs.DataPlaneConfigMapAsString(), err)
-}
-
-func (manager *StatusConditionManager) FailedToGetDataFromConfigMap(err error) reconciler.Event {
-
-	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
-		ConditionConfigMapUpdated,
-		fmt.Sprintf(
-			"Failed to get contract data from ConfigMap: %s",
-			manager.Configs.DataPlaneConfigMapAsString(),
-		),
-		"%v",
-		err,
-	)
-
-	return fmt.Errorf("failed to get broker and triggers data from config map %s: %w", manager.Configs.DataPlaneConfigMapAsString(), err)
-}
-
-func (manager *StatusConditionManager) FailedToUpdateConfigMap(err error) reconciler.Event {
-
-	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
-		ConditionConfigMapUpdated,
-		fmt.Sprintf("Failed to update ConfigMap: %s", manager.Configs.DataPlaneConfigMapAsString()),
-		"%s",
-		err,
-	)
-
-	return fmt.Errorf("failed to update contract config map %s: %w", manager.Configs.DataPlaneConfigMapAsString(), err)
-}
-
-func (manager *StatusConditionManager) ConfigMapUpdated() {
-
-	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrueWithReason(
-		ConditionConfigMapUpdated,
-		fmt.Sprintf("Config map %s updated", manager.Configs.DataPlaneConfigMapAsString()),
-		"",
-	)
 }
 
 func (manager *StatusConditionManager) FailedToCreateTopic(topic string, err error) reconciler.Event {
@@ -182,30 +132,6 @@ func (manager *StatusConditionManager) Reconciled() reconciler.Event {
 	return nil
 }
 
-func (manager *StatusConditionManager) FailedToUpdateDispatcherPodsAnnotation(err error) {
-
-	// We don't set status conditions for dispatcher pods updates.
-
-	// Record the event.
-	manager.Recorder.Eventf(
-		manager.Object,
-		corev1.EventTypeWarning,
-		"failed to update dispatcher pods annotation",
-		"%v",
-		err,
-	)
-}
-
-func (manager *StatusConditionManager) FailedToUpdateReceiverPodsAnnotation(err error) reconciler.Event {
-
-	return fmt.Errorf("failed to update receiver pods annotation: %w", err)
-}
-
-func (manager *StatusConditionManager) FailedToGetConfig(err error) reconciler.Event {
-
-	return fmt.Errorf("failed to get contract configuration: %w", err)
-}
-
 func (manager *StatusConditionManager) FailedToResolveConfig(err error) reconciler.Event {
 
 	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
@@ -241,4 +167,34 @@ func (manager *StatusConditionManager) TopicNotPresentOrInvalid() error {
 
 	return fmt.Errorf("topic is not present: check topic configuration")
 
+}
+
+func (manager *StatusConditionManager) FailedToCreateInternalTopic(topic string, err error) reconciler.Event {
+
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
+		ConditionInternalTopicCreated,
+		fmt.Sprintf("Failed to create internal topic %s", topic),
+		err.Error(),
+	)
+
+	return fmt.Errorf("failed to create internal topic %s: %w", topic, err)
+}
+
+func (manager *StatusConditionManager) InternalTopicCreated(topic string) {
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkTrueWithReason(
+		ConditionInternalTopicCreated,
+		fmt.Sprintf("Topic %s created", topic),
+		"",
+	)
+}
+
+func (manager *StatusConditionManager) FailedToSendMessage(err error) reconciler.Event {
+
+	manager.Object.GetConditionSet().Manage(manager.Object.GetStatus()).MarkFalse(
+		ConditionInternalTopicCreated,
+		"Failed to propagate changes to data plane",
+		err.Error(),
+	)
+
+	return fmt.Errorf("failed to propagate changes to data plane: %w", err)
 }

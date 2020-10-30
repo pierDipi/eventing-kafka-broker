@@ -23,12 +23,15 @@ import (
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 )
 
 // TopicConfig contains configurations for creating a topic.
 type TopicConfig struct {
 	TopicDetail      sarama.TopicDetail
 	BootstrapServers []string
+
+	configEntries map[string]*string
 }
 
 // GetBootstrapServers returns TopicConfig.BootstrapServers as a comma separated list of bootstrap servers.
@@ -59,6 +62,7 @@ func CreateTopic(admin sarama.ClusterAdmin, logger *zap.Logger, topic string, co
 	topicDetail := &sarama.TopicDetail{
 		NumPartitions:     config.TopicDetail.NumPartitions,
 		ReplicationFactor: config.TopicDetail.ReplicationFactor,
+		ConfigEntries:     config.configEntries,
 	}
 
 	logger.Debug("create topic",
@@ -98,6 +102,17 @@ func (f NewClusterAdminFunc) CreateTopic(logger *zap.Logger, topic string, confi
 	defer kafkaClusterAdmin.Close()
 
 	return CreateTopic(kafkaClusterAdmin, logger, topic, config)
+}
+
+func (f NewClusterAdminFunc) CreateLogCompactedTopic(logger *zap.Logger, topic string, config *TopicConfig) (string, error) {
+	return f.CreateTopic(logger, topic, &TopicConfig{
+		TopicDetail:      config.TopicDetail,
+		BootstrapServers: config.BootstrapServers,
+		configEntries:    map[string]*string{
+			"cleanup.policy":      pointer.StringPtr("compact"),
+			"delete.retention.ms": pointer.StringPtr(fmt.Sprintf("%d", 1000*60*60*24)),
+		},
+	})
 }
 
 func (f NewClusterAdminFunc) DeleteTopic(topic string, bootstrapServers []string) (string, error) {

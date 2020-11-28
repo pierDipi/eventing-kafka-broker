@@ -1,0 +1,10 @@
+sender:
+  target: http://localhost:8080/attack-ingress-single
+  frequency: 1000
+  workers: 15
+  keepAlive: true
+receiver:
+  port: 8081
+  timeout: 0m
+duration: 10m
+timeout: 0m

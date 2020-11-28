@@ -39,6 +39,7 @@ import io.vertx.micrometer.backends.BackendRegistries;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import net.logstash.logback.encoder.LogstashEncoder;
@@ -91,6 +92,10 @@ public class Main {
         )
     );
 
+    receiverMain(env, producerConfigs, vertx);
+  }
+
+  public static void receiverMain(final ReceiverEnv env, final Properties producerConfigs, final Vertx vertx) {
     try {
 
       ContractMessageCodec.register(vertx.eventBus());

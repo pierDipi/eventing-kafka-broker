@@ -17,8 +17,8 @@
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>dev.knative.eventing.kafka.broker</groupId>
@@ -54,6 +54,7 @@
     <assertj.version>3.18.1</assertj.version>
     <junit.jupiter.version>5.7.0</junit.jupiter.version>
     <mokito.junit.jupiter.version>3.6.28</mokito.junit.jupiter.version>
+    <jmh.version>1.26</jmh.version>
   </properties>
 
   <modules>
@@ -62,6 +63,7 @@
     <module>receiver</module>
     <module>dispatcher</module>
     <module>tests</module>
+    <module>benchmarks</module>
   </modules>
 
   <repositories>
@@ -223,7 +225,20 @@
         <groupId>org.assertj</groupId>
         <artifactId>assertj-core</artifactId>
         <version>${assertj.version}</version>
+        <scope>test</scope>
       </dependency>
+
+      <dependency>
+        <groupId>org.openjdk.jmh</groupId>
+        <artifactId>jmh-core</artifactId>
+        <version>${jmh.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.openjdk.jmh</groupId>
+        <artifactId>jmh-generator-annprocess</artifactId>
+        <version>${jmh.version}</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 

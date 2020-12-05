@@ -49,6 +49,16 @@ ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   "eventing:v1alpha1" \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
 
+OUTPUT_PKG="knative.dev/eventing-kafka-broker/control-plane/pkg/client/injection/kube" \
+VERSIONED_CLIENTSET_PKG="k8s.io/client-go/kubernetes" \
+EXTERNAL_INFORMER_PKG="k8s.io/client-go/informers" \
+  ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
+    k8s.io/client-go \
+    k8s.io/api \
+    "core:v1" \
+    --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt \
+    --force-genreconciler-kinds "ConfigMap"
+
 group "Update deps post-codegen"
 
 ${REPO_ROOT_DIR}/proto/hack/generate_proto

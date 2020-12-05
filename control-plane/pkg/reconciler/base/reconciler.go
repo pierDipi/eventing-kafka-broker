@@ -137,21 +137,13 @@ func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.Co
 		return &contract.Contract{}, nil
 	}
 
-	ct := &contract.Contract{}
-	var err error
-
 	logger.Debug(
 		"Unmarshalling configmap",
 		zap.String("format", format),
 	)
 
-	// determine unmarshalling strategy
-	switch format {
-	case Protobuf:
-		err = proto.Unmarshal(dataPlaneDataRaw, ct)
-	case Json:
-		err = protojson.Unmarshal(dataPlaneDataRaw, ct)
-	}
+	ct := &contract.Contract{}
+	err := Unmarshal(format, dataPlaneDataRaw, ct)
 	if err != nil {
 
 		logger.Warn("Failed to unmarshal config map", zap.Error(err))
@@ -164,29 +156,56 @@ func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.Co
 }
 
 func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *contract.Contract, configMap *corev1.ConfigMap) error {
+	return UpdateConfigMap(ctx, contract, configMap, r.KubeClient, r.DataPlaneConfigFormat)
+}
 
-	var data []byte
-	var err error
-	switch r.DataPlaneConfigFormat {
-	case Protobuf:
-		data, err = proto.Marshal(contract)
-	case Json:
-		data, err = protojson.Marshal(contract)
-	}
+func UpdateConfigMap(ctx context.Context, contract *contract.Contract, cm *corev1.ConfigMap, kc kubernetes.Interface, format string) error {
+	data, err := Marshal(format, contract)
 	if err != nil {
-		return fmt.Errorf("failed to marshal contract: %w", err)
+		return err
 	}
 
 	// Update config map data. TODO is it safe to update this config map? do we need to copy it?
-	configMap.BinaryData[ConfigMapDataKey] = data
+	cm.BinaryData[ConfigMapDataKey] = data
 
-	_, err = r.KubeClient.CoreV1().ConfigMaps(configMap.Namespace).Update(ctx, configMap, metav1.UpdateOptions{})
+	_, err = kc.CoreV1().ConfigMaps(cm.Namespace).Update(ctx, cm, metav1.UpdateOptions{})
 	if err != nil {
 		// Return the same error, so that we can handle conflicting updates.
 		return err
 	}
 
 	return nil
+
+}
+
+func Marshal(format string, contract *contract.Contract) ([]byte, error) {
+	var data []byte
+	var err error
+	switch format {
+	case Protobuf:
+		data, err = proto.Marshal(contract)
+	case Json:
+		data, err = protojson.Marshal(contract)
+	default:
+		return nil, fmt.Errorf("unknown format %s", format)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal contract: %w", err)
+	}
+	return data, err
+}
+
+func Unmarshal(format string, raw []byte, ct *contract.Contract) error {
+	var err error
+	switch format {
+	case Protobuf:
+		err = proto.Unmarshal(raw, ct)
+	case Json:
+		err = protojson.Unmarshal(raw, ct)
+	default:
+		return fmt.Errorf("unknown format %s", format)
+	}
+	return err
 }
 
 func (r *Reconciler) UpdateDispatcherPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {

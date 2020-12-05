@@ -80,3 +80,8 @@ func BackoffDelayFromISO8601String(backoffDelay *string, defaultDelay uint64) (u
 
 	return uint64(math.Abs(float64(ms.Milliseconds()))), nil
 }
+
+// Increment volume generation
+func IncrementGeneration(generation uint64) uint64 {
+	return (generation + 1) % (math.MaxUint64 - 1)
+}

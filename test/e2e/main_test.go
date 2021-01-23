@@ -19,10 +19,15 @@
 package e2e
 
 import (
+	"context"
+	"log"
 	"os"
 	"testing"
 
+	"k8s.io/client-go/kubernetes"
 	testlib "knative.dev/eventing/test/lib"
+	"knative.dev/pkg/injection"
+	"knative.dev/pkg/test/zipkin"
 )
 
 const (
@@ -31,6 +36,23 @@ const (
 )
 
 func TestMain(t *testing.M) {
+
+	ctx := context.Background()
+
+	// Create a K8s client.
+	cfg, err := injection.GetRESTConfig(injection.Flags().ServerURL, injection.Flags().Kubeconfig)
+	if err != nil {
+		panic(err)
+	}
+	kc, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := zipkin.SetupZipkinTracingFromConfigTracing(ctx, kc, log.Printf, SystemNamespace); err != nil {
+		panic(err)
+	}
+	defer zipkin.CleanupZipkinTracingSetup(log.Printf)
 
 	exit := t.Run()
 

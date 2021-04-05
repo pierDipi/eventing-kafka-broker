@@ -16,32 +16,50 @@
 package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.cluster.Cluster;
+import dev.knative.eventing.kafka.broker.core.cluster.ClusterChangedListener;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
-public class ResourcesReconcilerMessageHandler implements Handler<Message<Object>> {
+public class ResourcesReconcilerMessageHandler implements Handler<Message<Object>>, ClusterChangedListener {
 
   private static final Logger logger = LoggerFactory.getLogger(ResourcesReconcilerMessageHandler.class);
 
   public final static String ADDRESS = "resourcesreconciler.core";
 
   private final ResourcesReconciler resourcesReconciler;
+
+  // reconciling signal whether we're reconciling our last seen contract.
   private final AtomicBoolean reconciling;
+  // Cluster changed signal whether cluster members have changed during a reconciliation.
+  private final AtomicBoolean clusterChanged;
+
   private final AtomicReference<DataPlaneContract.Contract> last;
 
-  public ResourcesReconcilerMessageHandler(final ResourcesReconciler resourcesReconciler) {
+  ResourcesReconcilerMessageHandler(final ResourcesReconciler resourcesReconciler) {
+    this(resourcesReconciler, null);
+  }
+
+  ResourcesReconcilerMessageHandler(final ResourcesReconciler resourcesReconciler, final Cluster cluster) {
     this.resourcesReconciler = resourcesReconciler;
     reconciling = new AtomicBoolean();
+    clusterChanged = new AtomicBoolean(false);
     last = new AtomicReference<>();
+
+    if (cluster != null) {
+      cluster.nodeListener(this);
+    }
   }
 
   @Override
@@ -60,11 +78,15 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
     // Our reconciler is on the same verticle of the handler, therefore they use both the same thread.
     // However, if the reconciler makes an async request or executes a blocking operation, a new contract message to
     // reconcile might be scheduled to our verticle thread, that might generate inconsistencies.
-    if (reconciling.compareAndSet(false, true)) {
+    if (last.get() != null && reconciling.compareAndSet(false, true)) {
 
       final var contract = last.get();
 
       logger.info("Reconciling contract {}", keyValue("contractGeneration", contract.getGeneration()));
+
+      // Regardless of the cluster changed event, we're just reconciling resources, so we've picked up the latest
+      // cluster state.
+      clusterChanged.set(false);
 
       resourcesReconciler.reconcile(contract.getResourcesList())
         .onSuccess(v -> logger.info(
@@ -82,9 +104,9 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
           // We have reconciled the last known contract.
           reconciling.set(false);
 
-          // During a reconcile a new contract might have been set.
+          // During a reconcile a new contract might have been set or cluster members might have changed.
           // If that's the case, reconcile it.
-          if (last.get().getGeneration() != contract.getGeneration()) {
+          if (last.get().getGeneration() != contract.getGeneration() || clusterChanged.get()) {
             reconcileLast(null);
           }
         });
@@ -93,5 +115,23 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
 
   public static MessageConsumer<Object> start(final Vertx vertx, final ResourcesReconciler reconciler) {
     return vertx.eventBus().localConsumer(ADDRESS, new ResourcesReconcilerMessageHandler(reconciler));
+  }
+
+  public static MessageConsumer<Object> start(final Vertx vertx,
+                                              final ResourcesReconciler reconciler,
+                                              final Cluster cluster) {
+    return vertx.eventBus().localConsumer(ADDRESS, new ResourcesReconcilerMessageHandler(reconciler, cluster));
+  }
+
+  @Override
+  public void clusterChanged(Set<String> nodes) {
+    logger.info("Cluster changed {}", keyValue("nodes", nodes));
+
+    // If we're reconciling, the call to reconcileLast that follows won't start another reconciliation.
+    // Once the reconciliation that was happening ends, we will trigger another one through this flag.
+    clusterChanged.set(true);
+
+    // Reconcile again since members changed.
+    reconcileLast(null);
   }
 }

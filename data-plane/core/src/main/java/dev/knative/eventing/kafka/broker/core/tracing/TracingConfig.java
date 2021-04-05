@@ -22,6 +22,9 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static dev.knative.eventing.kafka.broker.core.Features.pathOf;
+import static dev.knative.eventing.kafka.broker.core.Features.trim;
+
 public final class TracingConfig {
 
   private final Backend backend;
@@ -121,10 +124,6 @@ public final class TracingConfig {
 
       return Float.valueOf(s);
     }
-
-    private static String trim(InputStream in) throws IOException {
-      return new String(in.readAllBytes()).trim();
-    }
   }
 
   static class Builder {
@@ -176,13 +175,6 @@ public final class TracingConfig {
 
   private static Path sampleRatePath(final String root) {
     return pathOf(root, "sample-rate");
-  }
-
-  private static Path pathOf(final String root, final String key) {
-    if (root.endsWith("/")) {
-      return Path.of(root + key);
-    }
-    return Path.of(root + "/" + key);
   }
 
   @Override

@@ -56,6 +56,12 @@ spec:
             - mountPath: /etc/tracing
               name: config-tracing
               readOnly: true
+            - mountPath: /etc/features
+              name: kafka-broker-config-features
+              readOnly: true
+            - mountPath: /etc/dispatcher-cluster
+              name: kafka-broker-dispatcher-cluster
+              readOnly: true
           ports:
             - containerPort: 9090
               name: http-metrics
@@ -97,6 +103,12 @@ spec:
             # This should be set according to initial delay seconds
             - name: WAIT_STARTUP_SECONDS
               value: "8"
+            - name: IP_ADDRESS
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: FEATURES_CONFIG_PATH
+              value: "/etc/features"
           command:
             - "java"
           args:
@@ -145,6 +157,12 @@ spec:
         - name: config-tracing
           configMap:
             name: config-tracing
+        - name: kafka-broker-config-features
+          configMap:
+            name: kafka-broker-config-features
+        - name: kafka-broker-dispatcher-cluster
+          configMap:
+            name: kafka-broker-dispatcher-cluster
       restartPolicy: Always
       dnsConfig:
         options:

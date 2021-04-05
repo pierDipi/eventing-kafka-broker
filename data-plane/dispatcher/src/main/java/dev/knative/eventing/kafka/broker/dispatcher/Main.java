@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import dev.knative.eventing.kafka.broker.core.cluster.DNSBasedCluster;
+import dev.knative.eventing.kafka.broker.core.cluster.DNSBasedClusterOptions;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
 import dev.knative.eventing.kafka.broker.core.file.FileWatcher;
@@ -33,6 +35,7 @@ import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.dns.DnsClientOptions;
 import io.vertx.core.tracing.TracingOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -128,7 +131,13 @@ public class Main {
 
       final var consumerDeployerVerticle = new ConsumerDeployerVerticle(
         consumerVerticleFactory,
-        env.getEgressesInitialCapacity()
+        env.getEgressesInitialCapacity(),
+        v -> new DNSBasedCluster(v, new DNSBasedClusterOptions(
+          new DnsClientOptions(),
+          System.getenv("IP_ADDRESS"),
+          System.getenv("CLUSTER_DNS_RECORD"),
+          30000
+        ))
       );
 
       final var waitConsumerDeployer = new CountDownLatch(1);

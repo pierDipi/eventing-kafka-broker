@@ -16,25 +16,30 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.cluster.Cluster;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListener;
+import dev.knative.eventing.kafka.broker.core.reconciler.impl.ClusteredEgressReconcilerFilter;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerImpl;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.consumer.ConsumerVerticleFactory;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.MessageConsumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.function.Function;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 /**
- * ResourcesManager manages Resource and Egress objects by instantiating and starting verticles based on resources
- * configurations.
+ * {@link ConsumerDeployerVerticle} manages Resource and Egress objects by instantiating and starting verticles based on
+ * egress configurations.
  *
  * <p>Note: {@link ConsumerDeployerVerticle} is not thread-safe and it's not supposed to be shared between
  * threads.
@@ -48,32 +53,49 @@ public final class ConsumerDeployerVerticle extends AbstractVerticle implements 
 
   private MessageConsumer<Object> messageConsumer;
 
-  /**
-   * All args constructor.
-   *
-   * @param consumerFactory         consumer factory.
-   * @param egressesInitialCapacity egresses container initial capacity.
-   */
+  private final Function<Vertx, Cluster> clusterFactory;
+
+  public ConsumerDeployerVerticle(final ConsumerVerticleFactory consumerFactory, final int egressesInitialCapacity) {
+    this(consumerFactory, egressesInitialCapacity, null);
+  }
+
   public ConsumerDeployerVerticle(
     final ConsumerVerticleFactory consumerFactory,
-    final int egressesInitialCapacity) {
+    final int egressesInitialCapacity,
+    final Function<Vertx, Cluster> clusterFactory) {
     Objects.requireNonNull(consumerFactory, "provide consumer factory");
     if (egressesInitialCapacity <= 0) {
       throw new IllegalArgumentException("egressesInitialCapacity cannot be negative or 0");
     }
     this.consumerFactory = consumerFactory;
     this.deployedDispatchers = new HashMap<>(egressesInitialCapacity);
+    this.clusterFactory = clusterFactory;
   }
 
   @Override
   public void start() {
-    this.messageConsumer = ResourcesReconcilerMessageHandler.start(
-      vertx,
-      ResourcesReconcilerImpl
-        .builder()
-        .watchEgress(this)
-        .build()
-    );
+    if (clusterFactory != null) {
+      final var cluster = clusterFactory.apply(vertx); // Note: Use a single instance.
+      this.messageConsumer = ResourcesReconcilerMessageHandler.start(
+        vertx,
+        new ClusteredEgressReconcilerFilter(
+          cluster,
+          ResourcesReconcilerImpl
+            .builder()
+            .watchEgress(this)
+            .build()
+        ),
+        cluster
+      );
+    } else {
+      this.messageConsumer = ResourcesReconcilerMessageHandler.start(
+        vertx,
+        ResourcesReconcilerImpl
+          .builder()
+          .watchEgress(this)
+          .build()
+      );
+    }
   }
 
   @Override

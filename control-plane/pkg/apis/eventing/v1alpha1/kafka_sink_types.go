@@ -95,6 +95,7 @@ type KafkaSinkSpec struct {
 	ContentMode *string `json:"contentMode,omitempty"`
 
 	// Auth configurations.
+	// +optional
 	Auth *Auth `json:"auth,omitempty"`
 }
 

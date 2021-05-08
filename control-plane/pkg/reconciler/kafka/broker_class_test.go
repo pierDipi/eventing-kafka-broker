@@ -33,3 +33,9 @@ func TestBrokerClassFilter(t *testing.T) {
 
 	assert.True(t, pass, "expected to pass filter when broker class annotation is set to "+BrokerClass)
 }
+
+func TestBrokerClassFilter(t *testing.T) {
+	pass := BrokerClassFilter()(&metav1.ObjectMeta{})
+
+	assert.False(t, pass, "expected to not pass filter when broker class annotation is not set")
+}

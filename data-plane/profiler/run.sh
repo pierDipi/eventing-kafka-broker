@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+set -e
+
 # Set runtime variables
 # echo 1 > /proc/sys/kernel/perf_event_paranoid
 # echo 0 > /proc/sys/kernel/kptr_restrict
@@ -49,35 +51,33 @@ echo "Kafka URL: ${KAFKA_URL}"
 # Build the data plane.
 cd "${PROJECT_ROOT_DIR}" && ./mvnw package -DskipTests -Dlicense.skip -Deditorconfig.skip -B -U --no-transfer-progress && cd - || exit 1
 
-# Download async profiler.
-rm async-profiler
-rm async-profiler.tgz
-mkdir async-profiler
-wget -O - ${ASYNC_PROFILER_URL} >async-profiler.tgz
-tar xzvf async-profiler.tgz -C async-profiler --strip-components=1
+if [ ! -d "async-profiler" ]; then
+  # Download async profiler.
+  mkdir async-profiler
+  wget -O - ${ASYNC_PROFILER_URL} >async-profiler.tgz
+  tar xzvf async-profiler.tgz -C async-profiler --strip-components=1
+fi
 
-# Download Apache Kafka.
-rm kafka
-rm kafka.tgz
-rm -r /tmp/kafka-logs/
-rm -r /tmp/zookeeper/
-mkdir kafka
-wget -O - ${KAFKA_URL} >kafka.tgz
-tar xzvf kafka.tgz -C kafka --strip-components=1
+if [ ! -d "kafka" ]; then
+  # Download Apache Kafka.
+  mkdir -p kafka
+  wget -O - ${KAFKA_URL} >kafka.tgz
+  tar xzvf kafka.tgz -C kafka --strip-components=1
+fi
 
-ls -al
+rm -rf /tmp/kafka-logs/
+rm -rf /tmp/zookeeper/
+rm -rf /tmp/profiler/*
+mkdir -p /tmp/profiler
 
 # Start Zookeeper and Kafka.
-cd kafka || exit 1
-./bin/zookeeper-server-start.sh config/zookeeper.properties &
+./kafka/bin/zookeeper-server-start.sh kafka/config/zookeeper.properties >/tmp/profiler/zookeeper.log &
 zookeeper_pid=$!
-./bin/kafka-server-start.sh config/server.properties &
+./kafka/bin/kafka-server-start.sh kafka/config/server.properties >/tmp/profiler/kafka.log &
 kafka_pid=$!
 
 # Create our Kafka topic.
-./bin/kafka-topics.sh --create --topic attack-ingress-single --partitions 10 --bootstrap-server localhost:9092
-# Back to our previous dir
-cd ..
+./kafka/bin/kafka-topics.sh --create --topic attack-ingress-single --partitions 10 --bootstrap-server localhost:9092
 
 # Define expected env variables.
 export PRODUCER_CONFIG_FILE_PATH=${RESOURCES_DIR}/config-kafka-broker-producer.properties
@@ -103,6 +103,8 @@ export INSTANCE_ID="receiver"
 
 # Run receiver.
 java \
+  -Xmx2g \
+  -Xms2g \
   -XX:+UnlockDiagnosticVMOptions \
   -XX:+DebugNonSafepoints \
   -Dlogback.configurationFile="${RESOURCES_DIR}"/config-logging.xml \
@@ -118,6 +120,8 @@ export INSTANCE_ID="dispatcher"
 
 # Run dispatcher.
 java \
+  -Xmx2g \
+  -Xms2g \
   -XX:+UnlockDiagnosticVMOptions \
   -XX:+DebugNonSafepoints \
   -Dlogback.configurationFile="${RESOURCES_DIR}"/config-logging.xml \
@@ -125,11 +129,14 @@ java \
 dispatcher_pid=$!
 
 # Download Sacura
-GO111MODULE=off go get github.com/pierdipi/sacura/cmd/sacura || exit 1
+GO111MODULE=off go install github.com/pierdipi/sacura/cmd/sacura || exit 1
+
+# Wait for our services to connect with Kafka
+sleep 10
 
 # Suppress failure since it fails when it doesn't receive all events.
 echo "Warm up $(date)"
-! sacura --config "${RESOURCES_DIR}"/config-sacura-warmup.yaml
+sacura --config "${RESOURCES_DIR}"/config-sacura-warmup.yaml
 
 echo "Attach profilers $(date)"
 ./async-profiler/profiler.sh \
@@ -146,7 +153,7 @@ echo "Attach profilers $(date)"
   $dispatcher_pid &
 
 echo "Starting Sacura $(date)"
-! sacura --config "${RESOURCES_DIR}"/config-sacura.yaml
+sacura --config "${RESOURCES_DIR}"/config-sacura.yaml
 
 echo "Sacura finished $(date)"
 

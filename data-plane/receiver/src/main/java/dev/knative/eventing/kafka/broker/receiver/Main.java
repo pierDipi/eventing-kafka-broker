@@ -28,12 +28,19 @@ import dev.knative.eventing.kafka.broker.core.utils.Shutdown;
 import io.cloudevents.kafka.CloudEventSerializer;
 import io.cloudevents.kafka.PartitionKeyExtensionInterceptor;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
+import net.logstash.logback.encoder.LogstashEncoder;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.ClosedWatchServiceException;
@@ -42,11 +49,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
-import net.logstash.logback.encoder.LogstashEncoder;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
@@ -127,7 +129,8 @@ public class Main {
       httpServerOptions.setPort(env.getIngressPort());
       httpServerOptions.setTracingPolicy(TracingPolicy.PROPAGATE);
 
-      final var verticle = new ReceiverVerticle(
+      final var waitVerticle = new CountDownLatch(1);
+      vertx.deployVerticle(() -> new ReceiverVerticle(
         httpServerOptions,
         handlerFactory,
         h -> new SimpleProbeHandlerDecorator(
@@ -135,10 +138,7 @@ public class Main {
           env.getReadinessProbePath(),
           h
         )
-      );
-
-      final var waitVerticle = new CountDownLatch(1);
-      vertx.deployVerticle(verticle)
+      ), new DeploymentOptions().setInstances(2))
         .onSuccess(v -> {
           logger.info("Receiver started");
           waitVerticle.countDown();

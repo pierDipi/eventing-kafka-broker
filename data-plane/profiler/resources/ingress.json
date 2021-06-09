@@ -10,6 +10,11 @@
       "ingress": {
         "path": "/attack-ingress-single"
       },
+      "egressConfig": {
+        "retry": 10,
+        "backoffPolicy": 0,
+        "backoffDelay": 100
+      },
       "egresses": [
         {
           "consumerGroup": "669082ef-b02b-4662-9a6e-85acd0f38c3c",

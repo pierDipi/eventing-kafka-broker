@@ -19,13 +19,11 @@ package broker
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/pkg/controller"
@@ -63,7 +61,6 @@ type Reconciler struct {
 	KafkaDefaultTopicDetailsLock sync.RWMutex
 	bootstrapServers             []string
 	bootstrapServersLock         sync.RWMutex
-	ConfigMapLister              corelisters.ConfigMapLister
 
 	// ClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
@@ -93,7 +90,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 	statusConditionManager.DataPlaneAvailable()
 
-	topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
+	topicConfig, brokerConfig, err := r.GetReferencedConfig(logger, broker.Spec.Config, broker, r.defaultConfig)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -260,7 +257,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		// eventually be seen by the dispatcher pod and resources will be deleted accordingly.
 	}
 
-	topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
+	topicConfig, brokerConfig, err := r.GetReferencedConfig(logger, broker.Spec.Config, broker, r.defaultConfig)
 	if err != nil {
 		return fmt.Errorf("failed to resolve broker config: %w", err)
 	}
@@ -279,37 +276,6 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	logger.Debug("Topic deleted", zap.String("topic", topic))
 
 	return nil
-}
-
-func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*kafka.TopicConfig, *corev1.ConfigMap, error) {
-
-	logger.Debug("broker config", zap.Any("broker.spec.config", broker.Spec.Config))
-
-	if broker.Spec.Config == nil {
-		tc, err := r.defaultConfig()
-		return tc, nil, err
-	}
-
-	if strings.ToLower(broker.Spec.Config.Kind) != "configmap" { // TODO: is there any constant?
-		return nil, nil, fmt.Errorf("supported config Kind: ConfigMap - got %s", broker.Spec.Config.Kind)
-	}
-
-	namespace := broker.Spec.Config.Namespace
-	if namespace == "" {
-		// Namespace not specified, use broker namespace.
-		namespace = broker.Namespace
-	}
-	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(broker.Spec.Config.Name)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, err)
-	}
-
-	brokerConfig, err := configFromConfigMap(logger, cm)
-	if err != nil {
-		return nil, cm, err
-	}
-
-	return brokerConfig, cm, nil
 }
 
 func (r *Reconciler) defaultTopicDetail() sarama.TopicDetail {
@@ -371,7 +337,7 @@ func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev
 
 	return func(configMap *corev1.ConfigMap) {
 
-		topicConfig, err := configFromConfigMap(logger, configMap)
+		topicConfig, err := ConfigFromConfigMap(logger, configMap)
 		if err != nil {
 			return
 		}

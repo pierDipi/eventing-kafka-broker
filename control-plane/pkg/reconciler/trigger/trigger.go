@@ -20,9 +20,11 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	"go.uber.org/zap"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -55,6 +57,10 @@ type Reconciler struct {
 	Resolver       *resolver.URIResolver
 
 	Configs *config.Env
+
+	EnqueueAfter func(trigger *eventing.Trigger, duration time.Duration)
+
+	IsConsumerGroupActive kafka.ConsumerGroupChecker
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -126,10 +132,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 		return statusConditionManager.failedToGetDataPlaneConfigFromConfigMap(err)
 	}
 
-	logger.Debug(
-		"Got contract data from config map",
-		zap.Any(base.ContractLogKey, ct),
-	)
+	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
 	brokerIndex := coreconfig.FindResource(ct, broker.UID)
 	if brokerIndex == coreconfig.NoResource {
@@ -147,32 +150,41 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 	changed := coreconfig.AddOrUpdateEgressConfig(ct, brokerIndex, triggerConfig, triggerIndex)
 
-	coreconfig.IncrementContractGeneration(ct)
-
 	logger.Debug("Egress changes", zap.Int("changed", changed))
 
 	if changed == coreconfig.EgressChanged {
+		// Increment volume generation since egress changed.
+		coreconfig.IncrementContractGeneration(ct)
 		// Update the configuration map with the new dataPlaneConfig data.
 		if err := r.UpdateDataPlaneConfigMap(ctx, ct, contractConfigMap); err != nil {
 			trigger.Status.MarkDependencyFailed(string(base.ConditionConfigMapUpdated), err.Error())
 			return err
 		}
-
-		// Update volume generation annotation of dispatcher pods
-		if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
-			// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
-			// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
-			// ready. So, log out the error and move on to the next step.
-			logger.Warn(
-				"Failed to update dispatcher pod annotation to trigger an immediate config map refresh",
-				zap.Error(err),
-			)
-
-			statusConditionManager.failedToUpdateDispatcherPodsAnnotation(err)
-		} else {
-			logger.Debug("Updated dispatcher pod annotation")
-		}
 	}
+
+	// Update volume generation annotation of dispatcher pods
+	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
+		// Failing to update dispatcher pods annotation leads to config map refresh delayed by several seconds.
+		// Since the dispatcher side is the consumer side, we don't lose availability, and we can consider the Trigger
+		// ready. So, log out the error and move on to the next step.
+		logger.Warn("Failed to update dispatcher pod annotation to trigger an immediate config map refresh", zap.Error(err))
+		statusConditionManager.failedToUpdateDispatcherPodsAnnotation(err)
+	} else {
+		logger.Debug("Updated dispatcher pod annotation")
+	}
+
+	topicConfig, brokerConfig, err := r.GetReferencedConfig(logger, broker.Spec.Config, broker, nil)
+	if err != nil {
+		// TODO return error
+	}
+	securityOption, _, err := security.NewOptionFromSecret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig}, r.SecretProviderFunc())
+
+	if ok, err := r.IsConsumerGroupActive(triggerConfig.ConsumerGroup, topicConfig, securityOption); !ok && err != nil {
+		logger.Warn("Consumer group is not active yet", zap.String("group.id", triggerConfig.ConsumerGroup), zap.Error(err))
+		// TODO use configurable delay
+		r.EnqueueAfter(trigger, 50*time.Millisecond)
+	}
+	statusConditionManager.subscriptionReady()
 
 	logger.Debug("Contract config map updated")
 

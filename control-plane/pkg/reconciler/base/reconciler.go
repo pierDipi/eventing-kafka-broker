@@ -19,6 +19,7 @@ package base
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -30,9 +31,12 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/tracker"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	brokerreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
@@ -60,9 +64,10 @@ const (
 // Base reconciler for broker and trigger reconciler.
 // It contains common logic for both trigger and broker reconciler.
 type Reconciler struct {
-	KubeClient   kubernetes.Interface
-	PodLister    corelisters.PodLister
-	SecretLister corelisters.SecretLister
+	KubeClient      kubernetes.Interface
+	PodLister       corelisters.PodLister
+	SecretLister    corelisters.SecretLister
+	ConfigMapLister corelisters.ConfigMapLister
 
 	SecretTracker    tracker.Interface
 	ConfigMapTracker tracker.Interface
@@ -301,4 +306,45 @@ func (r *Reconciler) OnDeleteObserver(obj interface{}) {
 	if r.SecretTracker != nil {
 		r.SecretTracker.OnDeletedObserver(obj)
 	}
+}
+
+type DefaultConfigFunc func() (*kafka.TopicConfig, error)
+
+func (r *Reconciler) GetReferencedConfig(
+	logger *zap.Logger,
+	config *duckv1.KReference,
+	object metav1.Object,
+	defaultConfig DefaultConfigFunc,
+) (*kafka.TopicConfig, *corev1.ConfigMap, error) {
+
+	logger.Debug("object config", zap.Any("config", config))
+
+	if config == nil {
+		if defaultConfig == nil {
+			return nil, nil, fmt.Errorf("failed to resolve object config")
+		}
+		tc, err := defaultConfig()
+		return tc, nil, err
+	}
+
+	if strings.ToLower(config.Kind) != "configmap" { // TODO: is there any constant?
+		return nil, nil, fmt.Errorf("supported config Kind: ConfigMap - got %s", config.Kind)
+	}
+
+	namespace := config.Namespace
+	if namespace == "" {
+		// Namespace not specified, use object namespace.
+		namespace = object.GetNamespace()
+	}
+	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(config.Name)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, config.Name, err)
+	}
+
+	brokerConfig, err := brokerreconciler.ConfigFromConfigMap(logger, cm)
+	if err != nil {
+		return nil, cm, err
+	}
+
+	return brokerConfig, cm, nil
 }

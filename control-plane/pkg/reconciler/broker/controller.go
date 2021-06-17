@@ -71,14 +71,14 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			SystemNamespace:             configs.SystemNamespace,
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
+			ConfigMapLister:             configmapInformer.Lister(),
 		},
 		ClusterAdmin: sarama.NewClusterAdmin,
 		KafkaDefaultTopicDetails: sarama.TopicDetail{
 			NumPartitions:     DefaultNumPartitions,
 			ReplicationFactor: DefaultReplicationFactor,
 		},
-		ConfigMapLister: configmapInformer.Lister(),
-		Configs:         configs,
+		Configs: configs,
 	}
 
 	logger := logging.FromContext(ctx)

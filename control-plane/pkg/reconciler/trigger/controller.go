@@ -70,6 +70,7 @@ func NewController(ctx context.Context, _ configmap.Watcher, configs *config.Env
 			SystemNamespace:             configs.SystemNamespace,
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
+			ConfigMapLister:             configmapInformer.Lister(),
 		},
 		BrokerLister:   brokerInformer.Lister(),
 		EventingClient: eventingclient.Get(ctx),

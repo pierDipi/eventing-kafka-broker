@@ -85,15 +85,12 @@ func (m *statusConditionManager) brokerNotFoundInDataPlaneConfigMap() reconciler
 	return fmt.Errorf("broker not found in data plane config map %s", m.Configs.DataPlaneConfigMapAsString())
 }
 
+func (m statusConditionManager) subscriptionReady() {
+	m.Trigger.Status.PropagateSubscriptionCondition(&apis.Condition{Status: corev1.ConditionTrue})
+}
+
 func (m *statusConditionManager) reconciled() reconciler.Event {
-
 	m.Trigger.Status.MarkDependencySucceeded()
-
-	// TODO we don't have a subscription, consider register custom condition set for Triggers
-	m.Trigger.Status.PropagateSubscriptionCondition(&apis.Condition{
-		Status: corev1.ConditionTrue,
-	})
-
 	return nil
 }
 

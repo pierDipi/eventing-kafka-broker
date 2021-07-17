@@ -28,6 +28,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	corev1mf "k8s.io/client-go/applyconfigurations/core/v1"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"knative.dev/pkg/tracker"
@@ -77,8 +78,32 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) IsReceiverRunning() bool {
+	name := "kafka-broker-brokers-triggers"
+
 	pods, err := r.PodLister.List(r.receiverSelector())
-	return err == nil && len(pods) > 0 && isAtLeastOneRunning(pods)
+	if err != nil {
+		return false
+	}
+
+	// for _, p := range pods {
+	// 	pac := corev1mf.Pod(p.Name, p.Namespace).WithSpec(
+	// 		corev1mf.PodSpec().WithVolumes(
+	// 			corev1mf.Volume().
+	// 				WithName(name).
+	// 				WithConfigMap(corev1mf.ConfigMapVolumeSource().WithName(p.GetName())),
+	// 		),
+	// 	)
+	//
+	// 	_, err = r.KubeClient.CoreV1().Pods(p.GetNamespace()).Apply(context.Background(), pac, metav1.ApplyOptions{
+	// 		Force:        true,
+	// 		FieldManager: "knative-eventing-kafka-controller",
+	// 	})
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// }
+
+	return len(pods) > 0 && isAtLeastOneRunning(pods)
 }
 
 func (r *Reconciler) IsDispatcherRunning() bool {

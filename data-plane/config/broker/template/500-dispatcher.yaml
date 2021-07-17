@@ -130,12 +130,19 @@ spec:
             privileged: false
             readOnlyRootFilesystem: true
       volumes:
+        - name: kafka-broker-brokers-triggers
+          projected:
+            sources:
+              - configMap:
+                  name: kafka-broker-brokers-triggers
+              - configMap:
+                  name: kafka-broker-brokers-triggers-1
         - name: config-kafka-broker-data-plane
           configMap:
             name: config-kafka-broker-data-plane
-        - name: kafka-broker-brokers-triggers
-          configMap:
-            name: kafka-broker-brokers-triggers
+#        - name: kafka-broker-brokers-triggers
+#          configMap:
+#            name: kafka-broker-brokers-triggers
         - name: cache
           emptyDir: { }
         - name: kafka-broker-config-logging

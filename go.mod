@@ -15,11 +15,11 @@ require (
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
 	go.uber.org/zap v1.17.0
 	google.golang.org/protobuf v1.26.0
-	k8s.io/api v0.20.7
+	k8s.io/api v0.21.2
 	k8s.io/apiextensions-apiserver v0.20.7
-	k8s.io/apimachinery v0.20.7
+	k8s.io/apimachinery v0.21.2
 	k8s.io/apiserver v0.20.7
-	k8s.io/client-go v0.20.7
+	k8s.io/client-go v0.21.2
 	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009
 	knative.dev/eventing v0.24.0
 	knative.dev/hack v0.0.0-20210622141627-e28525d8d260

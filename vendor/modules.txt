@@ -1176,6 +1176,7 @@ knative.dev/eventing-kafka/pkg/common/client
 knative.dev/eventing-kafka/pkg/common/config
 knative.dev/eventing-kafka/pkg/common/constants
 knative.dev/eventing-kafka/pkg/common/kafka/sarama
+knative.dev/eventing-kafka/pkg/common/scheduler
 # knative.dev/hack v0.0.0-20210806075220-815cd312d65c
 ## explicit
 knative.dev/hack

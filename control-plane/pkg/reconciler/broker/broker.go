@@ -105,6 +105,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 
 	logger.Debug("config resolved", zap.Any("config", topicConfig))
 
+	if broker.Status.Annotations == nil {
+		broker.Status.Annotations = make(map[string]string, 2)
+	}
+	broker.Status.Annotations[BootstrapServersConfigMapKey] = topicConfig.GetBootstrapServers()
+
 	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: brokerConfig}, r.SecretProviderFunc())
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
@@ -117,13 +122,12 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 			zap.String("kind", secret.Kind),
 		)
 	}
-
-	// get security option for Sarama with secret info in it
-	securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
-
 	if err := r.TrackSecret(secret, broker); err != nil {
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
+
+	// get security option for Sarama with secret info in it
+	securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
 	topic, err := r.ClusterAdmin.CreateTopicIfDoesntExist(logger, kafka.Topic(TopicPrefix, broker), topicConfig, securityOption)
 	if err != nil {
@@ -132,6 +136,10 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	statusConditionManager.TopicReady(topic)
 
 	logger.Debug("Topic created", zap.Any("topic", topic))
+
+	if secret != nil {
+		broker.Status.Annotations[security.AuthSecretNameKey] = secret.GetName()
+	}
 
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)

@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/configmap"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
@@ -93,7 +94,7 @@ func NewConfigMap(configs *Configs, data []byte) runtime.Object {
 			if data == nil {
 				data = []byte("")
 			}
-			configMap.BinaryData[base.ConfigMapDataKey] = data
+			configMap.BinaryData[configmap.DataKey] = data
 		},
 	)
 }

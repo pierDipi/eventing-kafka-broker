@@ -188,7 +188,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 
 	broker, err := r.BrokerLister.Brokers(trigger.Namespace).Get(trigger.Spec.Broker)
 	if err != nil && !apierrors.IsNotFound(err) {
-		return fmt.Errorf("failed to get broker from lister: %w", err)
+		return fmt.Errorf("failed to get broker from triggerLister: %w", err)
 	}
 
 	if apierrors.IsNotFound(err) {
@@ -294,14 +294,11 @@ func (r *Reconciler) getTriggerConfig(ctx context.Context, broker *eventing.Brok
 	// Merge Broker and Trigger egress configuration prioritizing the Trigger configuration.
 	egress.EgressConfig = coreconfig.MergeEgressConfig(triggerEgressConfig, brokerEgressConfig)
 
-	deliveryOrderAnnotationValue, ok := trigger.Annotations[deliveryOrderAnnotation]
-	if ok {
-		deliveryOrder, err := deliveryOrderFromString(deliveryOrderAnnotationValue)
-		if err != nil {
-			return nil, err
-		}
-		egress.DeliveryOrder = deliveryOrder
+	dOrder, err := deliveryOrder(trigger)
+	if err != nil {
+		return nil, err
 	}
+	egress.DeliveryOrder = dOrder
 
 	return egress, nil
 }
@@ -331,4 +328,12 @@ func deliveryOrderFromString(val string) (contract.DeliveryOrder, error) {
 	default:
 		return contract.DeliveryOrder_UNORDERED, fmt.Errorf("invalid annotation %s value: %s. Allowed values [ %q | %q ]", deliveryOrderAnnotation, val, deliveryOrderOrdered, deliveryOrderUnordered)
 	}
+}
+
+func deliveryOrder(t *eventing.Trigger) (contract.DeliveryOrder, error) {
+	deliveryOrderAnnotationValue, ok := t.Annotations[deliveryOrderAnnotation]
+	if !ok {
+		return contract.DeliveryOrder_UNORDERED, nil
+	}
+	return deliveryOrderFromString(deliveryOrderAnnotationValue)
 }

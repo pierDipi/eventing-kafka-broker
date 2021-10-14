@@ -31,9 +31,104 @@ enum BackoffPolicy {
   Linear = 1;
 }
 
+message KafkaSink {
+
+  // A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+  // Note: we're using a comma separated list simply because that's how java kafka client likes it.
+  string bootstrapServers = 1;
+
+  // Topic name
+  string topic = 2;
+
+  // Optional content mode to use when pushing messages to Kafka
+  ContentMode contentMode = 3;
+
+  oneof Auth {
+    // No auth configured.
+    Empty absentAuth = 4;
+
+    // Secret reference.
+    //
+    // Secret format:
+    //
+    //   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+    //   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+    //   ca.crt: <CA PEM certificate>
+    //   user.crt: <User PEM certificate>
+    //   user.key: <User PEM key>
+    //   user: <SASL username>
+    //   password: <SASL password>
+    //
+    // Validation:
+    //   - protocol=PLAINTEXT
+    //   - protocol=SSL
+    //     - required:
+    //       - ca.crt
+    //       - user.crt
+    //       - user.key
+    //   - protocol=SASL_PLAINTEXT
+    //     - required:
+    //       - sasl.mechanism
+    //       - user
+    //       - password
+    //   - protocol=SASL_SSL
+    //     - required:
+    //       - sasl.mechanism
+    //       - ca.crt
+    //       - user.crt
+    //       - user.key
+    //       - user
+    //       - password
+    Reference authSecret = 5;
+  }
+}
+
+message HTTPSink {
+
+  string URL = 1;
+
+  oneof replyStrategy {
+    // Send the response to an url
+    string replyUrl = 2;
+
+    // Send the response to a Kafka topic
+    Empty replyToOriginalTopic = 3;
+
+    // Discard response.
+    Empty discardReply = 4;
+  }
+
+  // retry is the minimum number of retries the sender should attempt when
+  // sending an event before moving it to the dead letter sink.
+  //
+  // Setting retry to 0 means don't retry.
+  uint32 retry = 5;
+
+  // backoffPolicy is the retry backoff policy (linear, exponential).
+  BackoffPolicy backoffPolicy = 6;
+
+  // backoffDelay is the delay before retrying in milliseconds.
+  uint64 backoffDelay = 7;
+
+  // timeout is the single request timeout (not the overall retry timeout)
+  uint64 timeout = 8;
+}
+
 message EgressConfig {
   // Dead letter is where the event is sent when something goes wrong
   string deadLetter = 1;
+
+  oneof deadLetterSink {
+    // Kafka dead letter is where the event is sent when something goes wrong.
+    //
+    // This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+    KafkaSink kafkaDeadLetter = 6;
+    // Kafka dead letter is where the event is sent when something goes wrong.
+    //
+    // This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+    // TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+    HTTPSink httpDeadLetterSink = 7;
+  }
 
   // retry is the minimum number of retries the sender should attempt when
   // sending an event before moving it to the dead letter sink.
@@ -63,6 +158,15 @@ message Egress {
 
   // destination is the sink where events are sent.
   string destination = 2;
+
+  // sink is the target where events are sent.
+  oneof sink {
+    // kafkaSink is the destination Kafka topic.
+    KafkaSink kafkaSink = 10;
+    // HttpSink is the destination HTTP service.
+    // TODO(pierDipi) this replaces: replyStrategy, destination
+    HTTPSink httpSink = 11;
+  }
 
   oneof replyStrategy {
     // Send the response to an url
@@ -188,6 +292,9 @@ message Resource {
     //       - password
     Reference authSecret = 8;
   }
+
+  // TODO(pierDipi) this field replaces: bootstrapServers, ingress.contentMode, Auth.
+  KafkaSink kafkaDestination = 9;
 }
 
 message Contract {

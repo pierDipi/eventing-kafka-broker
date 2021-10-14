@@ -255,6 +255,132 @@ public final class DataPlaneContract {
   }
 
   /**
+   * Protobuf enum {@code KeyType}
+   */
+  public enum KeyType
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>String = 0;</code>
+     */
+    String(0),
+    /**
+     * <code>Integer = 1;</code>
+     */
+    Integer(1),
+    /**
+     * <code>Double = 2;</code>
+     */
+    Double(2),
+    /**
+     * <code>ByteArray = 3;</code>
+     */
+    ByteArray(3),
+    UNRECOGNIZED(-1),
+    ;
+
+    /**
+     * <code>String = 0;</code>
+     */
+    public static final int String_VALUE = 0;
+    /**
+     * <code>Integer = 1;</code>
+     */
+    public static final int Integer_VALUE = 1;
+    /**
+     * <code>Double = 2;</code>
+     */
+    public static final int Double_VALUE = 2;
+    /**
+     * <code>ByteArray = 3;</code>
+     */
+    public static final int ByteArray_VALUE = 3;
+
+
+    public final int getNumber() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalArgumentException(
+            "Can't get the number of an unknown enum value.");
+      }
+      return value;
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static KeyType valueOf(int value) {
+      return forNumber(value);
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
+    public static KeyType forNumber(int value) {
+      switch (value) {
+        case 0: return String;
+        case 1: return Integer;
+        case 2: return Double;
+        case 3: return ByteArray;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<KeyType>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        KeyType> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<KeyType>() {
+            public KeyType findValueByNumber(int number) {
+              return KeyType.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalStateException(
+            "Can't get the descriptor of an unrecognized enum value.");
+      }
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(2);
+    }
+
+    private static final KeyType[] VALUES = values();
+
+    public static KeyType valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      if (desc.getIndex() == -1) {
+        return UNRECOGNIZED;
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private KeyType(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:KeyType)
+  }
+
+  /**
    * <pre>
    * CloudEvent content mode
    * </pre>
@@ -340,7 +466,7 @@ public final class DataPlaneContract {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(2);
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.getDescriptor().getEnumTypes().get(3);
     }
 
     private static final ContentMode[] VALUES = values();
@@ -1666,6 +1792,3904 @@ public final class DataPlaneContract {
 
   }
 
+  public interface KafkaSinkOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:KafkaSink)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 1;</code>
+     * @return The bootstrapServers.
+     */
+    java.lang.String getBootstrapServers();
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 1;</code>
+     * @return The bytes for bootstrapServers.
+     */
+    com.google.protobuf.ByteString
+        getBootstrapServersBytes();
+
+    /**
+     * <pre>
+     * Topic name
+     * </pre>
+     *
+     * <code>string topic = 2;</code>
+     * @return The topic.
+     */
+    java.lang.String getTopic();
+    /**
+     * <pre>
+     * Topic name
+     * </pre>
+     *
+     * <code>string topic = 2;</code>
+     * @return The bytes for topic.
+     */
+    com.google.protobuf.ByteString
+        getTopicBytes();
+
+    /**
+     * <pre>
+     * Optional content mode to use when pushing messages to Kafka
+     * </pre>
+     *
+     * <code>.ContentMode contentMode = 3;</code>
+     * @return The enum numeric value on the wire for contentMode.
+     */
+    int getContentModeValue();
+    /**
+     * <pre>
+     * Optional content mode to use when pushing messages to Kafka
+     * </pre>
+     *
+     * <code>.ContentMode contentMode = 3;</code>
+     * @return The contentMode.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode getContentMode();
+
+    /**
+     * <pre>
+     * No auth configured.
+     * </pre>
+     *
+     * <code>.Empty absentAuth = 4;</code>
+     * @return Whether the absentAuth field is set.
+     */
+    boolean hasAbsentAuth();
+    /**
+     * <pre>
+     * No auth configured.
+     * </pre>
+     *
+     * <code>.Empty absentAuth = 4;</code>
+     * @return The absentAuth.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty getAbsentAuth();
+    /**
+     * <pre>
+     * No auth configured.
+     * </pre>
+     *
+     * <code>.Empty absentAuth = 4;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getAbsentAuthOrBuilder();
+
+    /**
+     * <pre>
+     * Secret reference.
+     * Secret format:
+     *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+     *   ca.crt: &lt;CA PEM certificate&gt;
+     *   user.crt: &lt;User PEM certificate&gt;
+     *   user.key: &lt;User PEM key&gt;
+     *   user: &lt;SASL username&gt;
+     *   password: &lt;SASL password&gt;
+     * Validation:
+     *   - protocol=PLAINTEXT
+     *   - protocol=SSL
+     *     - required:
+     *       - ca.crt
+     *       - user.crt
+     *       - user.key
+     *   - protocol=SASL_PLAINTEXT
+     *     - required:
+     *       - sasl.mechanism
+     *       - user
+     *       - password
+     *   - protocol=SASL_SSL
+     *     - required:
+     *       - sasl.mechanism
+     *       - ca.crt
+     *       - user.crt
+     *       - user.key
+     *       - user
+     *       - password
+     * </pre>
+     *
+     * <code>.Reference authSecret = 5;</code>
+     * @return Whether the authSecret field is set.
+     */
+    boolean hasAuthSecret();
+    /**
+     * <pre>
+     * Secret reference.
+     * Secret format:
+     *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+     *   ca.crt: &lt;CA PEM certificate&gt;
+     *   user.crt: &lt;User PEM certificate&gt;
+     *   user.key: &lt;User PEM key&gt;
+     *   user: &lt;SASL username&gt;
+     *   password: &lt;SASL password&gt;
+     * Validation:
+     *   - protocol=PLAINTEXT
+     *   - protocol=SSL
+     *     - required:
+     *       - ca.crt
+     *       - user.crt
+     *       - user.key
+     *   - protocol=SASL_PLAINTEXT
+     *     - required:
+     *       - sasl.mechanism
+     *       - user
+     *       - password
+     *   - protocol=SASL_SSL
+     *     - required:
+     *       - sasl.mechanism
+     *       - ca.crt
+     *       - user.crt
+     *       - user.key
+     *       - user
+     *       - password
+     * </pre>
+     *
+     * <code>.Reference authSecret = 5;</code>
+     * @return The authSecret.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getAuthSecret();
+    /**
+     * <pre>
+     * Secret reference.
+     * Secret format:
+     *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+     *   ca.crt: &lt;CA PEM certificate&gt;
+     *   user.crt: &lt;User PEM certificate&gt;
+     *   user.key: &lt;User PEM key&gt;
+     *   user: &lt;SASL username&gt;
+     *   password: &lt;SASL password&gt;
+     * Validation:
+     *   - protocol=PLAINTEXT
+     *   - protocol=SSL
+     *     - required:
+     *       - ca.crt
+     *       - user.crt
+     *       - user.key
+     *   - protocol=SASL_PLAINTEXT
+     *     - required:
+     *       - sasl.mechanism
+     *       - user
+     *       - password
+     *   - protocol=SASL_SSL
+     *     - required:
+     *       - sasl.mechanism
+     *       - ca.crt
+     *       - user.crt
+     *       - user.key
+     *       - user
+     *       - password
+     * </pre>
+     *
+     * <code>.Reference authSecret = 5;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getAuthSecretOrBuilder();
+
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.AuthCase getAuthCase();
+  }
+  /**
+   * Protobuf type {@code KafkaSink}
+   */
+  public static final class KafkaSink extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:KafkaSink)
+      KafkaSinkOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use KafkaSink.newBuilder() to construct.
+    private KafkaSink(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private KafkaSink() {
+      bootstrapServers_ = "";
+      topic_ = "";
+      contentMode_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new KafkaSink();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private KafkaSink(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              bootstrapServers_ = s;
+              break;
+            }
+            case 18: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              topic_ = s;
+              break;
+            }
+            case 24: {
+              int rawValue = input.readEnum();
+
+              contentMode_ = rawValue;
+              break;
+            }
+            case 34: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder subBuilder = null;
+              if (authCase_ == 4) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) auth_).toBuilder();
+              }
+              auth_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) auth_);
+                auth_ = subBuilder.buildPartial();
+              }
+              authCase_ = 4;
+              break;
+            }
+            case 42: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder subBuilder = null;
+              if (authCase_ == 5) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_).toBuilder();
+              }
+              auth_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_);
+                auth_ = subBuilder.buildPartial();
+              }
+              authCase_ = 5;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_KafkaSink_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_KafkaSink_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder.class);
+    }
+
+    private int authCase_ = 0;
+    private java.lang.Object auth_;
+    public enum AuthCase
+        implements com.google.protobuf.Internal.EnumLite,
+            com.google.protobuf.AbstractMessage.InternalOneOfEnum {
+      ABSENTAUTH(4),
+      AUTHSECRET(5),
+      AUTH_NOT_SET(0);
+      private final int value;
+      private AuthCase(int value) {
+        this.value = value;
+      }
+      /**
+       * @param value The number of the enum to look for.
+       * @return The enum associated with the given number.
+       * @deprecated Use {@link #forNumber(int)} instead.
+       */
+      @java.lang.Deprecated
+      public static AuthCase valueOf(int value) {
+        return forNumber(value);
+      }
+
+      public static AuthCase forNumber(int value) {
+        switch (value) {
+          case 4: return ABSENTAUTH;
+          case 5: return AUTHSECRET;
+          case 0: return AUTH_NOT_SET;
+          default: return null;
+        }
+      }
+      public int getNumber() {
+        return this.value;
+      }
+    };
+
+    public AuthCase
+    getAuthCase() {
+      return AuthCase.forNumber(
+          authCase_);
+    }
+
+    public static final int BOOTSTRAPSERVERS_FIELD_NUMBER = 1;
+    private volatile java.lang.Object bootstrapServers_;
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 1;</code>
+     * @return The bootstrapServers.
+     */
+    @java.lang.Override
+    public java.lang.String getBootstrapServers() {
+      java.lang.Object ref = bootstrapServers_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        bootstrapServers_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+     * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+     * </pre>
+     *
+     * <code>string bootstrapServers = 1;</code>
+     * @return The bytes for bootstrapServers.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getBootstrapServersBytes() {
+      java.lang.Object ref = bootstrapServers_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        bootstrapServers_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int TOPIC_FIELD_NUMBER = 2;
+    private volatile java.lang.Object topic_;
+    /**
+     * <pre>
+     * Topic name
+     * </pre>
+     *
+     * <code>string topic = 2;</code>
+     * @return The topic.
+     */
+    @java.lang.Override
+    public java.lang.String getTopic() {
+      java.lang.Object ref = topic_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        topic_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Topic name
+     * </pre>
+     *
+     * <code>string topic = 2;</code>
+     * @return The bytes for topic.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getTopicBytes() {
+      java.lang.Object ref = topic_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        topic_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int CONTENTMODE_FIELD_NUMBER = 3;
+    private int contentMode_;
+    /**
+     * <pre>
+     * Optional content mode to use when pushing messages to Kafka
+     * </pre>
+     *
+     * <code>.ContentMode contentMode = 3;</code>
+     * @return The enum numeric value on the wire for contentMode.
+     */
+    @java.lang.Override public int getContentModeValue() {
+      return contentMode_;
+    }
+    /**
+     * <pre>
+     * Optional content mode to use when pushing messages to Kafka
+     * </pre>
+     *
+     * <code>.ContentMode contentMode = 3;</code>
+     * @return The contentMode.
+     */
+    @java.lang.Override public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode getContentMode() {
+      @SuppressWarnings("deprecation")
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.valueOf(contentMode_);
+      return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.UNRECOGNIZED : result;
+    }
+
+    public static final int ABSENTAUTH_FIELD_NUMBER = 4;
+    /**
+     * <pre>
+     * No auth configured.
+     * </pre>
+     *
+     * <code>.Empty absentAuth = 4;</code>
+     * @return Whether the absentAuth field is set.
+     */
+    @java.lang.Override
+    public boolean hasAbsentAuth() {
+      return authCase_ == 4;
+    }
+    /**
+     * <pre>
+     * No auth configured.
+     * </pre>
+     *
+     * <code>.Empty absentAuth = 4;</code>
+     * @return The absentAuth.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty getAbsentAuth() {
+      if (authCase_ == 4) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) auth_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+    }
+    /**
+     * <pre>
+     * No auth configured.
+     * </pre>
+     *
+     * <code>.Empty absentAuth = 4;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getAbsentAuthOrBuilder() {
+      if (authCase_ == 4) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) auth_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+    }
+
+    public static final int AUTHSECRET_FIELD_NUMBER = 5;
+    /**
+     * <pre>
+     * Secret reference.
+     * Secret format:
+     *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+     *   ca.crt: &lt;CA PEM certificate&gt;
+     *   user.crt: &lt;User PEM certificate&gt;
+     *   user.key: &lt;User PEM key&gt;
+     *   user: &lt;SASL username&gt;
+     *   password: &lt;SASL password&gt;
+     * Validation:
+     *   - protocol=PLAINTEXT
+     *   - protocol=SSL
+     *     - required:
+     *       - ca.crt
+     *       - user.crt
+     *       - user.key
+     *   - protocol=SASL_PLAINTEXT
+     *     - required:
+     *       - sasl.mechanism
+     *       - user
+     *       - password
+     *   - protocol=SASL_SSL
+     *     - required:
+     *       - sasl.mechanism
+     *       - ca.crt
+     *       - user.crt
+     *       - user.key
+     *       - user
+     *       - password
+     * </pre>
+     *
+     * <code>.Reference authSecret = 5;</code>
+     * @return Whether the authSecret field is set.
+     */
+    @java.lang.Override
+    public boolean hasAuthSecret() {
+      return authCase_ == 5;
+    }
+    /**
+     * <pre>
+     * Secret reference.
+     * Secret format:
+     *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+     *   ca.crt: &lt;CA PEM certificate&gt;
+     *   user.crt: &lt;User PEM certificate&gt;
+     *   user.key: &lt;User PEM key&gt;
+     *   user: &lt;SASL username&gt;
+     *   password: &lt;SASL password&gt;
+     * Validation:
+     *   - protocol=PLAINTEXT
+     *   - protocol=SSL
+     *     - required:
+     *       - ca.crt
+     *       - user.crt
+     *       - user.key
+     *   - protocol=SASL_PLAINTEXT
+     *     - required:
+     *       - sasl.mechanism
+     *       - user
+     *       - password
+     *   - protocol=SASL_SSL
+     *     - required:
+     *       - sasl.mechanism
+     *       - ca.crt
+     *       - user.crt
+     *       - user.key
+     *       - user
+     *       - password
+     * </pre>
+     *
+     * <code>.Reference authSecret = 5;</code>
+     * @return The authSecret.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getAuthSecret() {
+      if (authCase_ == 5) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance();
+    }
+    /**
+     * <pre>
+     * Secret reference.
+     * Secret format:
+     *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+     *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+     *   ca.crt: &lt;CA PEM certificate&gt;
+     *   user.crt: &lt;User PEM certificate&gt;
+     *   user.key: &lt;User PEM key&gt;
+     *   user: &lt;SASL username&gt;
+     *   password: &lt;SASL password&gt;
+     * Validation:
+     *   - protocol=PLAINTEXT
+     *   - protocol=SSL
+     *     - required:
+     *       - ca.crt
+     *       - user.crt
+     *       - user.key
+     *   - protocol=SASL_PLAINTEXT
+     *     - required:
+     *       - sasl.mechanism
+     *       - user
+     *       - password
+     *   - protocol=SASL_SSL
+     *     - required:
+     *       - sasl.mechanism
+     *       - ca.crt
+     *       - user.crt
+     *       - user.key
+     *       - user
+     *       - password
+     * </pre>
+     *
+     * <code>.Reference authSecret = 5;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getAuthSecretOrBuilder() {
+      if (authCase_ == 5) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance();
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (!getBootstrapServersBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, bootstrapServers_);
+      }
+      if (!getTopicBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, topic_);
+      }
+      if (contentMode_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.BINARY.getNumber()) {
+        output.writeEnum(3, contentMode_);
+      }
+      if (authCase_ == 4) {
+        output.writeMessage(4, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) auth_);
+      }
+      if (authCase_ == 5) {
+        output.writeMessage(5, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (!getBootstrapServersBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, bootstrapServers_);
+      }
+      if (!getTopicBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, topic_);
+      }
+      if (contentMode_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.BINARY.getNumber()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(3, contentMode_);
+      }
+      if (authCase_ == 4) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) auth_);
+      }
+      if (authCase_ == 5) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) obj;
+
+      if (!getBootstrapServers()
+          .equals(other.getBootstrapServers())) return false;
+      if (!getTopic()
+          .equals(other.getTopic())) return false;
+      if (contentMode_ != other.contentMode_) return false;
+      if (!getAuthCase().equals(other.getAuthCase())) return false;
+      switch (authCase_) {
+        case 4:
+          if (!getAbsentAuth()
+              .equals(other.getAbsentAuth())) return false;
+          break;
+        case 5:
+          if (!getAuthSecret()
+              .equals(other.getAuthSecret())) return false;
+          break;
+        case 0:
+        default:
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + BOOTSTRAPSERVERS_FIELD_NUMBER;
+      hash = (53 * hash) + getBootstrapServers().hashCode();
+      hash = (37 * hash) + TOPIC_FIELD_NUMBER;
+      hash = (53 * hash) + getTopic().hashCode();
+      hash = (37 * hash) + CONTENTMODE_FIELD_NUMBER;
+      hash = (53 * hash) + contentMode_;
+      switch (authCase_) {
+        case 4:
+          hash = (37 * hash) + ABSENTAUTH_FIELD_NUMBER;
+          hash = (53 * hash) + getAbsentAuth().hashCode();
+          break;
+        case 5:
+          hash = (37 * hash) + AUTHSECRET_FIELD_NUMBER;
+          hash = (53 * hash) + getAuthSecret().hashCode();
+          break;
+        case 0:
+        default:
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code KafkaSink}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:KafkaSink)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_KafkaSink_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_KafkaSink_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        bootstrapServers_ = "";
+
+        topic_ = "";
+
+        contentMode_ = 0;
+
+        authCase_ = 0;
+        auth_ = null;
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_KafkaSink_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink(this);
+        result.bootstrapServers_ = bootstrapServers_;
+        result.topic_ = topic_;
+        result.contentMode_ = contentMode_;
+        if (authCase_ == 4) {
+          if (absentAuthBuilder_ == null) {
+            result.auth_ = auth_;
+          } else {
+            result.auth_ = absentAuthBuilder_.build();
+          }
+        }
+        if (authCase_ == 5) {
+          if (authSecretBuilder_ == null) {
+            result.auth_ = auth_;
+          } else {
+            result.auth_ = authSecretBuilder_.build();
+          }
+        }
+        result.authCase_ = authCase_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance()) return this;
+        if (!other.getBootstrapServers().isEmpty()) {
+          bootstrapServers_ = other.bootstrapServers_;
+          onChanged();
+        }
+        if (!other.getTopic().isEmpty()) {
+          topic_ = other.topic_;
+          onChanged();
+        }
+        if (other.contentMode_ != 0) {
+          setContentModeValue(other.getContentModeValue());
+        }
+        switch (other.getAuthCase()) {
+          case ABSENTAUTH: {
+            mergeAbsentAuth(other.getAbsentAuth());
+            break;
+          }
+          case AUTHSECRET: {
+            mergeAuthSecret(other.getAuthSecret());
+            break;
+          }
+          case AUTH_NOT_SET: {
+            break;
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int authCase_ = 0;
+      private java.lang.Object auth_;
+      public AuthCase
+          getAuthCase() {
+        return AuthCase.forNumber(
+            authCase_);
+      }
+
+      public Builder clearAuth() {
+        authCase_ = 0;
+        auth_ = null;
+        onChanged();
+        return this;
+      }
+
+
+      private java.lang.Object bootstrapServers_ = "";
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 1;</code>
+       * @return The bootstrapServers.
+       */
+      public java.lang.String getBootstrapServers() {
+        java.lang.Object ref = bootstrapServers_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          bootstrapServers_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 1;</code>
+       * @return The bytes for bootstrapServers.
+       */
+      public com.google.protobuf.ByteString
+          getBootstrapServersBytes() {
+        java.lang.Object ref = bootstrapServers_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          bootstrapServers_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 1;</code>
+       * @param value The bootstrapServers to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBootstrapServers(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        bootstrapServers_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearBootstrapServers() {
+        
+        bootstrapServers_ = getDefaultInstance().getBootstrapServers();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * A comma separated list of host/port pairs to use for establishing the initial connection to the Kafka cluster.
+       * Note: we're using a comma separated list simply because that's how java kafka client likes it.
+       * </pre>
+       *
+       * <code>string bootstrapServers = 1;</code>
+       * @param value The bytes for bootstrapServers to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBootstrapServersBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        bootstrapServers_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object topic_ = "";
+      /**
+       * <pre>
+       * Topic name
+       * </pre>
+       *
+       * <code>string topic = 2;</code>
+       * @return The topic.
+       */
+      public java.lang.String getTopic() {
+        java.lang.Object ref = topic_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          topic_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Topic name
+       * </pre>
+       *
+       * <code>string topic = 2;</code>
+       * @return The bytes for topic.
+       */
+      public com.google.protobuf.ByteString
+          getTopicBytes() {
+        java.lang.Object ref = topic_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          topic_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Topic name
+       * </pre>
+       *
+       * <code>string topic = 2;</code>
+       * @param value The topic to set.
+       * @return This builder for chaining.
+       */
+      public Builder setTopic(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        topic_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Topic name
+       * </pre>
+       *
+       * <code>string topic = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearTopic() {
+        
+        topic_ = getDefaultInstance().getTopic();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Topic name
+       * </pre>
+       *
+       * <code>string topic = 2;</code>
+       * @param value The bytes for topic to set.
+       * @return This builder for chaining.
+       */
+      public Builder setTopicBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        topic_ = value;
+        onChanged();
+        return this;
+      }
+
+      private int contentMode_ = 0;
+      /**
+       * <pre>
+       * Optional content mode to use when pushing messages to Kafka
+       * </pre>
+       *
+       * <code>.ContentMode contentMode = 3;</code>
+       * @return The enum numeric value on the wire for contentMode.
+       */
+      @java.lang.Override public int getContentModeValue() {
+        return contentMode_;
+      }
+      /**
+       * <pre>
+       * Optional content mode to use when pushing messages to Kafka
+       * </pre>
+       *
+       * <code>.ContentMode contentMode = 3;</code>
+       * @param value The enum numeric value on the wire for contentMode to set.
+       * @return This builder for chaining.
+       */
+      public Builder setContentModeValue(int value) {
+        
+        contentMode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Optional content mode to use when pushing messages to Kafka
+       * </pre>
+       *
+       * <code>.ContentMode contentMode = 3;</code>
+       * @return The contentMode.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode getContentMode() {
+        @SuppressWarnings("deprecation")
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.valueOf(contentMode_);
+        return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode.UNRECOGNIZED : result;
+      }
+      /**
+       * <pre>
+       * Optional content mode to use when pushing messages to Kafka
+       * </pre>
+       *
+       * <code>.ContentMode contentMode = 3;</code>
+       * @param value The contentMode to set.
+       * @return This builder for chaining.
+       */
+      public Builder setContentMode(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ContentMode value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        
+        contentMode_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Optional content mode to use when pushing messages to Kafka
+       * </pre>
+       *
+       * <code>.ContentMode contentMode = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearContentMode() {
+        
+        contentMode_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder> absentAuthBuilder_;
+      /**
+       * <pre>
+       * No auth configured.
+       * </pre>
+       *
+       * <code>.Empty absentAuth = 4;</code>
+       * @return Whether the absentAuth field is set.
+       */
+      @java.lang.Override
+      public boolean hasAbsentAuth() {
+        return authCase_ == 4;
+      }
+      /**
+       * <pre>
+       * No auth configured.
+       * </pre>
+       *
+       * <code>.Empty absentAuth = 4;</code>
+       * @return The absentAuth.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty getAbsentAuth() {
+        if (absentAuthBuilder_ == null) {
+          if (authCase_ == 4) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) auth_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+        } else {
+          if (authCase_ == 4) {
+            return absentAuthBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * No auth configured.
+       * </pre>
+       *
+       * <code>.Empty absentAuth = 4;</code>
+       */
+      public Builder setAbsentAuth(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty value) {
+        if (absentAuthBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          auth_ = value;
+          onChanged();
+        } else {
+          absentAuthBuilder_.setMessage(value);
+        }
+        authCase_ = 4;
+        return this;
+      }
+      /**
+       * <pre>
+       * No auth configured.
+       * </pre>
+       *
+       * <code>.Empty absentAuth = 4;</code>
+       */
+      public Builder setAbsentAuth(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder builderForValue) {
+        if (absentAuthBuilder_ == null) {
+          auth_ = builderForValue.build();
+          onChanged();
+        } else {
+          absentAuthBuilder_.setMessage(builderForValue.build());
+        }
+        authCase_ = 4;
+        return this;
+      }
+      /**
+       * <pre>
+       * No auth configured.
+       * </pre>
+       *
+       * <code>.Empty absentAuth = 4;</code>
+       */
+      public Builder mergeAbsentAuth(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty value) {
+        if (absentAuthBuilder_ == null) {
+          if (authCase_ == 4 &&
+              auth_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance()) {
+            auth_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) auth_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            auth_ = value;
+          }
+          onChanged();
+        } else {
+          if (authCase_ == 4) {
+            absentAuthBuilder_.mergeFrom(value);
+          }
+          absentAuthBuilder_.setMessage(value);
+        }
+        authCase_ = 4;
+        return this;
+      }
+      /**
+       * <pre>
+       * No auth configured.
+       * </pre>
+       *
+       * <code>.Empty absentAuth = 4;</code>
+       */
+      public Builder clearAbsentAuth() {
+        if (absentAuthBuilder_ == null) {
+          if (authCase_ == 4) {
+            authCase_ = 0;
+            auth_ = null;
+            onChanged();
+          }
+        } else {
+          if (authCase_ == 4) {
+            authCase_ = 0;
+            auth_ = null;
+          }
+          absentAuthBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * No auth configured.
+       * </pre>
+       *
+       * <code>.Empty absentAuth = 4;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder getAbsentAuthBuilder() {
+        return getAbsentAuthFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * No auth configured.
+       * </pre>
+       *
+       * <code>.Empty absentAuth = 4;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getAbsentAuthOrBuilder() {
+        if ((authCase_ == 4) && (absentAuthBuilder_ != null)) {
+          return absentAuthBuilder_.getMessageOrBuilder();
+        } else {
+          if (authCase_ == 4) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) auth_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * No auth configured.
+       * </pre>
+       *
+       * <code>.Empty absentAuth = 4;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder> 
+          getAbsentAuthFieldBuilder() {
+        if (absentAuthBuilder_ == null) {
+          if (!(authCase_ == 4)) {
+            auth_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+          }
+          absentAuthBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) auth_,
+                  getParentForChildren(),
+                  isClean());
+          auth_ = null;
+        }
+        authCase_ = 4;
+        onChanged();;
+        return absentAuthBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> authSecretBuilder_;
+      /**
+       * <pre>
+       * Secret reference.
+       * Secret format:
+       *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+       *   ca.crt: &lt;CA PEM certificate&gt;
+       *   user.crt: &lt;User PEM certificate&gt;
+       *   user.key: &lt;User PEM key&gt;
+       *   user: &lt;SASL username&gt;
+       *   password: &lt;SASL password&gt;
+       * Validation:
+       *   - protocol=PLAINTEXT
+       *   - protocol=SSL
+       *     - required:
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *   - protocol=SASL_PLAINTEXT
+       *     - required:
+       *       - sasl.mechanism
+       *       - user
+       *       - password
+       *   - protocol=SASL_SSL
+       *     - required:
+       *       - sasl.mechanism
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *       - user
+       *       - password
+       * </pre>
+       *
+       * <code>.Reference authSecret = 5;</code>
+       * @return Whether the authSecret field is set.
+       */
+      @java.lang.Override
+      public boolean hasAuthSecret() {
+        return authCase_ == 5;
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * Secret format:
+       *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+       *   ca.crt: &lt;CA PEM certificate&gt;
+       *   user.crt: &lt;User PEM certificate&gt;
+       *   user.key: &lt;User PEM key&gt;
+       *   user: &lt;SASL username&gt;
+       *   password: &lt;SASL password&gt;
+       * Validation:
+       *   - protocol=PLAINTEXT
+       *   - protocol=SSL
+       *     - required:
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *   - protocol=SASL_PLAINTEXT
+       *     - required:
+       *       - sasl.mechanism
+       *       - user
+       *       - password
+       *   - protocol=SASL_SSL
+       *     - required:
+       *       - sasl.mechanism
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *       - user
+       *       - password
+       * </pre>
+       *
+       * <code>.Reference authSecret = 5;</code>
+       * @return The authSecret.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference getAuthSecret() {
+        if (authSecretBuilder_ == null) {
+          if (authCase_ == 5) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance();
+        } else {
+          if (authCase_ == 5) {
+            return authSecretBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * Secret format:
+       *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+       *   ca.crt: &lt;CA PEM certificate&gt;
+       *   user.crt: &lt;User PEM certificate&gt;
+       *   user.key: &lt;User PEM key&gt;
+       *   user: &lt;SASL username&gt;
+       *   password: &lt;SASL password&gt;
+       * Validation:
+       *   - protocol=PLAINTEXT
+       *   - protocol=SSL
+       *     - required:
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *   - protocol=SASL_PLAINTEXT
+       *     - required:
+       *       - sasl.mechanism
+       *       - user
+       *       - password
+       *   - protocol=SASL_SSL
+       *     - required:
+       *       - sasl.mechanism
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *       - user
+       *       - password
+       * </pre>
+       *
+       * <code>.Reference authSecret = 5;</code>
+       */
+      public Builder setAuthSecret(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
+        if (authSecretBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          auth_ = value;
+          onChanged();
+        } else {
+          authSecretBuilder_.setMessage(value);
+        }
+        authCase_ = 5;
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * Secret format:
+       *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+       *   ca.crt: &lt;CA PEM certificate&gt;
+       *   user.crt: &lt;User PEM certificate&gt;
+       *   user.key: &lt;User PEM key&gt;
+       *   user: &lt;SASL username&gt;
+       *   password: &lt;SASL password&gt;
+       * Validation:
+       *   - protocol=PLAINTEXT
+       *   - protocol=SSL
+       *     - required:
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *   - protocol=SASL_PLAINTEXT
+       *     - required:
+       *       - sasl.mechanism
+       *       - user
+       *       - password
+       *   - protocol=SASL_SSL
+       *     - required:
+       *       - sasl.mechanism
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *       - user
+       *       - password
+       * </pre>
+       *
+       * <code>.Reference authSecret = 5;</code>
+       */
+      public Builder setAuthSecret(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder builderForValue) {
+        if (authSecretBuilder_ == null) {
+          auth_ = builderForValue.build();
+          onChanged();
+        } else {
+          authSecretBuilder_.setMessage(builderForValue.build());
+        }
+        authCase_ = 5;
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * Secret format:
+       *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+       *   ca.crt: &lt;CA PEM certificate&gt;
+       *   user.crt: &lt;User PEM certificate&gt;
+       *   user.key: &lt;User PEM key&gt;
+       *   user: &lt;SASL username&gt;
+       *   password: &lt;SASL password&gt;
+       * Validation:
+       *   - protocol=PLAINTEXT
+       *   - protocol=SSL
+       *     - required:
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *   - protocol=SASL_PLAINTEXT
+       *     - required:
+       *       - sasl.mechanism
+       *       - user
+       *       - password
+       *   - protocol=SASL_SSL
+       *     - required:
+       *       - sasl.mechanism
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *       - user
+       *       - password
+       * </pre>
+       *
+       * <code>.Reference authSecret = 5;</code>
+       */
+      public Builder mergeAuthSecret(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference value) {
+        if (authSecretBuilder_ == null) {
+          if (authCase_ == 5 &&
+              auth_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance()) {
+            auth_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            auth_ = value;
+          }
+          onChanged();
+        } else {
+          if (authCase_ == 5) {
+            authSecretBuilder_.mergeFrom(value);
+          }
+          authSecretBuilder_.setMessage(value);
+        }
+        authCase_ = 5;
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * Secret format:
+       *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+       *   ca.crt: &lt;CA PEM certificate&gt;
+       *   user.crt: &lt;User PEM certificate&gt;
+       *   user.key: &lt;User PEM key&gt;
+       *   user: &lt;SASL username&gt;
+       *   password: &lt;SASL password&gt;
+       * Validation:
+       *   - protocol=PLAINTEXT
+       *   - protocol=SSL
+       *     - required:
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *   - protocol=SASL_PLAINTEXT
+       *     - required:
+       *       - sasl.mechanism
+       *       - user
+       *       - password
+       *   - protocol=SASL_SSL
+       *     - required:
+       *       - sasl.mechanism
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *       - user
+       *       - password
+       * </pre>
+       *
+       * <code>.Reference authSecret = 5;</code>
+       */
+      public Builder clearAuthSecret() {
+        if (authSecretBuilder_ == null) {
+          if (authCase_ == 5) {
+            authCase_ = 0;
+            auth_ = null;
+            onChanged();
+          }
+        } else {
+          if (authCase_ == 5) {
+            authCase_ = 0;
+            auth_ = null;
+          }
+          authSecretBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * Secret format:
+       *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+       *   ca.crt: &lt;CA PEM certificate&gt;
+       *   user.crt: &lt;User PEM certificate&gt;
+       *   user.key: &lt;User PEM key&gt;
+       *   user: &lt;SASL username&gt;
+       *   password: &lt;SASL password&gt;
+       * Validation:
+       *   - protocol=PLAINTEXT
+       *   - protocol=SSL
+       *     - required:
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *   - protocol=SASL_PLAINTEXT
+       *     - required:
+       *       - sasl.mechanism
+       *       - user
+       *       - password
+       *   - protocol=SASL_SSL
+       *     - required:
+       *       - sasl.mechanism
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *       - user
+       *       - password
+       * </pre>
+       *
+       * <code>.Reference authSecret = 5;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder getAuthSecretBuilder() {
+        return getAuthSecretFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * Secret format:
+       *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+       *   ca.crt: &lt;CA PEM certificate&gt;
+       *   user.crt: &lt;User PEM certificate&gt;
+       *   user.key: &lt;User PEM key&gt;
+       *   user: &lt;SASL username&gt;
+       *   password: &lt;SASL password&gt;
+       * Validation:
+       *   - protocol=PLAINTEXT
+       *   - protocol=SSL
+       *     - required:
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *   - protocol=SASL_PLAINTEXT
+       *     - required:
+       *       - sasl.mechanism
+       *       - user
+       *       - password
+       *   - protocol=SASL_SSL
+       *     - required:
+       *       - sasl.mechanism
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *       - user
+       *       - password
+       * </pre>
+       *
+       * <code>.Reference authSecret = 5;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getAuthSecretOrBuilder() {
+        if ((authCase_ == 5) && (authSecretBuilder_ != null)) {
+          return authSecretBuilder_.getMessageOrBuilder();
+        } else {
+          if (authCase_ == 5) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * Secret reference.
+       * Secret format:
+       *   protocol: (PLAINTEXT | SASL_PLAINTEXT | SSL | SASL_SSL)
+       *   sasl.mechanism: (SCRAM-SHA-256 | SCRAM-SHA-512)
+       *   ca.crt: &lt;CA PEM certificate&gt;
+       *   user.crt: &lt;User PEM certificate&gt;
+       *   user.key: &lt;User PEM key&gt;
+       *   user: &lt;SASL username&gt;
+       *   password: &lt;SASL password&gt;
+       * Validation:
+       *   - protocol=PLAINTEXT
+       *   - protocol=SSL
+       *     - required:
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *   - protocol=SASL_PLAINTEXT
+       *     - required:
+       *       - sasl.mechanism
+       *       - user
+       *       - password
+       *   - protocol=SASL_SSL
+       *     - required:
+       *       - sasl.mechanism
+       *       - ca.crt
+       *       - user.crt
+       *       - user.key
+       *       - user
+       *       - password
+       * </pre>
+       *
+       * <code>.Reference authSecret = 5;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder> 
+          getAuthSecretFieldBuilder() {
+        if (authSecretBuilder_ == null) {
+          if (!(authCase_ == 5)) {
+            auth_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance();
+          }
+          authSecretBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_,
+                  getParentForChildren(),
+                  isClean());
+          auth_ = null;
+        }
+        authCase_ = 5;
+        onChanged();;
+        return authSecretBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:KafkaSink)
+    }
+
+    // @@protoc_insertion_point(class_scope:KafkaSink)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<KafkaSink>
+        PARSER = new com.google.protobuf.AbstractParser<KafkaSink>() {
+      @java.lang.Override
+      public KafkaSink parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new KafkaSink(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<KafkaSink> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<KafkaSink> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface HTTPSinkOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:HTTPSink)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>string URL = 1;</code>
+     * @return The uRL.
+     */
+    java.lang.String getURL();
+    /**
+     * <code>string URL = 1;</code>
+     * @return The bytes for uRL.
+     */
+    com.google.protobuf.ByteString
+        getURLBytes();
+
+    /**
+     * <pre>
+     * Send the response to an url
+     * </pre>
+     *
+     * <code>string replyUrl = 2;</code>
+     * @return Whether the replyUrl field is set.
+     */
+    boolean hasReplyUrl();
+    /**
+     * <pre>
+     * Send the response to an url
+     * </pre>
+     *
+     * <code>string replyUrl = 2;</code>
+     * @return The replyUrl.
+     */
+    java.lang.String getReplyUrl();
+    /**
+     * <pre>
+     * Send the response to an url
+     * </pre>
+     *
+     * <code>string replyUrl = 2;</code>
+     * @return The bytes for replyUrl.
+     */
+    com.google.protobuf.ByteString
+        getReplyUrlBytes();
+
+    /**
+     * <pre>
+     * Send the response to a Kafka topic
+     * </pre>
+     *
+     * <code>.Empty replyToOriginalTopic = 3;</code>
+     * @return Whether the replyToOriginalTopic field is set.
+     */
+    boolean hasReplyToOriginalTopic();
+    /**
+     * <pre>
+     * Send the response to a Kafka topic
+     * </pre>
+     *
+     * <code>.Empty replyToOriginalTopic = 3;</code>
+     * @return The replyToOriginalTopic.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty getReplyToOriginalTopic();
+    /**
+     * <pre>
+     * Send the response to a Kafka topic
+     * </pre>
+     *
+     * <code>.Empty replyToOriginalTopic = 3;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getReplyToOriginalTopicOrBuilder();
+
+    /**
+     * <pre>
+     * Discard response.
+     * </pre>
+     *
+     * <code>.Empty discardReply = 4;</code>
+     * @return Whether the discardReply field is set.
+     */
+    boolean hasDiscardReply();
+    /**
+     * <pre>
+     * Discard response.
+     * </pre>
+     *
+     * <code>.Empty discardReply = 4;</code>
+     * @return The discardReply.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty getDiscardReply();
+    /**
+     * <pre>
+     * Discard response.
+     * </pre>
+     *
+     * <code>.Empty discardReply = 4;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getDiscardReplyOrBuilder();
+
+    /**
+     * <pre>
+     * retry is the minimum number of retries the sender should attempt when
+     * sending an event before moving it to the dead letter sink.
+     * Setting retry to 0 means don't retry.
+     * </pre>
+     *
+     * <code>uint32 retry = 5;</code>
+     * @return The retry.
+     */
+    int getRetry();
+
+    /**
+     * <pre>
+     * backoffPolicy is the retry backoff policy (linear, exponential).
+     * </pre>
+     *
+     * <code>.BackoffPolicy backoffPolicy = 6;</code>
+     * @return The enum numeric value on the wire for backoffPolicy.
+     */
+    int getBackoffPolicyValue();
+    /**
+     * <pre>
+     * backoffPolicy is the retry backoff policy (linear, exponential).
+     * </pre>
+     *
+     * <code>.BackoffPolicy backoffPolicy = 6;</code>
+     * @return The backoffPolicy.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy getBackoffPolicy();
+
+    /**
+     * <pre>
+     * backoffDelay is the delay before retrying in milliseconds.
+     * </pre>
+     *
+     * <code>uint64 backoffDelay = 7;</code>
+     * @return The backoffDelay.
+     */
+    long getBackoffDelay();
+
+    /**
+     * <pre>
+     * timeout is the single request timeout (not the overall retry timeout)
+     * </pre>
+     *
+     * <code>uint64 timeout = 8;</code>
+     * @return The timeout.
+     */
+    long getTimeout();
+
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.ReplyStrategyCase getReplyStrategyCase();
+  }
+  /**
+   * Protobuf type {@code HTTPSink}
+   */
+  public static final class HTTPSink extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:HTTPSink)
+      HTTPSinkOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use HTTPSink.newBuilder() to construct.
+    private HTTPSink(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private HTTPSink() {
+      uRL_ = "";
+      backoffPolicy_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new HTTPSink();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private HTTPSink(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              uRL_ = s;
+              break;
+            }
+            case 18: {
+              java.lang.String s = input.readStringRequireUtf8();
+              replyStrategyCase_ = 2;
+              replyStrategy_ = s;
+              break;
+            }
+            case 26: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder subBuilder = null;
+              if (replyStrategyCase_ == 3) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_).toBuilder();
+              }
+              replyStrategy_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_);
+                replyStrategy_ = subBuilder.buildPartial();
+              }
+              replyStrategyCase_ = 3;
+              break;
+            }
+            case 34: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder subBuilder = null;
+              if (replyStrategyCase_ == 4) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_).toBuilder();
+              }
+              replyStrategy_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_);
+                replyStrategy_ = subBuilder.buildPartial();
+              }
+              replyStrategyCase_ = 4;
+              break;
+            }
+            case 40: {
+
+              retry_ = input.readUInt32();
+              break;
+            }
+            case 48: {
+              int rawValue = input.readEnum();
+
+              backoffPolicy_ = rawValue;
+              break;
+            }
+            case 56: {
+
+              backoffDelay_ = input.readUInt64();
+              break;
+            }
+            case 64: {
+
+              timeout_ = input.readUInt64();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_HTTPSink_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_HTTPSink_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.Builder.class);
+    }
+
+    private int replyStrategyCase_ = 0;
+    private java.lang.Object replyStrategy_;
+    public enum ReplyStrategyCase
+        implements com.google.protobuf.Internal.EnumLite,
+            com.google.protobuf.AbstractMessage.InternalOneOfEnum {
+      REPLYURL(2),
+      REPLYTOORIGINALTOPIC(3),
+      DISCARDREPLY(4),
+      REPLYSTRATEGY_NOT_SET(0);
+      private final int value;
+      private ReplyStrategyCase(int value) {
+        this.value = value;
+      }
+      /**
+       * @param value The number of the enum to look for.
+       * @return The enum associated with the given number.
+       * @deprecated Use {@link #forNumber(int)} instead.
+       */
+      @java.lang.Deprecated
+      public static ReplyStrategyCase valueOf(int value) {
+        return forNumber(value);
+      }
+
+      public static ReplyStrategyCase forNumber(int value) {
+        switch (value) {
+          case 2: return REPLYURL;
+          case 3: return REPLYTOORIGINALTOPIC;
+          case 4: return DISCARDREPLY;
+          case 0: return REPLYSTRATEGY_NOT_SET;
+          default: return null;
+        }
+      }
+      public int getNumber() {
+        return this.value;
+      }
+    };
+
+    public ReplyStrategyCase
+    getReplyStrategyCase() {
+      return ReplyStrategyCase.forNumber(
+          replyStrategyCase_);
+    }
+
+    public static final int URL_FIELD_NUMBER = 1;
+    private volatile java.lang.Object uRL_;
+    /**
+     * <code>string URL = 1;</code>
+     * @return The uRL.
+     */
+    @java.lang.Override
+    public java.lang.String getURL() {
+      java.lang.Object ref = uRL_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        uRL_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string URL = 1;</code>
+     * @return The bytes for uRL.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getURLBytes() {
+      java.lang.Object ref = uRL_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        uRL_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int REPLYURL_FIELD_NUMBER = 2;
+    /**
+     * <pre>
+     * Send the response to an url
+     * </pre>
+     *
+     * <code>string replyUrl = 2;</code>
+     * @return Whether the replyUrl field is set.
+     */
+    public boolean hasReplyUrl() {
+      return replyStrategyCase_ == 2;
+    }
+    /**
+     * <pre>
+     * Send the response to an url
+     * </pre>
+     *
+     * <code>string replyUrl = 2;</code>
+     * @return The replyUrl.
+     */
+    public java.lang.String getReplyUrl() {
+      java.lang.Object ref = "";
+      if (replyStrategyCase_ == 2) {
+        ref = replyStrategy_;
+      }
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (replyStrategyCase_ == 2) {
+          replyStrategy_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Send the response to an url
+     * </pre>
+     *
+     * <code>string replyUrl = 2;</code>
+     * @return The bytes for replyUrl.
+     */
+    public com.google.protobuf.ByteString
+        getReplyUrlBytes() {
+      java.lang.Object ref = "";
+      if (replyStrategyCase_ == 2) {
+        ref = replyStrategy_;
+      }
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        if (replyStrategyCase_ == 2) {
+          replyStrategy_ = b;
+        }
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int REPLYTOORIGINALTOPIC_FIELD_NUMBER = 3;
+    /**
+     * <pre>
+     * Send the response to a Kafka topic
+     * </pre>
+     *
+     * <code>.Empty replyToOriginalTopic = 3;</code>
+     * @return Whether the replyToOriginalTopic field is set.
+     */
+    @java.lang.Override
+    public boolean hasReplyToOriginalTopic() {
+      return replyStrategyCase_ == 3;
+    }
+    /**
+     * <pre>
+     * Send the response to a Kafka topic
+     * </pre>
+     *
+     * <code>.Empty replyToOriginalTopic = 3;</code>
+     * @return The replyToOriginalTopic.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty getReplyToOriginalTopic() {
+      if (replyStrategyCase_ == 3) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+    }
+    /**
+     * <pre>
+     * Send the response to a Kafka topic
+     * </pre>
+     *
+     * <code>.Empty replyToOriginalTopic = 3;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getReplyToOriginalTopicOrBuilder() {
+      if (replyStrategyCase_ == 3) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+    }
+
+    public static final int DISCARDREPLY_FIELD_NUMBER = 4;
+    /**
+     * <pre>
+     * Discard response.
+     * </pre>
+     *
+     * <code>.Empty discardReply = 4;</code>
+     * @return Whether the discardReply field is set.
+     */
+    @java.lang.Override
+    public boolean hasDiscardReply() {
+      return replyStrategyCase_ == 4;
+    }
+    /**
+     * <pre>
+     * Discard response.
+     * </pre>
+     *
+     * <code>.Empty discardReply = 4;</code>
+     * @return The discardReply.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty getDiscardReply() {
+      if (replyStrategyCase_ == 4) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+    }
+    /**
+     * <pre>
+     * Discard response.
+     * </pre>
+     *
+     * <code>.Empty discardReply = 4;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getDiscardReplyOrBuilder() {
+      if (replyStrategyCase_ == 4) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+    }
+
+    public static final int RETRY_FIELD_NUMBER = 5;
+    private int retry_;
+    /**
+     * <pre>
+     * retry is the minimum number of retries the sender should attempt when
+     * sending an event before moving it to the dead letter sink.
+     * Setting retry to 0 means don't retry.
+     * </pre>
+     *
+     * <code>uint32 retry = 5;</code>
+     * @return The retry.
+     */
+    @java.lang.Override
+    public int getRetry() {
+      return retry_;
+    }
+
+    public static final int BACKOFFPOLICY_FIELD_NUMBER = 6;
+    private int backoffPolicy_;
+    /**
+     * <pre>
+     * backoffPolicy is the retry backoff policy (linear, exponential).
+     * </pre>
+     *
+     * <code>.BackoffPolicy backoffPolicy = 6;</code>
+     * @return The enum numeric value on the wire for backoffPolicy.
+     */
+    @java.lang.Override public int getBackoffPolicyValue() {
+      return backoffPolicy_;
+    }
+    /**
+     * <pre>
+     * backoffPolicy is the retry backoff policy (linear, exponential).
+     * </pre>
+     *
+     * <code>.BackoffPolicy backoffPolicy = 6;</code>
+     * @return The backoffPolicy.
+     */
+    @java.lang.Override public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy getBackoffPolicy() {
+      @SuppressWarnings("deprecation")
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.valueOf(backoffPolicy_);
+      return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.UNRECOGNIZED : result;
+    }
+
+    public static final int BACKOFFDELAY_FIELD_NUMBER = 7;
+    private long backoffDelay_;
+    /**
+     * <pre>
+     * backoffDelay is the delay before retrying in milliseconds.
+     * </pre>
+     *
+     * <code>uint64 backoffDelay = 7;</code>
+     * @return The backoffDelay.
+     */
+    @java.lang.Override
+    public long getBackoffDelay() {
+      return backoffDelay_;
+    }
+
+    public static final int TIMEOUT_FIELD_NUMBER = 8;
+    private long timeout_;
+    /**
+     * <pre>
+     * timeout is the single request timeout (not the overall retry timeout)
+     * </pre>
+     *
+     * <code>uint64 timeout = 8;</code>
+     * @return The timeout.
+     */
+    @java.lang.Override
+    public long getTimeout() {
+      return timeout_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (!getURLBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, uRL_);
+      }
+      if (replyStrategyCase_ == 2) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, replyStrategy_);
+      }
+      if (replyStrategyCase_ == 3) {
+        output.writeMessage(3, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_);
+      }
+      if (replyStrategyCase_ == 4) {
+        output.writeMessage(4, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_);
+      }
+      if (retry_ != 0) {
+        output.writeUInt32(5, retry_);
+      }
+      if (backoffPolicy_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.Exponential.getNumber()) {
+        output.writeEnum(6, backoffPolicy_);
+      }
+      if (backoffDelay_ != 0L) {
+        output.writeUInt64(7, backoffDelay_);
+      }
+      if (timeout_ != 0L) {
+        output.writeUInt64(8, timeout_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (!getURLBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, uRL_);
+      }
+      if (replyStrategyCase_ == 2) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, replyStrategy_);
+      }
+      if (replyStrategyCase_ == 3) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_);
+      }
+      if (replyStrategyCase_ == 4) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_);
+      }
+      if (retry_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(5, retry_);
+      }
+      if (backoffPolicy_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.Exponential.getNumber()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(6, backoffPolicy_);
+      }
+      if (backoffDelay_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(7, backoffDelay_);
+      }
+      if (timeout_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(8, timeout_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink)) {
+        return super.equals(obj);
+      }
+      dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink other = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) obj;
+
+      if (!getURL()
+          .equals(other.getURL())) return false;
+      if (getRetry()
+          != other.getRetry()) return false;
+      if (backoffPolicy_ != other.backoffPolicy_) return false;
+      if (getBackoffDelay()
+          != other.getBackoffDelay()) return false;
+      if (getTimeout()
+          != other.getTimeout()) return false;
+      if (!getReplyStrategyCase().equals(other.getReplyStrategyCase())) return false;
+      switch (replyStrategyCase_) {
+        case 2:
+          if (!getReplyUrl()
+              .equals(other.getReplyUrl())) return false;
+          break;
+        case 3:
+          if (!getReplyToOriginalTopic()
+              .equals(other.getReplyToOriginalTopic())) return false;
+          break;
+        case 4:
+          if (!getDiscardReply()
+              .equals(other.getDiscardReply())) return false;
+          break;
+        case 0:
+        default:
+      }
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + URL_FIELD_NUMBER;
+      hash = (53 * hash) + getURL().hashCode();
+      hash = (37 * hash) + RETRY_FIELD_NUMBER;
+      hash = (53 * hash) + getRetry();
+      hash = (37 * hash) + BACKOFFPOLICY_FIELD_NUMBER;
+      hash = (53 * hash) + backoffPolicy_;
+      hash = (37 * hash) + BACKOFFDELAY_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getBackoffDelay());
+      hash = (37 * hash) + TIMEOUT_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getTimeout());
+      switch (replyStrategyCase_) {
+        case 2:
+          hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
+          hash = (53 * hash) + getReplyUrl().hashCode();
+          break;
+        case 3:
+          hash = (37 * hash) + REPLYTOORIGINALTOPIC_FIELD_NUMBER;
+          hash = (53 * hash) + getReplyToOriginalTopic().hashCode();
+          break;
+        case 4:
+          hash = (37 * hash) + DISCARDREPLY_FIELD_NUMBER;
+          hash = (53 * hash) + getDiscardReply().hashCode();
+          break;
+        case 0:
+        default:
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code HTTPSink}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:HTTPSink)
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSinkOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_HTTPSink_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_HTTPSink_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.Builder.class);
+      }
+
+      // Construct using dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        uRL_ = "";
+
+        retry_ = 0;
+
+        backoffPolicy_ = 0;
+
+        backoffDelay_ = 0L;
+
+        timeout_ = 0L;
+
+        replyStrategyCase_ = 0;
+        replyStrategy_ = null;
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_HTTPSink_descriptor;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink getDefaultInstanceForType() {
+        return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink build() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink buildPartial() {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink(this);
+        result.uRL_ = uRL_;
+        if (replyStrategyCase_ == 2) {
+          result.replyStrategy_ = replyStrategy_;
+        }
+        if (replyStrategyCase_ == 3) {
+          if (replyToOriginalTopicBuilder_ == null) {
+            result.replyStrategy_ = replyStrategy_;
+          } else {
+            result.replyStrategy_ = replyToOriginalTopicBuilder_.build();
+          }
+        }
+        if (replyStrategyCase_ == 4) {
+          if (discardReplyBuilder_ == null) {
+            result.replyStrategy_ = replyStrategy_;
+          } else {
+            result.replyStrategy_ = discardReplyBuilder_.build();
+          }
+        }
+        result.retry_ = retry_;
+        result.backoffPolicy_ = backoffPolicy_;
+        result.backoffDelay_ = backoffDelay_;
+        result.timeout_ = timeout_;
+        result.replyStrategyCase_ = replyStrategyCase_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) {
+          return mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink other) {
+        if (other == dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance()) return this;
+        if (!other.getURL().isEmpty()) {
+          uRL_ = other.uRL_;
+          onChanged();
+        }
+        if (other.getRetry() != 0) {
+          setRetry(other.getRetry());
+        }
+        if (other.backoffPolicy_ != 0) {
+          setBackoffPolicyValue(other.getBackoffPolicyValue());
+        }
+        if (other.getBackoffDelay() != 0L) {
+          setBackoffDelay(other.getBackoffDelay());
+        }
+        if (other.getTimeout() != 0L) {
+          setTimeout(other.getTimeout());
+        }
+        switch (other.getReplyStrategyCase()) {
+          case REPLYURL: {
+            replyStrategyCase_ = 2;
+            replyStrategy_ = other.replyStrategy_;
+            onChanged();
+            break;
+          }
+          case REPLYTOORIGINALTOPIC: {
+            mergeReplyToOriginalTopic(other.getReplyToOriginalTopic());
+            break;
+          }
+          case DISCARDREPLY: {
+            mergeDiscardReply(other.getDiscardReply());
+            break;
+          }
+          case REPLYSTRATEGY_NOT_SET: {
+            break;
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int replyStrategyCase_ = 0;
+      private java.lang.Object replyStrategy_;
+      public ReplyStrategyCase
+          getReplyStrategyCase() {
+        return ReplyStrategyCase.forNumber(
+            replyStrategyCase_);
+      }
+
+      public Builder clearReplyStrategy() {
+        replyStrategyCase_ = 0;
+        replyStrategy_ = null;
+        onChanged();
+        return this;
+      }
+
+
+      private java.lang.Object uRL_ = "";
+      /**
+       * <code>string URL = 1;</code>
+       * @return The uRL.
+       */
+      public java.lang.String getURL() {
+        java.lang.Object ref = uRL_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          uRL_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string URL = 1;</code>
+       * @return The bytes for uRL.
+       */
+      public com.google.protobuf.ByteString
+          getURLBytes() {
+        java.lang.Object ref = uRL_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          uRL_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string URL = 1;</code>
+       * @param value The uRL to set.
+       * @return This builder for chaining.
+       */
+      public Builder setURL(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        uRL_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string URL = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearURL() {
+        
+        uRL_ = getDefaultInstance().getURL();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string URL = 1;</code>
+       * @param value The bytes for uRL to set.
+       * @return This builder for chaining.
+       */
+      public Builder setURLBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        uRL_ = value;
+        onChanged();
+        return this;
+      }
+
+      /**
+       * <pre>
+       * Send the response to an url
+       * </pre>
+       *
+       * <code>string replyUrl = 2;</code>
+       * @return Whether the replyUrl field is set.
+       */
+      @java.lang.Override
+      public boolean hasReplyUrl() {
+        return replyStrategyCase_ == 2;
+      }
+      /**
+       * <pre>
+       * Send the response to an url
+       * </pre>
+       *
+       * <code>string replyUrl = 2;</code>
+       * @return The replyUrl.
+       */
+      @java.lang.Override
+      public java.lang.String getReplyUrl() {
+        java.lang.Object ref = "";
+        if (replyStrategyCase_ == 2) {
+          ref = replyStrategy_;
+        }
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (replyStrategyCase_ == 2) {
+            replyStrategy_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Send the response to an url
+       * </pre>
+       *
+       * <code>string replyUrl = 2;</code>
+       * @return The bytes for replyUrl.
+       */
+      @java.lang.Override
+      public com.google.protobuf.ByteString
+          getReplyUrlBytes() {
+        java.lang.Object ref = "";
+        if (replyStrategyCase_ == 2) {
+          ref = replyStrategy_;
+        }
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          if (replyStrategyCase_ == 2) {
+            replyStrategy_ = b;
+          }
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Send the response to an url
+       * </pre>
+       *
+       * <code>string replyUrl = 2;</code>
+       * @param value The replyUrl to set.
+       * @return This builder for chaining.
+       */
+      public Builder setReplyUrl(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  replyStrategyCase_ = 2;
+        replyStrategy_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Send the response to an url
+       * </pre>
+       *
+       * <code>string replyUrl = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearReplyUrl() {
+        if (replyStrategyCase_ == 2) {
+          replyStrategyCase_ = 0;
+          replyStrategy_ = null;
+          onChanged();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Send the response to an url
+       * </pre>
+       *
+       * <code>string replyUrl = 2;</code>
+       * @param value The bytes for replyUrl to set.
+       * @return This builder for chaining.
+       */
+      public Builder setReplyUrlBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        replyStrategyCase_ = 2;
+        replyStrategy_ = value;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder> replyToOriginalTopicBuilder_;
+      /**
+       * <pre>
+       * Send the response to a Kafka topic
+       * </pre>
+       *
+       * <code>.Empty replyToOriginalTopic = 3;</code>
+       * @return Whether the replyToOriginalTopic field is set.
+       */
+      @java.lang.Override
+      public boolean hasReplyToOriginalTopic() {
+        return replyStrategyCase_ == 3;
+      }
+      /**
+       * <pre>
+       * Send the response to a Kafka topic
+       * </pre>
+       *
+       * <code>.Empty replyToOriginalTopic = 3;</code>
+       * @return The replyToOriginalTopic.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty getReplyToOriginalTopic() {
+        if (replyToOriginalTopicBuilder_ == null) {
+          if (replyStrategyCase_ == 3) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+        } else {
+          if (replyStrategyCase_ == 3) {
+            return replyToOriginalTopicBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * Send the response to a Kafka topic
+       * </pre>
+       *
+       * <code>.Empty replyToOriginalTopic = 3;</code>
+       */
+      public Builder setReplyToOriginalTopic(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty value) {
+        if (replyToOriginalTopicBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          replyStrategy_ = value;
+          onChanged();
+        } else {
+          replyToOriginalTopicBuilder_.setMessage(value);
+        }
+        replyStrategyCase_ = 3;
+        return this;
+      }
+      /**
+       * <pre>
+       * Send the response to a Kafka topic
+       * </pre>
+       *
+       * <code>.Empty replyToOriginalTopic = 3;</code>
+       */
+      public Builder setReplyToOriginalTopic(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder builderForValue) {
+        if (replyToOriginalTopicBuilder_ == null) {
+          replyStrategy_ = builderForValue.build();
+          onChanged();
+        } else {
+          replyToOriginalTopicBuilder_.setMessage(builderForValue.build());
+        }
+        replyStrategyCase_ = 3;
+        return this;
+      }
+      /**
+       * <pre>
+       * Send the response to a Kafka topic
+       * </pre>
+       *
+       * <code>.Empty replyToOriginalTopic = 3;</code>
+       */
+      public Builder mergeReplyToOriginalTopic(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty value) {
+        if (replyToOriginalTopicBuilder_ == null) {
+          if (replyStrategyCase_ == 3 &&
+              replyStrategy_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance()) {
+            replyStrategy_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            replyStrategy_ = value;
+          }
+          onChanged();
+        } else {
+          if (replyStrategyCase_ == 3) {
+            replyToOriginalTopicBuilder_.mergeFrom(value);
+          }
+          replyToOriginalTopicBuilder_.setMessage(value);
+        }
+        replyStrategyCase_ = 3;
+        return this;
+      }
+      /**
+       * <pre>
+       * Send the response to a Kafka topic
+       * </pre>
+       *
+       * <code>.Empty replyToOriginalTopic = 3;</code>
+       */
+      public Builder clearReplyToOriginalTopic() {
+        if (replyToOriginalTopicBuilder_ == null) {
+          if (replyStrategyCase_ == 3) {
+            replyStrategyCase_ = 0;
+            replyStrategy_ = null;
+            onChanged();
+          }
+        } else {
+          if (replyStrategyCase_ == 3) {
+            replyStrategyCase_ = 0;
+            replyStrategy_ = null;
+          }
+          replyToOriginalTopicBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Send the response to a Kafka topic
+       * </pre>
+       *
+       * <code>.Empty replyToOriginalTopic = 3;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder getReplyToOriginalTopicBuilder() {
+        return getReplyToOriginalTopicFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Send the response to a Kafka topic
+       * </pre>
+       *
+       * <code>.Empty replyToOriginalTopic = 3;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getReplyToOriginalTopicOrBuilder() {
+        if ((replyStrategyCase_ == 3) && (replyToOriginalTopicBuilder_ != null)) {
+          return replyToOriginalTopicBuilder_.getMessageOrBuilder();
+        } else {
+          if (replyStrategyCase_ == 3) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * Send the response to a Kafka topic
+       * </pre>
+       *
+       * <code>.Empty replyToOriginalTopic = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder> 
+          getReplyToOriginalTopicFieldBuilder() {
+        if (replyToOriginalTopicBuilder_ == null) {
+          if (!(replyStrategyCase_ == 3)) {
+            replyStrategy_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+          }
+          replyToOriginalTopicBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_,
+                  getParentForChildren(),
+                  isClean());
+          replyStrategy_ = null;
+        }
+        replyStrategyCase_ = 3;
+        onChanged();;
+        return replyToOriginalTopicBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder> discardReplyBuilder_;
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 4;</code>
+       * @return Whether the discardReply field is set.
+       */
+      @java.lang.Override
+      public boolean hasDiscardReply() {
+        return replyStrategyCase_ == 4;
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 4;</code>
+       * @return The discardReply.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty getDiscardReply() {
+        if (discardReplyBuilder_ == null) {
+          if (replyStrategyCase_ == 4) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+        } else {
+          if (replyStrategyCase_ == 4) {
+            return discardReplyBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 4;</code>
+       */
+      public Builder setDiscardReply(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty value) {
+        if (discardReplyBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          replyStrategy_ = value;
+          onChanged();
+        } else {
+          discardReplyBuilder_.setMessage(value);
+        }
+        replyStrategyCase_ = 4;
+        return this;
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 4;</code>
+       */
+      public Builder setDiscardReply(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder builderForValue) {
+        if (discardReplyBuilder_ == null) {
+          replyStrategy_ = builderForValue.build();
+          onChanged();
+        } else {
+          discardReplyBuilder_.setMessage(builderForValue.build());
+        }
+        replyStrategyCase_ = 4;
+        return this;
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 4;</code>
+       */
+      public Builder mergeDiscardReply(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty value) {
+        if (discardReplyBuilder_ == null) {
+          if (replyStrategyCase_ == 4 &&
+              replyStrategy_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance()) {
+            replyStrategy_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            replyStrategy_ = value;
+          }
+          onChanged();
+        } else {
+          if (replyStrategyCase_ == 4) {
+            discardReplyBuilder_.mergeFrom(value);
+          }
+          discardReplyBuilder_.setMessage(value);
+        }
+        replyStrategyCase_ = 4;
+        return this;
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 4;</code>
+       */
+      public Builder clearDiscardReply() {
+        if (discardReplyBuilder_ == null) {
+          if (replyStrategyCase_ == 4) {
+            replyStrategyCase_ = 0;
+            replyStrategy_ = null;
+            onChanged();
+          }
+        } else {
+          if (replyStrategyCase_ == 4) {
+            replyStrategyCase_ = 0;
+            replyStrategy_ = null;
+          }
+          discardReplyBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 4;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder getDiscardReplyBuilder() {
+        return getDiscardReplyFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 4;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder getDiscardReplyOrBuilder() {
+        if ((replyStrategyCase_ == 4) && (discardReplyBuilder_ != null)) {
+          return discardReplyBuilder_.getMessageOrBuilder();
+        } else {
+          if (replyStrategyCase_ == 4) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * Discard response.
+       * </pre>
+       *
+       * <code>.Empty discardReply = 4;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder> 
+          getDiscardReplyFieldBuilder() {
+        if (discardReplyBuilder_ == null) {
+          if (!(replyStrategyCase_ == 4)) {
+            replyStrategy_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.getDefaultInstance();
+          }
+          discardReplyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EmptyOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_,
+                  getParentForChildren(),
+                  isClean());
+          replyStrategy_ = null;
+        }
+        replyStrategyCase_ = 4;
+        onChanged();;
+        return discardReplyBuilder_;
+      }
+
+      private int retry_ ;
+      /**
+       * <pre>
+       * retry is the minimum number of retries the sender should attempt when
+       * sending an event before moving it to the dead letter sink.
+       * Setting retry to 0 means don't retry.
+       * </pre>
+       *
+       * <code>uint32 retry = 5;</code>
+       * @return The retry.
+       */
+      @java.lang.Override
+      public int getRetry() {
+        return retry_;
+      }
+      /**
+       * <pre>
+       * retry is the minimum number of retries the sender should attempt when
+       * sending an event before moving it to the dead letter sink.
+       * Setting retry to 0 means don't retry.
+       * </pre>
+       *
+       * <code>uint32 retry = 5;</code>
+       * @param value The retry to set.
+       * @return This builder for chaining.
+       */
+      public Builder setRetry(int value) {
+        
+        retry_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * retry is the minimum number of retries the sender should attempt when
+       * sending an event before moving it to the dead letter sink.
+       * Setting retry to 0 means don't retry.
+       * </pre>
+       *
+       * <code>uint32 retry = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearRetry() {
+        
+        retry_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int backoffPolicy_ = 0;
+      /**
+       * <pre>
+       * backoffPolicy is the retry backoff policy (linear, exponential).
+       * </pre>
+       *
+       * <code>.BackoffPolicy backoffPolicy = 6;</code>
+       * @return The enum numeric value on the wire for backoffPolicy.
+       */
+      @java.lang.Override public int getBackoffPolicyValue() {
+        return backoffPolicy_;
+      }
+      /**
+       * <pre>
+       * backoffPolicy is the retry backoff policy (linear, exponential).
+       * </pre>
+       *
+       * <code>.BackoffPolicy backoffPolicy = 6;</code>
+       * @param value The enum numeric value on the wire for backoffPolicy to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBackoffPolicyValue(int value) {
+        
+        backoffPolicy_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * backoffPolicy is the retry backoff policy (linear, exponential).
+       * </pre>
+       *
+       * <code>.BackoffPolicy backoffPolicy = 6;</code>
+       * @return The backoffPolicy.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy getBackoffPolicy() {
+        @SuppressWarnings("deprecation")
+        dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy result = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.valueOf(backoffPolicy_);
+        return result == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy.UNRECOGNIZED : result;
+      }
+      /**
+       * <pre>
+       * backoffPolicy is the retry backoff policy (linear, exponential).
+       * </pre>
+       *
+       * <code>.BackoffPolicy backoffPolicy = 6;</code>
+       * @param value The backoffPolicy to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBackoffPolicy(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.BackoffPolicy value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        
+        backoffPolicy_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * backoffPolicy is the retry backoff policy (linear, exponential).
+       * </pre>
+       *
+       * <code>.BackoffPolicy backoffPolicy = 6;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearBackoffPolicy() {
+        
+        backoffPolicy_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private long backoffDelay_ ;
+      /**
+       * <pre>
+       * backoffDelay is the delay before retrying in milliseconds.
+       * </pre>
+       *
+       * <code>uint64 backoffDelay = 7;</code>
+       * @return The backoffDelay.
+       */
+      @java.lang.Override
+      public long getBackoffDelay() {
+        return backoffDelay_;
+      }
+      /**
+       * <pre>
+       * backoffDelay is the delay before retrying in milliseconds.
+       * </pre>
+       *
+       * <code>uint64 backoffDelay = 7;</code>
+       * @param value The backoffDelay to set.
+       * @return This builder for chaining.
+       */
+      public Builder setBackoffDelay(long value) {
+        
+        backoffDelay_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * backoffDelay is the delay before retrying in milliseconds.
+       * </pre>
+       *
+       * <code>uint64 backoffDelay = 7;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearBackoffDelay() {
+        
+        backoffDelay_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long timeout_ ;
+      /**
+       * <pre>
+       * timeout is the single request timeout (not the overall retry timeout)
+       * </pre>
+       *
+       * <code>uint64 timeout = 8;</code>
+       * @return The timeout.
+       */
+      @java.lang.Override
+      public long getTimeout() {
+        return timeout_;
+      }
+      /**
+       * <pre>
+       * timeout is the single request timeout (not the overall retry timeout)
+       * </pre>
+       *
+       * <code>uint64 timeout = 8;</code>
+       * @param value The timeout to set.
+       * @return This builder for chaining.
+       */
+      public Builder setTimeout(long value) {
+        
+        timeout_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * timeout is the single request timeout (not the overall retry timeout)
+       * </pre>
+       *
+       * <code>uint64 timeout = 8;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearTimeout() {
+        
+        timeout_ = 0L;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:HTTPSink)
+    }
+
+    // @@protoc_insertion_point(class_scope:HTTPSink)
+    private static final dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink();
+    }
+
+    public static dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<HTTPSink>
+        PARSER = new com.google.protobuf.AbstractParser<HTTPSink>() {
+      @java.lang.Override
+      public HTTPSink parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new HTTPSink(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<HTTPSink> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<HTTPSink> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface EgressConfigOrBuilder extends
       // @@protoc_insertion_point(interface_extends:EgressConfig)
       com.google.protobuf.MessageOrBuilder {
@@ -1689,6 +5713,69 @@ public final class DataPlaneContract {
      */
     com.google.protobuf.ByteString
         getDeadLetterBytes();
+
+    /**
+     * <pre>
+     * Kafka dead letter is where the event is sent when something goes wrong.
+     * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+     * @return Whether the kafkaDeadLetter field is set.
+     */
+    boolean hasKafkaDeadLetter();
+    /**
+     * <pre>
+     * Kafka dead letter is where the event is sent when something goes wrong.
+     * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+     * @return The kafkaDeadLetter.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink getKafkaDeadLetter();
+    /**
+     * <pre>
+     * Kafka dead letter is where the event is sent when something goes wrong.
+     * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder getKafkaDeadLetterOrBuilder();
+
+    /**
+     * <pre>
+     * Kafka dead letter is where the event is sent when something goes wrong.
+     * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+     * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+     * </pre>
+     *
+     * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+     * @return Whether the httpDeadLetterSink field is set.
+     */
+    boolean hasHttpDeadLetterSink();
+    /**
+     * <pre>
+     * Kafka dead letter is where the event is sent when something goes wrong.
+     * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+     * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+     * </pre>
+     *
+     * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+     * @return The httpDeadLetterSink.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink getHttpDeadLetterSink();
+    /**
+     * <pre>
+     * Kafka dead letter is where the event is sent when something goes wrong.
+     * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+     * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+     * </pre>
+     *
+     * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSinkOrBuilder getHttpDeadLetterSinkOrBuilder();
 
     /**
      * <pre>
@@ -1740,6 +5827,8 @@ public final class DataPlaneContract {
      * @return The timeout.
      */
     long getTimeout();
+
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.DeadLetterSinkCase getDeadLetterSinkCase();
   }
   /**
    * Protobuf type {@code EgressConfig}
@@ -1815,6 +5904,34 @@ public final class DataPlaneContract {
               timeout_ = input.readUInt64();
               break;
             }
+            case 50: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder subBuilder = null;
+              if (deadLetterSinkCase_ == 6) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) deadLetterSink_).toBuilder();
+              }
+              deadLetterSink_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) deadLetterSink_);
+                deadLetterSink_ = subBuilder.buildPartial();
+              }
+              deadLetterSinkCase_ = 6;
+              break;
+            }
+            case 58: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.Builder subBuilder = null;
+              if (deadLetterSinkCase_ == 7) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) deadLetterSink_).toBuilder();
+              }
+              deadLetterSink_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) deadLetterSink_);
+                deadLetterSink_ = subBuilder.buildPartial();
+              }
+              deadLetterSinkCase_ = 7;
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -1845,6 +5962,47 @@ public final class DataPlaneContract {
       return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_EgressConfig_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig.Builder.class);
+    }
+
+    private int deadLetterSinkCase_ = 0;
+    private java.lang.Object deadLetterSink_;
+    public enum DeadLetterSinkCase
+        implements com.google.protobuf.Internal.EnumLite,
+            com.google.protobuf.AbstractMessage.InternalOneOfEnum {
+      KAFKADEADLETTER(6),
+      HTTPDEADLETTERSINK(7),
+      DEADLETTERSINK_NOT_SET(0);
+      private final int value;
+      private DeadLetterSinkCase(int value) {
+        this.value = value;
+      }
+      /**
+       * @param value The number of the enum to look for.
+       * @return The enum associated with the given number.
+       * @deprecated Use {@link #forNumber(int)} instead.
+       */
+      @java.lang.Deprecated
+      public static DeadLetterSinkCase valueOf(int value) {
+        return forNumber(value);
+      }
+
+      public static DeadLetterSinkCase forNumber(int value) {
+        switch (value) {
+          case 6: return KAFKADEADLETTER;
+          case 7: return HTTPDEADLETTERSINK;
+          case 0: return DEADLETTERSINK_NOT_SET;
+          default: return null;
+        }
+      }
+      public int getNumber() {
+        return this.value;
+      }
+    };
+
+    public DeadLetterSinkCase
+    getDeadLetterSinkCase() {
+      return DeadLetterSinkCase.forNumber(
+          deadLetterSinkCase_);
     }
 
     public static final int DEADLETTER_FIELD_NUMBER = 1;
@@ -1891,6 +6049,101 @@ public final class DataPlaneContract {
       } else {
         return (com.google.protobuf.ByteString) ref;
       }
+    }
+
+    public static final int KAFKADEADLETTER_FIELD_NUMBER = 6;
+    /**
+     * <pre>
+     * Kafka dead letter is where the event is sent when something goes wrong.
+     * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+     * @return Whether the kafkaDeadLetter field is set.
+     */
+    @java.lang.Override
+    public boolean hasKafkaDeadLetter() {
+      return deadLetterSinkCase_ == 6;
+    }
+    /**
+     * <pre>
+     * Kafka dead letter is where the event is sent when something goes wrong.
+     * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+     * @return The kafkaDeadLetter.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink getKafkaDeadLetter() {
+      if (deadLetterSinkCase_ == 6) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) deadLetterSink_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance();
+    }
+    /**
+     * <pre>
+     * Kafka dead letter is where the event is sent when something goes wrong.
+     * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder getKafkaDeadLetterOrBuilder() {
+      if (deadLetterSinkCase_ == 6) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) deadLetterSink_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance();
+    }
+
+    public static final int HTTPDEADLETTERSINK_FIELD_NUMBER = 7;
+    /**
+     * <pre>
+     * Kafka dead letter is where the event is sent when something goes wrong.
+     * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+     * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+     * </pre>
+     *
+     * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+     * @return Whether the httpDeadLetterSink field is set.
+     */
+    @java.lang.Override
+    public boolean hasHttpDeadLetterSink() {
+      return deadLetterSinkCase_ == 7;
+    }
+    /**
+     * <pre>
+     * Kafka dead letter is where the event is sent when something goes wrong.
+     * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+     * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+     * </pre>
+     *
+     * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+     * @return The httpDeadLetterSink.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink getHttpDeadLetterSink() {
+      if (deadLetterSinkCase_ == 7) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) deadLetterSink_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance();
+    }
+    /**
+     * <pre>
+     * Kafka dead letter is where the event is sent when something goes wrong.
+     * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+     * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+     * </pre>
+     *
+     * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSinkOrBuilder getHttpDeadLetterSinkOrBuilder() {
+      if (deadLetterSinkCase_ == 7) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) deadLetterSink_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance();
     }
 
     public static final int RETRY_FIELD_NUMBER = 2;
@@ -1996,6 +6249,12 @@ public final class DataPlaneContract {
       if (timeout_ != 0L) {
         output.writeUInt64(5, timeout_);
       }
+      if (deadLetterSinkCase_ == 6) {
+        output.writeMessage(6, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) deadLetterSink_);
+      }
+      if (deadLetterSinkCase_ == 7) {
+        output.writeMessage(7, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) deadLetterSink_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -2024,6 +6283,14 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(5, timeout_);
       }
+      if (deadLetterSinkCase_ == 6) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(6, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) deadLetterSink_);
+      }
+      if (deadLetterSinkCase_ == 7) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(7, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) deadLetterSink_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -2048,6 +6315,19 @@ public final class DataPlaneContract {
           != other.getBackoffDelay()) return false;
       if (getTimeout()
           != other.getTimeout()) return false;
+      if (!getDeadLetterSinkCase().equals(other.getDeadLetterSinkCase())) return false;
+      switch (deadLetterSinkCase_) {
+        case 6:
+          if (!getKafkaDeadLetter()
+              .equals(other.getKafkaDeadLetter())) return false;
+          break;
+        case 7:
+          if (!getHttpDeadLetterSink()
+              .equals(other.getHttpDeadLetterSink())) return false;
+          break;
+        case 0:
+        default:
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -2071,6 +6351,18 @@ public final class DataPlaneContract {
       hash = (37 * hash) + TIMEOUT_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
           getTimeout());
+      switch (deadLetterSinkCase_) {
+        case 6:
+          hash = (37 * hash) + KAFKADEADLETTER_FIELD_NUMBER;
+          hash = (53 * hash) + getKafkaDeadLetter().hashCode();
+          break;
+        case 7:
+          hash = (37 * hash) + HTTPDEADLETTERSINK_FIELD_NUMBER;
+          hash = (53 * hash) + getHttpDeadLetterSink().hashCode();
+          break;
+        case 0:
+        default:
+      }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -2214,6 +6506,8 @@ public final class DataPlaneContract {
 
         timeout_ = 0L;
 
+        deadLetterSinkCase_ = 0;
+        deadLetterSink_ = null;
         return this;
       }
 
@@ -2241,10 +6535,25 @@ public final class DataPlaneContract {
       public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig buildPartial() {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig(this);
         result.deadLetter_ = deadLetter_;
+        if (deadLetterSinkCase_ == 6) {
+          if (kafkaDeadLetterBuilder_ == null) {
+            result.deadLetterSink_ = deadLetterSink_;
+          } else {
+            result.deadLetterSink_ = kafkaDeadLetterBuilder_.build();
+          }
+        }
+        if (deadLetterSinkCase_ == 7) {
+          if (httpDeadLetterSinkBuilder_ == null) {
+            result.deadLetterSink_ = deadLetterSink_;
+          } else {
+            result.deadLetterSink_ = httpDeadLetterSinkBuilder_.build();
+          }
+        }
         result.retry_ = retry_;
         result.backoffPolicy_ = backoffPolicy_;
         result.backoffDelay_ = backoffDelay_;
         result.timeout_ = timeout_;
+        result.deadLetterSinkCase_ = deadLetterSinkCase_;
         onBuilt();
         return result;
       }
@@ -2309,6 +6618,19 @@ public final class DataPlaneContract {
         if (other.getTimeout() != 0L) {
           setTimeout(other.getTimeout());
         }
+        switch (other.getDeadLetterSinkCase()) {
+          case KAFKADEADLETTER: {
+            mergeKafkaDeadLetter(other.getKafkaDeadLetter());
+            break;
+          }
+          case HTTPDEADLETTERSINK: {
+            mergeHttpDeadLetterSink(other.getHttpDeadLetterSink());
+            break;
+          }
+          case DEADLETTERSINK_NOT_SET: {
+            break;
+          }
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -2337,6 +6659,21 @@ public final class DataPlaneContract {
         }
         return this;
       }
+      private int deadLetterSinkCase_ = 0;
+      private java.lang.Object deadLetterSink_;
+      public DeadLetterSinkCase
+          getDeadLetterSinkCase() {
+        return DeadLetterSinkCase.forNumber(
+            deadLetterSinkCase_);
+      }
+
+      public Builder clearDeadLetterSink() {
+        deadLetterSinkCase_ = 0;
+        deadLetterSink_ = null;
+        onChanged();
+        return this;
+      }
+
 
       private java.lang.Object deadLetter_ = "";
       /**
@@ -2432,6 +6769,387 @@ public final class DataPlaneContract {
         deadLetter_ = value;
         onChanged();
         return this;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder> kafkaDeadLetterBuilder_;
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+       * @return Whether the kafkaDeadLetter field is set.
+       */
+      @java.lang.Override
+      public boolean hasKafkaDeadLetter() {
+        return deadLetterSinkCase_ == 6;
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+       * @return The kafkaDeadLetter.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink getKafkaDeadLetter() {
+        if (kafkaDeadLetterBuilder_ == null) {
+          if (deadLetterSinkCase_ == 6) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) deadLetterSink_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance();
+        } else {
+          if (deadLetterSinkCase_ == 6) {
+            return kafkaDeadLetterBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+       */
+      public Builder setKafkaDeadLetter(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink value) {
+        if (kafkaDeadLetterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          deadLetterSink_ = value;
+          onChanged();
+        } else {
+          kafkaDeadLetterBuilder_.setMessage(value);
+        }
+        deadLetterSinkCase_ = 6;
+        return this;
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+       */
+      public Builder setKafkaDeadLetter(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder builderForValue) {
+        if (kafkaDeadLetterBuilder_ == null) {
+          deadLetterSink_ = builderForValue.build();
+          onChanged();
+        } else {
+          kafkaDeadLetterBuilder_.setMessage(builderForValue.build());
+        }
+        deadLetterSinkCase_ = 6;
+        return this;
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+       */
+      public Builder mergeKafkaDeadLetter(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink value) {
+        if (kafkaDeadLetterBuilder_ == null) {
+          if (deadLetterSinkCase_ == 6 &&
+              deadLetterSink_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance()) {
+            deadLetterSink_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) deadLetterSink_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            deadLetterSink_ = value;
+          }
+          onChanged();
+        } else {
+          if (deadLetterSinkCase_ == 6) {
+            kafkaDeadLetterBuilder_.mergeFrom(value);
+          }
+          kafkaDeadLetterBuilder_.setMessage(value);
+        }
+        deadLetterSinkCase_ = 6;
+        return this;
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+       */
+      public Builder clearKafkaDeadLetter() {
+        if (kafkaDeadLetterBuilder_ == null) {
+          if (deadLetterSinkCase_ == 6) {
+            deadLetterSinkCase_ = 0;
+            deadLetterSink_ = null;
+            onChanged();
+          }
+        } else {
+          if (deadLetterSinkCase_ == 6) {
+            deadLetterSinkCase_ = 0;
+            deadLetterSink_ = null;
+          }
+          kafkaDeadLetterBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder getKafkaDeadLetterBuilder() {
+        return getKafkaDeadLetterFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder getKafkaDeadLetterOrBuilder() {
+        if ((deadLetterSinkCase_ == 6) && (kafkaDeadLetterBuilder_ != null)) {
+          return kafkaDeadLetterBuilder_.getMessageOrBuilder();
+        } else {
+          if (deadLetterSinkCase_ == 6) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) deadLetterSink_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDeadLetter = 6;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder> 
+          getKafkaDeadLetterFieldBuilder() {
+        if (kafkaDeadLetterBuilder_ == null) {
+          if (!(deadLetterSinkCase_ == 6)) {
+            deadLetterSink_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance();
+          }
+          kafkaDeadLetterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) deadLetterSink_,
+                  getParentForChildren(),
+                  isClean());
+          deadLetterSink_ = null;
+        }
+        deadLetterSinkCase_ = 6;
+        onChanged();;
+        return kafkaDeadLetterBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSinkOrBuilder> httpDeadLetterSinkBuilder_;
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+       * </pre>
+       *
+       * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+       * @return Whether the httpDeadLetterSink field is set.
+       */
+      @java.lang.Override
+      public boolean hasHttpDeadLetterSink() {
+        return deadLetterSinkCase_ == 7;
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+       * </pre>
+       *
+       * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+       * @return The httpDeadLetterSink.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink getHttpDeadLetterSink() {
+        if (httpDeadLetterSinkBuilder_ == null) {
+          if (deadLetterSinkCase_ == 7) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) deadLetterSink_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance();
+        } else {
+          if (deadLetterSinkCase_ == 7) {
+            return httpDeadLetterSinkBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+       * </pre>
+       *
+       * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+       */
+      public Builder setHttpDeadLetterSink(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink value) {
+        if (httpDeadLetterSinkBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          deadLetterSink_ = value;
+          onChanged();
+        } else {
+          httpDeadLetterSinkBuilder_.setMessage(value);
+        }
+        deadLetterSinkCase_ = 7;
+        return this;
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+       * </pre>
+       *
+       * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+       */
+      public Builder setHttpDeadLetterSink(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.Builder builderForValue) {
+        if (httpDeadLetterSinkBuilder_ == null) {
+          deadLetterSink_ = builderForValue.build();
+          onChanged();
+        } else {
+          httpDeadLetterSinkBuilder_.setMessage(builderForValue.build());
+        }
+        deadLetterSinkCase_ = 7;
+        return this;
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+       * </pre>
+       *
+       * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+       */
+      public Builder mergeHttpDeadLetterSink(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink value) {
+        if (httpDeadLetterSinkBuilder_ == null) {
+          if (deadLetterSinkCase_ == 7 &&
+              deadLetterSink_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance()) {
+            deadLetterSink_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) deadLetterSink_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            deadLetterSink_ = value;
+          }
+          onChanged();
+        } else {
+          if (deadLetterSinkCase_ == 7) {
+            httpDeadLetterSinkBuilder_.mergeFrom(value);
+          }
+          httpDeadLetterSinkBuilder_.setMessage(value);
+        }
+        deadLetterSinkCase_ = 7;
+        return this;
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+       * </pre>
+       *
+       * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+       */
+      public Builder clearHttpDeadLetterSink() {
+        if (httpDeadLetterSinkBuilder_ == null) {
+          if (deadLetterSinkCase_ == 7) {
+            deadLetterSinkCase_ = 0;
+            deadLetterSink_ = null;
+            onChanged();
+          }
+        } else {
+          if (deadLetterSinkCase_ == 7) {
+            deadLetterSinkCase_ = 0;
+            deadLetterSink_ = null;
+          }
+          httpDeadLetterSinkBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+       * </pre>
+       *
+       * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.Builder getHttpDeadLetterSinkBuilder() {
+        return getHttpDeadLetterSinkFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+       * </pre>
+       *
+       * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSinkOrBuilder getHttpDeadLetterSinkOrBuilder() {
+        if ((deadLetterSinkCase_ == 7) && (httpDeadLetterSinkBuilder_ != null)) {
+          return httpDeadLetterSinkBuilder_.getMessageOrBuilder();
+        } else {
+          if (deadLetterSinkCase_ == 7) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) deadLetterSink_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * Kafka dead letter is where the event is sent when something goes wrong.
+       * This is different from deadLetter because this fields targets a Kafka cluster rather than a generic destination.
+       * TODO(pierDipi) this replaces: deadLetter, retry, backoffPolicy, backoffDelay, timeout
+       * </pre>
+       *
+       * <code>.HTTPSink httpDeadLetterSink = 7;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSinkOrBuilder> 
+          getHttpDeadLetterSinkFieldBuilder() {
+        if (httpDeadLetterSinkBuilder_ == null) {
+          if (!(deadLetterSinkCase_ == 7)) {
+            deadLetterSink_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance();
+          }
+          httpDeadLetterSinkBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSinkOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) deadLetterSink_,
+                  getParentForChildren(),
+                  isClean());
+          deadLetterSink_ = null;
+        }
+        deadLetterSinkCase_ = 7;
+        onChanged();;
+        return httpDeadLetterSinkBuilder_;
       }
 
       private int retry_ ;
@@ -2741,6 +7459,63 @@ public final class DataPlaneContract {
 
     /**
      * <pre>
+     * kafkaSink is the destination Kafka topic.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaSink = 10;</code>
+     * @return Whether the kafkaSink field is set.
+     */
+    boolean hasKafkaSink();
+    /**
+     * <pre>
+     * kafkaSink is the destination Kafka topic.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaSink = 10;</code>
+     * @return The kafkaSink.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink getKafkaSink();
+    /**
+     * <pre>
+     * kafkaSink is the destination Kafka topic.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaSink = 10;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder getKafkaSinkOrBuilder();
+
+    /**
+     * <pre>
+     * HttpSink is the destination HTTP service.
+     * TODO(pierDipi) this replaces: replyStrategy, destination
+     * </pre>
+     *
+     * <code>.HTTPSink httpSink = 11;</code>
+     * @return Whether the httpSink field is set.
+     */
+    boolean hasHttpSink();
+    /**
+     * <pre>
+     * HttpSink is the destination HTTP service.
+     * TODO(pierDipi) this replaces: replyStrategy, destination
+     * </pre>
+     *
+     * <code>.HTTPSink httpSink = 11;</code>
+     * @return The httpSink.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink getHttpSink();
+    /**
+     * <pre>
+     * HttpSink is the destination HTTP service.
+     * TODO(pierDipi) this replaces: replyStrategy, destination
+     * </pre>
+     *
+     * <code>.HTTPSink httpSink = 11;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSinkOrBuilder getHttpSinkOrBuilder();
+
+    /**
+     * <pre>
      * Send the response to an url
      * </pre>
      *
@@ -2910,6 +7685,8 @@ public final class DataPlaneContract {
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.DeliveryOrder getDeliveryOrder();
 
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.SinkCase getSinkCase();
+
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.ReplyStrategyCase getReplyStrategyCase();
   }
   /**
@@ -3045,6 +7822,34 @@ public final class DataPlaneContract {
               replyStrategyCase_ = 9;
               break;
             }
+            case 82: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder subBuilder = null;
+              if (sinkCase_ == 10) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) sink_).toBuilder();
+              }
+              sink_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) sink_);
+                sink_ = subBuilder.buildPartial();
+              }
+              sinkCase_ = 10;
+              break;
+            }
+            case 90: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.Builder subBuilder = null;
+              if (sinkCase_ == 11) {
+                subBuilder = ((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) sink_).toBuilder();
+              }
+              sink_ =
+                  input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) sink_);
+                sink_ = subBuilder.buildPartial();
+              }
+              sinkCase_ = 11;
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -3075,6 +7880,47 @@ public final class DataPlaneContract {
       return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.internal_static_Egress_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.class, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress.Builder.class);
+    }
+
+    private int sinkCase_ = 0;
+    private java.lang.Object sink_;
+    public enum SinkCase
+        implements com.google.protobuf.Internal.EnumLite,
+            com.google.protobuf.AbstractMessage.InternalOneOfEnum {
+      KAFKASINK(10),
+      HTTPSINK(11),
+      SINK_NOT_SET(0);
+      private final int value;
+      private SinkCase(int value) {
+        this.value = value;
+      }
+      /**
+       * @param value The number of the enum to look for.
+       * @return The enum associated with the given number.
+       * @deprecated Use {@link #forNumber(int)} instead.
+       */
+      @java.lang.Deprecated
+      public static SinkCase valueOf(int value) {
+        return forNumber(value);
+      }
+
+      public static SinkCase forNumber(int value) {
+        switch (value) {
+          case 10: return KAFKASINK;
+          case 11: return HTTPSINK;
+          case 0: return SINK_NOT_SET;
+          default: return null;
+        }
+      }
+      public int getNumber() {
+        return this.value;
+      }
+    };
+
+    public SinkCase
+    getSinkCase() {
+      return SinkCase.forNumber(
+          sinkCase_);
     }
 
     private int replyStrategyCase_ = 0;
@@ -3210,6 +8056,95 @@ public final class DataPlaneContract {
       } else {
         return (com.google.protobuf.ByteString) ref;
       }
+    }
+
+    public static final int KAFKASINK_FIELD_NUMBER = 10;
+    /**
+     * <pre>
+     * kafkaSink is the destination Kafka topic.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaSink = 10;</code>
+     * @return Whether the kafkaSink field is set.
+     */
+    @java.lang.Override
+    public boolean hasKafkaSink() {
+      return sinkCase_ == 10;
+    }
+    /**
+     * <pre>
+     * kafkaSink is the destination Kafka topic.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaSink = 10;</code>
+     * @return The kafkaSink.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink getKafkaSink() {
+      if (sinkCase_ == 10) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) sink_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance();
+    }
+    /**
+     * <pre>
+     * kafkaSink is the destination Kafka topic.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaSink = 10;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder getKafkaSinkOrBuilder() {
+      if (sinkCase_ == 10) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) sink_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance();
+    }
+
+    public static final int HTTPSINK_FIELD_NUMBER = 11;
+    /**
+     * <pre>
+     * HttpSink is the destination HTTP service.
+     * TODO(pierDipi) this replaces: replyStrategy, destination
+     * </pre>
+     *
+     * <code>.HTTPSink httpSink = 11;</code>
+     * @return Whether the httpSink field is set.
+     */
+    @java.lang.Override
+    public boolean hasHttpSink() {
+      return sinkCase_ == 11;
+    }
+    /**
+     * <pre>
+     * HttpSink is the destination HTTP service.
+     * TODO(pierDipi) this replaces: replyStrategy, destination
+     * </pre>
+     *
+     * <code>.HTTPSink httpSink = 11;</code>
+     * @return The httpSink.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink getHttpSink() {
+      if (sinkCase_ == 11) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) sink_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance();
+    }
+    /**
+     * <pre>
+     * HttpSink is the destination HTTP service.
+     * TODO(pierDipi) this replaces: replyStrategy, destination
+     * </pre>
+     *
+     * <code>.HTTPSink httpSink = 11;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSinkOrBuilder getHttpSinkOrBuilder() {
+      if (sinkCase_ == 11) {
+         return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) sink_;
+      }
+      return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance();
     }
 
     public static final int REPLYURL_FIELD_NUMBER = 3;
@@ -3547,6 +8482,12 @@ public final class DataPlaneContract {
       if (replyStrategyCase_ == 9) {
         output.writeMessage(9, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_);
       }
+      if (sinkCase_ == 10) {
+        output.writeMessage(10, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) sink_);
+      }
+      if (sinkCase_ == 11) {
+        output.writeMessage(11, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) sink_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -3588,6 +8529,14 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(9, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Empty) replyStrategy_);
       }
+      if (sinkCase_ == 10) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(10, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) sink_);
+      }
+      if (sinkCase_ == 11) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(11, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) sink_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -3620,6 +8569,19 @@ public final class DataPlaneContract {
             .equals(other.getEgressConfig())) return false;
       }
       if (deliveryOrder_ != other.deliveryOrder_) return false;
+      if (!getSinkCase().equals(other.getSinkCase())) return false;
+      switch (sinkCase_) {
+        case 10:
+          if (!getKafkaSink()
+              .equals(other.getKafkaSink())) return false;
+          break;
+        case 11:
+          if (!getHttpSink()
+              .equals(other.getHttpSink())) return false;
+          break;
+        case 0:
+        default:
+      }
       if (!getReplyStrategyCase().equals(other.getReplyStrategyCase())) return false;
       switch (replyStrategyCase_) {
         case 3:
@@ -3664,6 +8626,18 @@ public final class DataPlaneContract {
       }
       hash = (37 * hash) + DELIVERYORDER_FIELD_NUMBER;
       hash = (53 * hash) + deliveryOrder_;
+      switch (sinkCase_) {
+        case 10:
+          hash = (37 * hash) + KAFKASINK_FIELD_NUMBER;
+          hash = (53 * hash) + getKafkaSink().hashCode();
+          break;
+        case 11:
+          hash = (37 * hash) + HTTPSINK_FIELD_NUMBER;
+          hash = (53 * hash) + getHttpSink().hashCode();
+          break;
+        case 0:
+        default:
+      }
       switch (replyStrategyCase_) {
         case 3:
           hash = (37 * hash) + REPLYURL_FIELD_NUMBER;
@@ -3833,6 +8807,8 @@ public final class DataPlaneContract {
         }
         deliveryOrder_ = 0;
 
+        sinkCase_ = 0;
+        sink_ = null;
         replyStrategyCase_ = 0;
         replyStrategy_ = null;
         return this;
@@ -3863,6 +8839,20 @@ public final class DataPlaneContract {
         dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress result = new dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Egress(this);
         result.consumerGroup_ = consumerGroup_;
         result.destination_ = destination_;
+        if (sinkCase_ == 10) {
+          if (kafkaSinkBuilder_ == null) {
+            result.sink_ = sink_;
+          } else {
+            result.sink_ = kafkaSinkBuilder_.build();
+          }
+        }
+        if (sinkCase_ == 11) {
+          if (httpSinkBuilder_ == null) {
+            result.sink_ = sink_;
+          } else {
+            result.sink_ = httpSinkBuilder_.build();
+          }
+        }
         if (replyStrategyCase_ == 3) {
           result.replyStrategy_ = replyStrategy_;
         }
@@ -3892,6 +8882,7 @@ public final class DataPlaneContract {
           result.egressConfig_ = egressConfigBuilder_.build();
         }
         result.deliveryOrder_ = deliveryOrder_;
+        result.sinkCase_ = sinkCase_;
         result.replyStrategyCase_ = replyStrategyCase_;
         onBuilt();
         return result;
@@ -3962,6 +8953,19 @@ public final class DataPlaneContract {
         if (other.deliveryOrder_ != 0) {
           setDeliveryOrderValue(other.getDeliveryOrderValue());
         }
+        switch (other.getSinkCase()) {
+          case KAFKASINK: {
+            mergeKafkaSink(other.getKafkaSink());
+            break;
+          }
+          case HTTPSINK: {
+            mergeHttpSink(other.getHttpSink());
+            break;
+          }
+          case SINK_NOT_SET: {
+            break;
+          }
+        }
         switch (other.getReplyStrategyCase()) {
           case REPLYURL: {
             replyStrategyCase_ = 3;
@@ -4009,6 +9013,21 @@ public final class DataPlaneContract {
         }
         return this;
       }
+      private int sinkCase_ = 0;
+      private java.lang.Object sink_;
+      public SinkCase
+          getSinkCase() {
+        return SinkCase.forNumber(
+            sinkCase_);
+      }
+
+      public Builder clearSink() {
+        sinkCase_ = 0;
+        sink_ = null;
+        onChanged();
+        return this;
+      }
+
       private int replyStrategyCase_ = 0;
       private java.lang.Object replyStrategy_;
       public ReplyStrategyCase
@@ -4215,6 +9234,369 @@ public final class DataPlaneContract {
         destination_ = value;
         onChanged();
         return this;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder> kafkaSinkBuilder_;
+      /**
+       * <pre>
+       * kafkaSink is the destination Kafka topic.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaSink = 10;</code>
+       * @return Whether the kafkaSink field is set.
+       */
+      @java.lang.Override
+      public boolean hasKafkaSink() {
+        return sinkCase_ == 10;
+      }
+      /**
+       * <pre>
+       * kafkaSink is the destination Kafka topic.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaSink = 10;</code>
+       * @return The kafkaSink.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink getKafkaSink() {
+        if (kafkaSinkBuilder_ == null) {
+          if (sinkCase_ == 10) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) sink_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance();
+        } else {
+          if (sinkCase_ == 10) {
+            return kafkaSinkBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * kafkaSink is the destination Kafka topic.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaSink = 10;</code>
+       */
+      public Builder setKafkaSink(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink value) {
+        if (kafkaSinkBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          sink_ = value;
+          onChanged();
+        } else {
+          kafkaSinkBuilder_.setMessage(value);
+        }
+        sinkCase_ = 10;
+        return this;
+      }
+      /**
+       * <pre>
+       * kafkaSink is the destination Kafka topic.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaSink = 10;</code>
+       */
+      public Builder setKafkaSink(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder builderForValue) {
+        if (kafkaSinkBuilder_ == null) {
+          sink_ = builderForValue.build();
+          onChanged();
+        } else {
+          kafkaSinkBuilder_.setMessage(builderForValue.build());
+        }
+        sinkCase_ = 10;
+        return this;
+      }
+      /**
+       * <pre>
+       * kafkaSink is the destination Kafka topic.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaSink = 10;</code>
+       */
+      public Builder mergeKafkaSink(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink value) {
+        if (kafkaSinkBuilder_ == null) {
+          if (sinkCase_ == 10 &&
+              sink_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance()) {
+            sink_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) sink_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            sink_ = value;
+          }
+          onChanged();
+        } else {
+          if (sinkCase_ == 10) {
+            kafkaSinkBuilder_.mergeFrom(value);
+          }
+          kafkaSinkBuilder_.setMessage(value);
+        }
+        sinkCase_ = 10;
+        return this;
+      }
+      /**
+       * <pre>
+       * kafkaSink is the destination Kafka topic.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaSink = 10;</code>
+       */
+      public Builder clearKafkaSink() {
+        if (kafkaSinkBuilder_ == null) {
+          if (sinkCase_ == 10) {
+            sinkCase_ = 0;
+            sink_ = null;
+            onChanged();
+          }
+        } else {
+          if (sinkCase_ == 10) {
+            sinkCase_ = 0;
+            sink_ = null;
+          }
+          kafkaSinkBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * kafkaSink is the destination Kafka topic.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaSink = 10;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder getKafkaSinkBuilder() {
+        return getKafkaSinkFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * kafkaSink is the destination Kafka topic.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaSink = 10;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder getKafkaSinkOrBuilder() {
+        if ((sinkCase_ == 10) && (kafkaSinkBuilder_ != null)) {
+          return kafkaSinkBuilder_.getMessageOrBuilder();
+        } else {
+          if (sinkCase_ == 10) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) sink_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * kafkaSink is the destination Kafka topic.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaSink = 10;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder> 
+          getKafkaSinkFieldBuilder() {
+        if (kafkaSinkBuilder_ == null) {
+          if (!(sinkCase_ == 10)) {
+            sink_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance();
+          }
+          kafkaSinkBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink) sink_,
+                  getParentForChildren(),
+                  isClean());
+          sink_ = null;
+        }
+        sinkCase_ = 10;
+        onChanged();;
+        return kafkaSinkBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSinkOrBuilder> httpSinkBuilder_;
+      /**
+       * <pre>
+       * HttpSink is the destination HTTP service.
+       * TODO(pierDipi) this replaces: replyStrategy, destination
+       * </pre>
+       *
+       * <code>.HTTPSink httpSink = 11;</code>
+       * @return Whether the httpSink field is set.
+       */
+      @java.lang.Override
+      public boolean hasHttpSink() {
+        return sinkCase_ == 11;
+      }
+      /**
+       * <pre>
+       * HttpSink is the destination HTTP service.
+       * TODO(pierDipi) this replaces: replyStrategy, destination
+       * </pre>
+       *
+       * <code>.HTTPSink httpSink = 11;</code>
+       * @return The httpSink.
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink getHttpSink() {
+        if (httpSinkBuilder_ == null) {
+          if (sinkCase_ == 11) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) sink_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance();
+        } else {
+          if (sinkCase_ == 11) {
+            return httpSinkBuilder_.getMessage();
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * HttpSink is the destination HTTP service.
+       * TODO(pierDipi) this replaces: replyStrategy, destination
+       * </pre>
+       *
+       * <code>.HTTPSink httpSink = 11;</code>
+       */
+      public Builder setHttpSink(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink value) {
+        if (httpSinkBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          sink_ = value;
+          onChanged();
+        } else {
+          httpSinkBuilder_.setMessage(value);
+        }
+        sinkCase_ = 11;
+        return this;
+      }
+      /**
+       * <pre>
+       * HttpSink is the destination HTTP service.
+       * TODO(pierDipi) this replaces: replyStrategy, destination
+       * </pre>
+       *
+       * <code>.HTTPSink httpSink = 11;</code>
+       */
+      public Builder setHttpSink(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.Builder builderForValue) {
+        if (httpSinkBuilder_ == null) {
+          sink_ = builderForValue.build();
+          onChanged();
+        } else {
+          httpSinkBuilder_.setMessage(builderForValue.build());
+        }
+        sinkCase_ = 11;
+        return this;
+      }
+      /**
+       * <pre>
+       * HttpSink is the destination HTTP service.
+       * TODO(pierDipi) this replaces: replyStrategy, destination
+       * </pre>
+       *
+       * <code>.HTTPSink httpSink = 11;</code>
+       */
+      public Builder mergeHttpSink(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink value) {
+        if (httpSinkBuilder_ == null) {
+          if (sinkCase_ == 11 &&
+              sink_ != dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance()) {
+            sink_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.newBuilder((dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) sink_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            sink_ = value;
+          }
+          onChanged();
+        } else {
+          if (sinkCase_ == 11) {
+            httpSinkBuilder_.mergeFrom(value);
+          }
+          httpSinkBuilder_.setMessage(value);
+        }
+        sinkCase_ = 11;
+        return this;
+      }
+      /**
+       * <pre>
+       * HttpSink is the destination HTTP service.
+       * TODO(pierDipi) this replaces: replyStrategy, destination
+       * </pre>
+       *
+       * <code>.HTTPSink httpSink = 11;</code>
+       */
+      public Builder clearHttpSink() {
+        if (httpSinkBuilder_ == null) {
+          if (sinkCase_ == 11) {
+            sinkCase_ = 0;
+            sink_ = null;
+            onChanged();
+          }
+        } else {
+          if (sinkCase_ == 11) {
+            sinkCase_ = 0;
+            sink_ = null;
+          }
+          httpSinkBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * HttpSink is the destination HTTP service.
+       * TODO(pierDipi) this replaces: replyStrategy, destination
+       * </pre>
+       *
+       * <code>.HTTPSink httpSink = 11;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.Builder getHttpSinkBuilder() {
+        return getHttpSinkFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * HttpSink is the destination HTTP service.
+       * TODO(pierDipi) this replaces: replyStrategy, destination
+       * </pre>
+       *
+       * <code>.HTTPSink httpSink = 11;</code>
+       */
+      @java.lang.Override
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSinkOrBuilder getHttpSinkOrBuilder() {
+        if ((sinkCase_ == 11) && (httpSinkBuilder_ != null)) {
+          return httpSinkBuilder_.getMessageOrBuilder();
+        } else {
+          if (sinkCase_ == 11) {
+            return (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) sink_;
+          }
+          return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance();
+        }
+      }
+      /**
+       * <pre>
+       * HttpSink is the destination HTTP service.
+       * TODO(pierDipi) this replaces: replyStrategy, destination
+       * </pre>
+       *
+       * <code>.HTTPSink httpSink = 11;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSinkOrBuilder> 
+          getHttpSinkFieldBuilder() {
+        if (httpSinkBuilder_ == null) {
+          if (!(sinkCase_ == 11)) {
+            sink_ = dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.getDefaultInstance();
+          }
+          httpSinkBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSinkOrBuilder>(
+                  (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.HTTPSink) sink_,
+                  getParentForChildren(),
+                  isClean());
+          sink_ = null;
+        }
+        sinkCase_ = 11;
+        onChanged();;
+        return httpSinkBuilder_;
       }
 
       /**
@@ -7832,6 +13214,33 @@ public final class DataPlaneContract {
      */
     dev.knative.eventing.kafka.broker.contract.DataPlaneContract.ReferenceOrBuilder getAuthSecretOrBuilder();
 
+    /**
+     * <pre>
+     * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaDestination = 9;</code>
+     * @return Whether the kafkaDestination field is set.
+     */
+    boolean hasKafkaDestination();
+    /**
+     * <pre>
+     * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaDestination = 9;</code>
+     * @return The kafkaDestination.
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink getKafkaDestination();
+    /**
+     * <pre>
+     * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaDestination = 9;</code>
+     */
+    dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder getKafkaDestinationOrBuilder();
+
     public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Resource.AuthCase getAuthCase();
   }
   /**
@@ -7966,6 +13375,19 @@ public final class DataPlaneContract {
                 auth_ = subBuilder.buildPartial();
               }
               authCase_ = 8;
+              break;
+            }
+            case 74: {
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder subBuilder = null;
+              if (kafkaDestination_ != null) {
+                subBuilder = kafkaDestination_.toBuilder();
+              }
+              kafkaDestination_ = input.readMessage(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(kafkaDestination_);
+                kafkaDestination_ = subBuilder.buildPartial();
+              }
+
               break;
             }
             default: {
@@ -8508,6 +13930,44 @@ public final class DataPlaneContract {
       return dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference.getDefaultInstance();
     }
 
+    public static final int KAFKADESTINATION_FIELD_NUMBER = 9;
+    private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink kafkaDestination_;
+    /**
+     * <pre>
+     * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaDestination = 9;</code>
+     * @return Whether the kafkaDestination field is set.
+     */
+    @java.lang.Override
+    public boolean hasKafkaDestination() {
+      return kafkaDestination_ != null;
+    }
+    /**
+     * <pre>
+     * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaDestination = 9;</code>
+     * @return The kafkaDestination.
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink getKafkaDestination() {
+      return kafkaDestination_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance() : kafkaDestination_;
+    }
+    /**
+     * <pre>
+     * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+     * </pre>
+     *
+     * <code>.KafkaSink kafkaDestination = 9;</code>
+     */
+    @java.lang.Override
+    public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder getKafkaDestinationOrBuilder() {
+      return getKafkaDestination();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -8545,6 +14005,9 @@ public final class DataPlaneContract {
       }
       if (authCase_ == 8) {
         output.writeMessage(8, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_);
+      }
+      if (kafkaDestination_ != null) {
+        output.writeMessage(9, getKafkaDestination());
       }
       unknownFields.writeTo(output);
     }
@@ -8589,6 +14052,10 @@ public final class DataPlaneContract {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(8, (dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Reference) auth_);
       }
+      if (kafkaDestination_ != null) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(9, getKafkaDestination());
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -8622,6 +14089,11 @@ public final class DataPlaneContract {
       }
       if (!getEgressesList()
           .equals(other.getEgressesList())) return false;
+      if (hasKafkaDestination() != other.hasKafkaDestination()) return false;
+      if (hasKafkaDestination()) {
+        if (!getKafkaDestination()
+            .equals(other.getKafkaDestination())) return false;
+      }
       if (!getAuthCase().equals(other.getAuthCase())) return false;
       switch (authCase_) {
         case 7:
@@ -8665,6 +14137,10 @@ public final class DataPlaneContract {
       if (getEgressesCount() > 0) {
         hash = (37 * hash) + EGRESSES_FIELD_NUMBER;
         hash = (53 * hash) + getEgressesList().hashCode();
+      }
+      if (hasKafkaDestination()) {
+        hash = (37 * hash) + KAFKADESTINATION_FIELD_NUMBER;
+        hash = (53 * hash) + getKafkaDestination().hashCode();
       }
       switch (authCase_) {
         case 7:
@@ -8836,6 +14312,12 @@ public final class DataPlaneContract {
         } else {
           egressesBuilder_.clear();
         }
+        if (kafkaDestinationBuilder_ == null) {
+          kafkaDestination_ = null;
+        } else {
+          kafkaDestination_ = null;
+          kafkaDestinationBuilder_ = null;
+        }
         authCase_ = 0;
         auth_ = null;
         return this;
@@ -8904,6 +14386,11 @@ public final class DataPlaneContract {
           } else {
             result.auth_ = authSecretBuilder_.build();
           }
+        }
+        if (kafkaDestinationBuilder_ == null) {
+          result.kafkaDestination_ = kafkaDestination_;
+        } else {
+          result.kafkaDestination_ = kafkaDestinationBuilder_.build();
         }
         result.authCase_ = authCase_;
         onBuilt();
@@ -9003,6 +14490,9 @@ public final class DataPlaneContract {
               egressesBuilder_.addAllMessages(other.egresses_);
             }
           }
+        }
+        if (other.hasKafkaDestination()) {
+          mergeKafkaDestination(other.getKafkaDestination());
         }
         switch (other.getAuthCase()) {
           case ABSENTAUTH: {
@@ -10655,6 +16145,161 @@ public final class DataPlaneContract {
         onChanged();;
         return authSecretBuilder_;
       }
+
+      private dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink kafkaDestination_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder> kafkaDestinationBuilder_;
+      /**
+       * <pre>
+       * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDestination = 9;</code>
+       * @return Whether the kafkaDestination field is set.
+       */
+      public boolean hasKafkaDestination() {
+        return kafkaDestinationBuilder_ != null || kafkaDestination_ != null;
+      }
+      /**
+       * <pre>
+       * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDestination = 9;</code>
+       * @return The kafkaDestination.
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink getKafkaDestination() {
+        if (kafkaDestinationBuilder_ == null) {
+          return kafkaDestination_ == null ? dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance() : kafkaDestination_;
+        } else {
+          return kafkaDestinationBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDestination = 9;</code>
+       */
+      public Builder setKafkaDestination(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink value) {
+        if (kafkaDestinationBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          kafkaDestination_ = value;
+          onChanged();
+        } else {
+          kafkaDestinationBuilder_.setMessage(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDestination = 9;</code>
+       */
+      public Builder setKafkaDestination(
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder builderForValue) {
+        if (kafkaDestinationBuilder_ == null) {
+          kafkaDestination_ = builderForValue.build();
+          onChanged();
+        } else {
+          kafkaDestinationBuilder_.setMessage(builderForValue.build());
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDestination = 9;</code>
+       */
+      public Builder mergeKafkaDestination(dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink value) {
+        if (kafkaDestinationBuilder_ == null) {
+          if (kafkaDestination_ != null) {
+            kafkaDestination_ =
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.newBuilder(kafkaDestination_).mergeFrom(value).buildPartial();
+          } else {
+            kafkaDestination_ = value;
+          }
+          onChanged();
+        } else {
+          kafkaDestinationBuilder_.mergeFrom(value);
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDestination = 9;</code>
+       */
+      public Builder clearKafkaDestination() {
+        if (kafkaDestinationBuilder_ == null) {
+          kafkaDestination_ = null;
+          onChanged();
+        } else {
+          kafkaDestination_ = null;
+          kafkaDestinationBuilder_ = null;
+        }
+
+        return this;
+      }
+      /**
+       * <pre>
+       * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDestination = 9;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder getKafkaDestinationBuilder() {
+        
+        onChanged();
+        return getKafkaDestinationFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDestination = 9;</code>
+       */
+      public dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder getKafkaDestinationOrBuilder() {
+        if (kafkaDestinationBuilder_ != null) {
+          return kafkaDestinationBuilder_.getMessageOrBuilder();
+        } else {
+          return kafkaDestination_ == null ?
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.getDefaultInstance() : kafkaDestination_;
+        }
+      }
+      /**
+       * <pre>
+       * TODO(pierDipi) this field will replaces: bootstrapServers, ingress.contentMode, Auth.
+       * </pre>
+       *
+       * <code>.KafkaSink kafkaDestination = 9;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder> 
+          getKafkaDestinationFieldBuilder() {
+        if (kafkaDestinationBuilder_ == null) {
+          kafkaDestinationBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSink.Builder, dev.knative.eventing.kafka.broker.contract.DataPlaneContract.KafkaSinkOrBuilder>(
+                  getKafkaDestination(),
+                  getParentForChildren(),
+                  isClean());
+          kafkaDestination_ = null;
+        }
+        return kafkaDestinationBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -11613,6 +17258,16 @@ public final class DataPlaneContract {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Filter_AttributesEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_KafkaSink_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_KafkaSink_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_HTTPSink_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_HTTPSink_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_EgressConfig_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -11654,34 +17309,51 @@ public final class DataPlaneContract {
       "\n\016contract.proto\"\007\n\005Empty\"h\n\006Filter\022+\n\na" +
       "ttributes\030\001 \003(\0132\027.Filter.AttributesEntry" +
       "\0321\n\017AttributesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005valu" +
-      "e\030\002 \001(\t:\0028\001\"\177\n\014EgressConfig\022\022\n\ndeadLette" +
-      "r\030\001 \001(\t\022\r\n\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030" +
-      "\003 \001(\0162\016.BackoffPolicy\022\024\n\014backoffDelay\030\004 " +
-      "\001(\004\022\017\n\007timeout\030\005 \001(\004\"\223\002\n\006Egress\022\025\n\rconsu" +
-      "merGroup\030\001 \001(\t\022\023\n\013destination\030\002 \001(\t\022\022\n\010r" +
-      "eplyUrl\030\003 \001(\tH\000\022&\n\024replyToOriginalTopic\030" +
-      "\004 \001(\0132\006.EmptyH\000\022\036\n\014discardReply\030\t \001(\0132\006." +
-      "EmptyH\000\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030" +
-      "\006 \001(\t\022#\n\014egressConfig\030\007 \001(\0132\r.EgressConf" +
-      "ig\022%\n\rdeliveryOrder\030\010 \001(\0162\016.DeliveryOrde" +
-      "rB\017\n\rreplyStrategy\"[\n\007Ingress\022!\n\013content" +
-      "Mode\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002 \001(\tH\000" +
-      "\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"K\n\tRefer" +
-      "ence\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014\n" +
-      "\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"\344\001\n\010Resourc" +
-      "e\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020bootst" +
-      "rapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ingr" +
-      "ess\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfig" +
-      "\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsentAut" +
-      "h\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n." +
-      "ReferenceH\000B\006\n\004Auth\"<\n\010Contract\022\022\n\ngener" +
-      "ation\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132\t.Resourc" +
-      "e*,\n\rBackoffPolicy\022\017\n\013Exponential\020\000\022\n\n\006L" +
-      "inear\020\001*+\n\rDeliveryOrder\022\r\n\tUNORDERED\020\000\022" +
-      "\013\n\007ORDERED\020\001*)\n\013ContentMode\022\n\n\006BINARY\020\000\022" +
-      "\016\n\nSTRUCTURED\020\001B[\n*dev.knative.eventing." +
-      "kafka.broker.contractB\021DataPlaneContract" +
-      "Z\032control-plane/pkg/contractb\006proto3"
+      "e\030\002 \001(\t:\0028\001\"\237\001\n\tKafkaSink\022\030\n\020bootstrapSe" +
+      "rvers\030\001 \001(\t\022\r\n\005topic\030\002 \001(\t\022!\n\013contentMod" +
+      "e\030\003 \001(\0162\014.ContentMode\022\034\n\nabsentAuth\030\004 \001(" +
+      "\0132\006.EmptyH\000\022 \n\nauthSecret\030\005 \001(\0132\n.Refere" +
+      "nceH\000B\006\n\004Auth\"\341\001\n\010HTTPSink\022\013\n\003URL\030\001 \001(\t\022" +
+      "\022\n\010replyUrl\030\002 \001(\tH\000\022&\n\024replyToOriginalTo" +
+      "pic\030\003 \001(\0132\006.EmptyH\000\022\036\n\014discardReply\030\004 \001(" +
+      "\0132\006.EmptyH\000\022\r\n\005retry\030\005 \001(\r\022%\n\rbackoffPol" +
+      "icy\030\006 \001(\0162\016.BackoffPolicy\022\024\n\014backoffDela" +
+      "y\030\007 \001(\004\022\017\n\007timeout\030\010 \001(\004B\017\n\rreplyStrateg" +
+      "y\"\341\001\n\014EgressConfig\022\022\n\ndeadLetter\030\001 \001(\t\022%" +
+      "\n\017kafkaDeadLetter\030\006 \001(\0132\n.KafkaSinkH\000\022\'\n" +
+      "\022httpDeadLetterSink\030\007 \001(\0132\t.HTTPSinkH\000\022\r" +
+      "\n\005retry\030\002 \001(\r\022%\n\rbackoffPolicy\030\003 \001(\0162\016.B" +
+      "ackoffPolicy\022\024\n\014backoffDelay\030\004 \001(\004\022\017\n\007ti" +
+      "meout\030\005 \001(\004B\020\n\016deadLetterSink\"\333\002\n\006Egress" +
+      "\022\025\n\rconsumerGroup\030\001 \001(\t\022\023\n\013destination\030\002" +
+      " \001(\t\022\037\n\tkafkaSink\030\n \001(\0132\n.KafkaSinkH\000\022\035\n" +
+      "\010httpSink\030\013 \001(\0132\t.HTTPSinkH\000\022\022\n\010replyUrl" +
+      "\030\003 \001(\tH\001\022&\n\024replyToOriginalTopic\030\004 \001(\0132\006" +
+      ".EmptyH\001\022\036\n\014discardReply\030\t \001(\0132\006.EmptyH\001" +
+      "\022\027\n\006filter\030\005 \001(\0132\007.Filter\022\013\n\003uid\030\006 \001(\t\022#" +
+      "\n\014egressConfig\030\007 \001(\0132\r.EgressConfig\022%\n\rd" +
+      "eliveryOrder\030\010 \001(\0162\016.DeliveryOrderB\006\n\004si" +
+      "nkB\017\n\rreplyStrategy\"[\n\007Ingress\022!\n\013conten" +
+      "tMode\030\001 \001(\0162\014.ContentMode\022\016\n\004path\030\002 \001(\tH" +
+      "\000\022\016\n\004host\030\003 \001(\tH\000B\r\n\013ingressType\"K\n\tRefe" +
+      "rence\022\014\n\004uuid\030\001 \001(\t\022\021\n\tnamespace\030\002 \001(\t\022\014" +
+      "\n\004name\030\003 \001(\t\022\017\n\007version\030\004 \001(\t\"\212\002\n\010Resour" +
+      "ce\022\013\n\003uid\030\001 \001(\t\022\016\n\006topics\030\002 \003(\t\022\030\n\020boots" +
+      "trapServers\030\003 \001(\t\022\031\n\007ingress\030\004 \001(\0132\010.Ing" +
+      "ress\022#\n\014egressConfig\030\005 \001(\0132\r.EgressConfi" +
+      "g\022\031\n\010egresses\030\006 \003(\0132\007.Egress\022\034\n\nabsentAu" +
+      "th\030\007 \001(\0132\006.EmptyH\000\022 \n\nauthSecret\030\010 \001(\0132\n" +
+      ".ReferenceH\000\022$\n\020kafkaDestination\030\t \001(\0132\n" +
+      ".KafkaSinkB\006\n\004Auth\"<\n\010Contract\022\022\n\ngenera" +
+      "tion\030\001 \001(\004\022\034\n\tresources\030\002 \003(\0132\t.Resource" +
+      "*,\n\rBackoffPolicy\022\017\n\013Exponential\020\000\022\n\n\006Li" +
+      "near\020\001*+\n\rDeliveryOrder\022\r\n\tUNORDERED\020\000\022\013" +
+      "\n\007ORDERED\020\001*=\n\007KeyType\022\n\n\006String\020\000\022\013\n\007In" +
+      "teger\020\001\022\n\n\006Double\020\002\022\r\n\tByteArray\020\003*)\n\013Co" +
+      "ntentMode\022\n\n\006BINARY\020\000\022\016\n\nSTRUCTURED\020\001B[\n" +
+      "*dev.knative.eventing.kafka.broker.contr" +
+      "actB\021DataPlaneContractZ\032control-plane/pk" +
+      "g/contractb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -11705,38 +17377,50 @@ public final class DataPlaneContract {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Filter_AttributesEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
-    internal_static_EgressConfig_descriptor =
+    internal_static_KafkaSink_descriptor =
       getDescriptor().getMessageTypes().get(2);
+    internal_static_KafkaSink_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_KafkaSink_descriptor,
+        new java.lang.String[] { "BootstrapServers", "Topic", "ContentMode", "AbsentAuth", "AuthSecret", "Auth", });
+    internal_static_HTTPSink_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_HTTPSink_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_HTTPSink_descriptor,
+        new java.lang.String[] { "URL", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "Retry", "BackoffPolicy", "BackoffDelay", "Timeout", "ReplyStrategy", });
+    internal_static_EgressConfig_descriptor =
+      getDescriptor().getMessageTypes().get(4);
     internal_static_EgressConfig_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_EgressConfig_descriptor,
-        new java.lang.String[] { "DeadLetter", "Retry", "BackoffPolicy", "BackoffDelay", "Timeout", });
+        new java.lang.String[] { "DeadLetter", "KafkaDeadLetter", "HttpDeadLetterSink", "Retry", "BackoffPolicy", "BackoffDelay", "Timeout", "DeadLetterSink", });
     internal_static_Egress_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_Egress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Egress_descriptor,
-        new java.lang.String[] { "ConsumerGroup", "Destination", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "ReplyStrategy", });
+        new java.lang.String[] { "ConsumerGroup", "Destination", "KafkaSink", "HttpSink", "ReplyUrl", "ReplyToOriginalTopic", "DiscardReply", "Filter", "Uid", "EgressConfig", "DeliveryOrder", "Sink", "ReplyStrategy", });
     internal_static_Ingress_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_Ingress_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Ingress_descriptor,
         new java.lang.String[] { "ContentMode", "Path", "Host", "IngressType", });
     internal_static_Reference_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_Reference_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Reference_descriptor,
         new java.lang.String[] { "Uuid", "Namespace", "Name", "Version", });
     internal_static_Resource_descriptor =
-      getDescriptor().getMessageTypes().get(6);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_Resource_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Resource_descriptor,
-        new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", "AbsentAuth", "AuthSecret", "Auth", });
+        new java.lang.String[] { "Uid", "Topics", "BootstrapServers", "Ingress", "EgressConfig", "Egresses", "AbsentAuth", "AuthSecret", "KafkaDestination", "Auth", });
     internal_static_Contract_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_Contract_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Contract_descriptor,

@@ -16,34 +16,37 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.impl.GenericStructuredMessageReader;
 import io.cloudevents.core.message.impl.MessageUtils;
 import io.cloudevents.kafka.impl.KafkaBinaryMessageReaderImpl;
 import io.cloudevents.kafka.impl.KafkaHeaders;
+
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Deserializer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-
 /**
- * CloudEventDeserializer is the deserializer used for deserializing {@link CloudEvent}.
- * <p>
- * This is an adapted form of {@link io.cloudevents.kafka.CloudEventDeserializer} to handle invalid CloudEvents, as
- * required by a {@code KafkaSource} instance.
- * <p>
- * Invalid {@link CloudEvent} are wrapped in an instance of {@link InvalidCloudEvent} to enable further processing,
- * typically done by a {@link org.apache.kafka.clients.consumer.ConsumerInterceptor}.
+ * CloudEventDeserializer is the deserializer used for deserializing {@link
+ * CloudEvent}. <p> This is an adapted form of {@link
+ * io.cloudevents.kafka.CloudEventDeserializer} to handle invalid CloudEvents,
+ * as required by a {@code KafkaSource} instance. <p> Invalid {@link CloudEvent}
+ * are wrapped in an instance of {@link InvalidCloudEvent} to enable further
+ * processing, typically done by a {@link
+ * org.apache.kafka.clients.consumer.ConsumerInterceptor}.
  */
 public class CloudEventDeserializer implements Deserializer<CloudEvent> {
+  private static final Logger logger =
+    LoggerFactory.getLogger(CloudEventDeserializer.class);
 
-  private static final Logger logger = LoggerFactory.getLogger(CloudEventDeserializer.class);
-
-  public static final String INVALID_CE_WRAPPER_ENABLED = "cloudevent.invalid.transformer.enabled";
+  public static final String INVALID_CE_WRAPPER_ENABLED =
+    "cloudevent.invalid.transformer.enabled";
 
   private boolean isInvalidLogicEnabled = false;
 
@@ -56,18 +59,19 @@ public class CloudEventDeserializer implements Deserializer<CloudEvent> {
   @Override
   public void configure(Map<String, ?> configs, boolean isKey) {
     if (configs.containsKey(INVALID_CE_WRAPPER_ENABLED)) {
-      isInvalidLogicEnabled = Boolean.parseBoolean(configs.get(INVALID_CE_WRAPPER_ENABLED).toString());
+      isInvalidLogicEnabled = Boolean.parseBoolean(
+        configs.get(INVALID_CE_WRAPPER_ENABLED).toString());
     }
 
     logger.info("Deserializer config {}",
-      keyValue("isInvalidLogicEnabled", isInvalidLogicEnabled)
-    );
+                keyValue("isInvalidLogicEnabled", isInvalidLogicEnabled));
   }
 
   @Override
   public CloudEvent deserialize(final String topic, final byte[] data) {
     if (!this.isInvalidLogicEnabled) {
-      throw new UnsupportedOperationException("CloudEventDeserializer supports only the signature deserialize(String, Headers, byte[])");
+      throw new UnsupportedOperationException(
+        "CloudEventDeserializer supports only the signature deserialize(String, Headers, byte[])");
     }
     return new InvalidCloudEvent(data);
   }
@@ -78,35 +82,40 @@ public class CloudEventDeserializer implements Deserializer<CloudEvent> {
    * @param topic   topic associated with the data
    * @param headers headers associated with the record; may be empty.
    * @param data    serialized bytes; may be null;
-   *                implementations are recommended to handle null by returning a value or null rather than throwing an exception.
+   *                implementations are recommended to handle null by returning
+   * a value or null rather than throwing an exception.
    * @return deserialized typed data; may be null
    */
   @Override
-  public CloudEvent deserialize(final String topic, final Headers headers, byte[] data) {
-
+  public CloudEvent deserialize(final String topic, final Headers headers,
+                                byte[] data) {
     String ctHeader = null;
-    final var specVersionHeader = KafkaHeaders.getParsedKafkaHeader(headers, KafkaHeaders.SPEC_VERSION);
+    final var specVersionHeader =
+      KafkaHeaders.getParsedKafkaHeader(headers, KafkaHeaders.SPEC_VERSION);
     if (specVersionHeader == null) {
-      ctHeader = KafkaHeaders.getParsedKafkaHeader(headers, KafkaHeaders.CONTENT_TYPE);
+      ctHeader =
+        KafkaHeaders.getParsedKafkaHeader(headers, KafkaHeaders.CONTENT_TYPE);
     }
     if (ctHeader == null && specVersionHeader == null) {
       if (!isInvalidLogicEnabled) {
-        throw new IllegalStateException("Invalid CloudEvent for topic: " + topic);
+        throw new IllegalStateException("Invalid CloudEvent for topic: "
+                                        + topic);
       }
       // Record is not in binary nor structured format.
       return new InvalidCloudEvent(data);
     }
 
-    final var contentTypeHeader = ctHeader; // Make content type header final.
+    final var contentTypeHeader = ctHeader;  // Make content type header final.
 
     final var reader = MessageUtils.parseStructuredOrBinaryMessage(
-      () -> contentTypeHeader,
-      format -> new GenericStructuredMessageReader(format, data),
-      () -> specVersionHeader,
-      sv -> new KafkaBinaryMessageReaderImpl(sv, headers, data)
-    );
+      ()
+        -> contentTypeHeader,
+      format
+      -> new GenericStructuredMessageReader(format, data),
+      ()
+        -> specVersionHeader,
+      sv -> new KafkaBinaryMessageReaderImpl(sv, headers, data));
 
     return reader.toEvent();
   }
-
 }

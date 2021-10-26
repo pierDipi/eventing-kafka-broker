@@ -16,23 +16,25 @@
 package dev.knative.eventing.kafka.broker.receiver.impl;
 
 import dev.knative.eventing.kafka.broker.receiver.RequestToRecordMapper;
+
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.http.vertx.VertxMessageFactory;
+
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 
 /**
- * This class implements a strict {@link HttpServerRequest} to {@link KafkaProducerRecord} mapper.
- * The conversion will fail if the request does not contain a valid {@link CloudEvent}.
- * <p>
- * This class is stateless, hence thread safe and shareable among verticles.
+ * This class implements a strict {@link HttpServerRequest} to {@link
+ * KafkaProducerRecord} mapper. The conversion will fail if the request does not
+ * contain a valid {@link CloudEvent}. <p> This class is stateless, hence thread
+ * safe and shareable among verticles.
  */
 public class StrictRequestToRecordMapper implements RequestToRecordMapper {
-
   private static class SingletonContainer {
-    private static final StrictRequestToRecordMapper INSTANCE = new StrictRequestToRecordMapper();
+    private static final StrictRequestToRecordMapper INSTANCE =
+      new StrictRequestToRecordMapper();
   }
 
   public static RequestToRecordMapper getInstance() {
@@ -44,9 +46,7 @@ public class StrictRequestToRecordMapper implements RequestToRecordMapper {
 
   @Override
   public Future<KafkaProducerRecord<String, CloudEvent>> requestToRecord(
-    final HttpServerRequest request,
-    final String topic) {
-
+    final HttpServerRequest request, final String topic) {
     return VertxMessageFactory.createReader(request)
       .map(MessageReader::toEvent)
       .map(event -> {

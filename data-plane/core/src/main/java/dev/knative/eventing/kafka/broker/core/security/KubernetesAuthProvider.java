@@ -15,13 +15,13 @@
  */
 package dev.knative.eventing.kafka.broker.core.security;
 
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 
-class KubernetesAuthProvider implements AuthProvider {
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.client.KubernetesClient;
 
+class KubernetesAuthProvider implements AuthProvider {
   private final KubernetesClient kubernetesClient;
 
   KubernetesAuthProvider(final KubernetesClient client) {
@@ -29,14 +29,15 @@ class KubernetesAuthProvider implements AuthProvider {
   }
 
   @Override
-  public Future<Credentials> getCredentials(final String namespace, final String name) {
+  public Future<Credentials> getCredentials(final String namespace,
+                                            final String name) {
     return Vertx.currentContext().executeBlocking(p -> {
       Secret secret;
       try {
         secret = kubernetesClient.secrets()
-          .inNamespace(namespace)
-          .withName(name)
-          .get();
+                   .inNamespace(namespace)
+                   .withName(name)
+                   .get();
       } catch (final Exception ex) {
         p.fail(ex);
         return;

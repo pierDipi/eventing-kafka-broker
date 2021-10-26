@@ -16,13 +16,14 @@
 package dev.knative.eventing.kafka.broker.core.utils;
 
 import io.vertx.core.Vertx;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class Shutdown {
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+public final class Shutdown {
   private static final Logger logger = LoggerFactory.getLogger(Shutdown.class);
 
   private Shutdown() {
@@ -30,16 +31,16 @@ public final class Shutdown {
 
   /**
    * Register a set of {@link AutoCloseable} in the runtime shutdown hook.
-   * This is going to shutdown the set of provided autocloseable, and then the vertx instance.
+   * This is going to shutdown the set of provided autocloseable, and then the
+   * vertx instance.
    *
    * @param vertx      the vertx instance to shutdown
    * @param closeables the set of auto closeable to shutdown
    */
-  public static void registerHook(final Vertx vertx, final AutoCloseable... closeables) {
-    Runtime.getRuntime()
-      .addShutdownHook(new Thread(
-        Shutdown.createRunnable(vertx, closeables)
-      ));
+  public static void registerHook(final Vertx vertx,
+                                  final AutoCloseable... closeables) {
+    Runtime.getRuntime().addShutdownHook(
+      new Thread(Shutdown.createRunnable(vertx, closeables)));
   }
 
   /**
@@ -51,10 +52,8 @@ public final class Shutdown {
   public static void closeVertxSync(final Vertx vertx) {
     logger.info("Closing Vert.x");
     try {
-      vertx.close()
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(2, TimeUnit.MINUTES);
+      vertx.close().toCompletionStage().toCompletableFuture().get(
+        2, TimeUnit.MINUTES);
     } catch (TimeoutException e) {
       logger.error("Timeout waiting for Vertx::close", e);
     } catch (Throwable e) {
@@ -62,7 +61,8 @@ public final class Shutdown {
     }
   }
 
-  static Runnable createRunnable(final Vertx vertx, final AutoCloseable... closeables) {
+  static Runnable createRunnable(final Vertx vertx,
+                                 final AutoCloseable... closeables) {
     return () -> {
       logger.info("Running shutdown hook");
       for (AutoCloseable closeable : closeables) {

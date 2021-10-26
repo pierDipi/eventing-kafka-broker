@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.core.security;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 
 public class PlaintextCredentials implements Credentials {
-
   @Override
   public String caCertificates() {
     return null;

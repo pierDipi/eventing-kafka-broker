@@ -15,27 +15,29 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
+
 import io.vertx.core.Future;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.OffsetAndMetadata;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Consumer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * This class implements the offset strategy for the ordered consumer.
  */
 public final class OrderedOffsetManager implements RecordDispatcherListener {
-
-  private static final Logger logger = LoggerFactory
-    .getLogger(OrderedOffsetManager.class);
+  private static final Logger logger =
+    LoggerFactory.getLogger(OrderedOffsetManager.class);
 
   private final KafkaConsumer<?, ?> consumer;
 
@@ -47,7 +49,8 @@ public final class OrderedOffsetManager implements RecordDispatcherListener {
    * @param consumer Kafka consumer.
    * @param onCommit Callback invoked when an offset is actually committed
    */
-  public OrderedOffsetManager(final KafkaConsumer<?, ?> consumer, final Consumer<Integer> onCommit) {
+  public OrderedOffsetManager(final KafkaConsumer<?, ?> consumer,
+                              final Consumer<Integer> onCommit) {
     Objects.requireNonNull(consumer, "provide consumer");
 
     this.consumer = consumer;
@@ -68,7 +71,8 @@ public final class OrderedOffsetManager implements RecordDispatcherListener {
    * {@inheritDoc}
    */
   @Override
-  public Future<Void> successfullySentToSubscriber(final KafkaConsumerRecord<?, ?> record) {
+  public Future<Void> successfullySentToSubscriber(
+    final KafkaConsumerRecord<?, ?> record) {
     return commit(record);
   }
 
@@ -76,7 +80,8 @@ public final class OrderedOffsetManager implements RecordDispatcherListener {
    * {@inheritDoc}
    */
   @Override
-  public Future<Void> successfullySentToDeadLetterSink(final KafkaConsumerRecord<?, ?> record) {
+  public Future<Void> successfullySentToDeadLetterSink(
+    final KafkaConsumerRecord<?, ?> record) {
     return commit(record);
   }
 
@@ -84,7 +89,8 @@ public final class OrderedOffsetManager implements RecordDispatcherListener {
    * {@inheritDoc}
    */
   @Override
-  public Future<Void> failedToSendToDeadLetterSink(final KafkaConsumerRecord<?, ?> record, final Throwable ex) {
+  public Future<Void> failedToSendToDeadLetterSink(
+    final KafkaConsumerRecord<?, ?> record, final Throwable ex) {
     return Future.succeededFuture();
   }
 
@@ -98,30 +104,23 @@ public final class OrderedOffsetManager implements RecordDispatcherListener {
 
   private Future<Void> commit(final KafkaConsumerRecord<?, ?> record) {
     // Execute the actual commit
-    return consumer.commit(Map.of(
-      new TopicPartition(record.topic(), record.partition()),
-      new OffsetAndMetadata(record.offset() + 1, ""))
-    )
+    return consumer
+      .commit(Map.of(new TopicPartition(record.topic(), record.partition()),
+                     new OffsetAndMetadata(record.offset() + 1, "")))
       .onSuccess(ignored -> {
         if (onCommit != null) {
           onCommit.accept(1);
         }
-        logger.debug(
-          "committed {} {} {}",
-          keyValue("topic", record.topic()),
-          keyValue("partition", record.partition()),
-          keyValue("offset", record.offset() + 1)
-        );
+        logger.debug("committed {} {} {}", keyValue("topic", record.topic()),
+                     keyValue("partition", record.partition()),
+                     keyValue("offset", record.offset() + 1));
       })
-      .onFailure(cause ->
-        logger.error(
-          "failed to commit {} {} {}",
-          keyValue("topic", record.topic()),
-          keyValue("partition", record.partition()),
-          keyValue("offset", record.offset() + 1),
-          cause
-        )
-      ).mapEmpty();
+      .onFailure(cause
+                 -> logger.error("failed to commit {} {} {}",
+                                 keyValue("topic", record.topic()),
+                                 keyValue("partition", record.partition()),
+                                 keyValue("offset", record.offset() + 1),
+                                 cause))
+      .mapEmpty();
   }
-
 }

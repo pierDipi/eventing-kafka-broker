@@ -18,12 +18,10 @@ package dev.knative.eventing.kafka.broker.core.security;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 
 class CredentialsValidator {
-
   private CredentialsValidator() {
   }
 
   static String validate(final Credentials credentials) {
-
     final var securityProtocol = credentials.securityProtocol();
     if (securityProtocol == null) {
       return "No security protocol specified";
@@ -38,7 +36,8 @@ class CredentialsValidator {
         return null;
       }
       if (anyBlank(credentials.userCertificate(), credentials.userKey())) {
-        return "Security protocol " + securityProtocol.name + ": invalid user certificate or user key or CA certificates";
+        return "Security protocol " + securityProtocol.name
+          + ": invalid user certificate or user key or CA certificates";
       }
       return null;
     }
@@ -46,27 +45,34 @@ class CredentialsValidator {
     final var SASLMechanism = credentials.SASLMechanism();
     if (is(SecurityProtocol.SASL_PLAINTEXT, securityProtocol)) {
       if (isInvalidSASLMechanism(SASLMechanism)) {
-        return "Security protocol " + securityProtocol.name + ": invalid SASL mechanism, expected SCRAM-SHA-256, SCRAM-SHA-512 or PLAIN got " + SASLMechanism;
+        return "Security protocol " + securityProtocol.name
+          + ": invalid SASL mechanism, expected SCRAM-SHA-256, SCRAM-SHA-512 or PLAIN got "
+          + SASLMechanism;
       }
       if (anyBlank(credentials.SASLUsername(), credentials.SASLPassword())) {
-        return "Security protocol " + securityProtocol.name + ":  invalid SASL username or password";
+        return "Security protocol " + securityProtocol.name
+          + ":  invalid SASL username or password";
       }
       return null;
     }
 
     if (is(SecurityProtocol.SASL_SSL, securityProtocol)) {
       if (isInvalidSASLMechanism(SASLMechanism)) {
-        return "Security protocol " + securityProtocol.name + ": invalid SASL mechanism, expected SCRAM-SHA-256, SCRAM-SHA-512 or PLAIN got " + SASLMechanism;
+        return "Security protocol " + securityProtocol.name
+          + ": invalid SASL mechanism, expected SCRAM-SHA-256, SCRAM-SHA-512 or PLAIN got "
+          + SASLMechanism;
       }
       if (anyBlank(credentials.SASLUsername(), credentials.SASLPassword())) {
-        return "Security protocol " + securityProtocol.name + ":  invalid SASL username or password";
+        return "Security protocol " + securityProtocol.name
+          + ":  invalid SASL username or password";
       }
       return null;
     }
     return "Unsupported security protocol " + securityProtocol.name;
   }
 
-  private static boolean is(final SecurityProtocol s1, final SecurityProtocol s2) {
+  private static boolean is(final SecurityProtocol s1,
+                            final SecurityProtocol s2) {
     return s1.name.equals(s2.name);
   }
 
@@ -79,7 +85,9 @@ class CredentialsValidator {
   }
 
   private static boolean isInvalidSASLMechanism(final String SASLMechanism) {
-    return !(is("SCRAM-SHA-256", SASLMechanism) || is("SCRAM-SHA-512", SASLMechanism) || is("PLAIN", SASLMechanism));
+    return !(is("SCRAM-SHA-256", SASLMechanism)
+             || is("SCRAM-SHA-512", SASLMechanism)
+             || is("PLAIN", SASLMechanism));
   }
 
   private static boolean anyBlank(final String... stores) {

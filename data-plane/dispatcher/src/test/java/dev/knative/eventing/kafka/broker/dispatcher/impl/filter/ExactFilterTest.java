@@ -15,37 +15,35 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
+
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.stream.Stream;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 public class ExactFilterTest {
-
-  final static CloudEvent event = CloudEventBuilder.v1()
-    .withId("123-42")
-    .withDataContentType("application/cloudevents+json")
-    .withDataSchema(URI.create("/api/schema"))
-    .withSource(URI.create("/api/some-source"))
-    .withSubject("a-subject-42")
-    .withType("type")
-    .withTime(OffsetDateTime.of(
-      1985, 4, 12,
-      23, 20, 50, 0,
-      ZoneOffset.UTC
-    ))
-    .withExtension("abc", "123")
-    .withExtension("urlext", URI.create("/ext"))
-    .build();
+  final static CloudEvent event =
+    CloudEventBuilder.v1()
+      .withId("123-42")
+      .withDataContentType("application/cloudevents+json")
+      .withDataSchema(URI.create("/api/schema"))
+      .withSource(URI.create("/api/some-source"))
+      .withSubject("a-subject-42")
+      .withType("type")
+      .withTime(OffsetDateTime.of(1985, 4, 12, 23, 20, 50, 0, ZoneOffset.UTC))
+      .withExtension("abc", "123")
+      .withExtension("urlext", URI.create("/ext"))
+      .build();
 
   @Test
   public void testInvalidKey() {
@@ -65,10 +63,10 @@ public class ExactFilterTest {
 
   @ParameterizedTest
   @MethodSource(value = {"testCases"})
-  public void match(CloudEvent event, String key, String value, boolean shouldMatch) {
+  public void match(CloudEvent event, String key, String value,
+                    boolean shouldMatch) {
     var filter = new ExactFilter(key, value);
-    assertThat(filter.test(event))
-      .isEqualTo(shouldMatch);
+    assertThat(filter.test(event)).isEqualTo(shouldMatch);
   }
 
   static Stream<Arguments> testCases() {
@@ -80,8 +78,6 @@ public class ExactFilterTest {
       Arguments.of(event, "abc", "123", true),
       Arguments.of(event, "abc", "456", false),
       Arguments.of(event, "urlext", "/ext", true),
-      Arguments.of(event, "urlext", "/no-ext", false)
-    );
+      Arguments.of(event, "urlext", "/no-ext", false));
   }
-
 }

@@ -15,24 +15,27 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
-class DeliveryOrderTest {
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 
+import org.junit.jupiter.api.Test;
+
+class DeliveryOrderTest {
   @Test
   void fromContract() {
     assertThat(DeliveryOrder.fromContract(null))
       .isEqualTo(DeliveryOrder.UNORDERED);
 
-    assertThat(DeliveryOrder.fromContract(DataPlaneContract.DeliveryOrder.UNORDERED))
+    assertThat(
+      DeliveryOrder.fromContract(DataPlaneContract.DeliveryOrder.UNORDERED))
       .isEqualTo(DeliveryOrder.UNORDERED);
-    assertThat(DeliveryOrder.fromContract(DataPlaneContract.DeliveryOrder.UNRECOGNIZED))
+    assertThat(
+      DeliveryOrder.fromContract(DataPlaneContract.DeliveryOrder.UNRECOGNIZED))
       .isEqualTo(DeliveryOrder.UNORDERED);
 
-    assertThat(DeliveryOrder.fromContract(DataPlaneContract.DeliveryOrder.ORDERED))
+    assertThat(
+      DeliveryOrder.fromContract(DataPlaneContract.DeliveryOrder.ORDERED))
       .isEqualTo(DeliveryOrder.ORDERED);
   }
 }

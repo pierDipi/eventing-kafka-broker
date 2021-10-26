@@ -16,6 +16,10 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import io.cloudevents.CloudEvent;
+
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -27,13 +31,13 @@ import io.vertx.kafka.client.consumer.KafkaReadStream;
 import io.vertx.kafka.client.consumer.OffsetAndMetadata;
 import io.vertx.kafka.client.consumer.OffsetAndTimestamp;
 import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
+
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
+
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Scope;
@@ -42,10 +46,8 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
 
 public class UnorderedOffsetManagerBenchmark {
-
   @State(Scope.Thread)
   public static class RecordsState {
-
     private KafkaConsumerRecord<String, CloudEvent>[][] records;
 
     @Setup(Level.Trial)
@@ -55,146 +57,137 @@ public class UnorderedOffsetManagerBenchmark {
       for (int p = 0; p < 100; p++) {
         for (int o = 0; o < 10_000; o++) {
           this.records[p][o] = new KafkaConsumerRecordImpl<>(
-            new ConsumerRecord<>(
-              "abc",
-              p,
-              o,
-              null,
-              null
-            )
-          );
+            new ConsumerRecord<>("abc", p, o, null, null));
         }
       }
     }
-
   }
 
   @Benchmark
-  public void benchmarkReverseOrder(RecordsState recordsState, Blackhole blackhole) {
-    UnorderedOffsetManager offsetManager = new UnorderedOffsetManager(new MockKafkaConsumer(), null);
+  public void benchmarkReverseOrder(RecordsState recordsState,
+                                    Blackhole blackhole) {
+    UnorderedOffsetManager offsetManager =
+      new UnorderedOffsetManager(new MockKafkaConsumer(), null);
 
     int partitions = 100;
     for (int partition = 0; partition < partitions; partition++) {
       blackhole.consume(
-        offsetManager.recordReceived(recordsState.records[partition][0])
-      );
+        offsetManager.recordReceived(recordsState.records[partition][0]));
     }
 
     for (int offset = 9_999; offset > 0; offset--) {
       for (int partition = 0; partition < partitions; partition++) {
-        blackhole.consume(
-          offsetManager.recordReceived(recordsState.records[partition][offset])
-        );
-        blackhole.consume(
-          offsetManager.successfullySentToSubscriber(recordsState.records[partition][offset])
-        );
+        blackhole.consume(offsetManager.recordReceived(
+          recordsState.records[partition][offset]));
+        blackhole.consume(offsetManager.successfullySentToSubscriber(
+          recordsState.records[partition][offset]));
       }
     }
 
     for (int partition = 0; partition < partitions; partition++) {
-      blackhole.consume(
-        offsetManager.successfullySentToSubscriber(recordsState.records[partition][0])
-      );
+      blackhole.consume(offsetManager.successfullySentToSubscriber(
+        recordsState.records[partition][0]));
     }
   }
 
   @Benchmark
   public void benchmarkOrdered(RecordsState recordsState, Blackhole blackhole) {
-    UnorderedOffsetManager offsetManager = new UnorderedOffsetManager(new MockKafkaConsumer(), null);
+    UnorderedOffsetManager offsetManager =
+      new UnorderedOffsetManager(new MockKafkaConsumer(), null);
     int partitions = 100;
 
     for (int offset = 0; offset < 10_000; offset++) {
       for (int partition = 0; partition < partitions; partition++) {
-        blackhole.consume(
-          offsetManager.recordReceived(recordsState.records[partition][offset])
-        );
-        blackhole.consume(
-          offsetManager.successfullySentToSubscriber(recordsState.records[partition][offset])
-        );
+        blackhole.consume(offsetManager.recordReceived(
+          recordsState.records[partition][offset]));
+        blackhole.consume(offsetManager.successfullySentToSubscriber(
+          recordsState.records[partition][offset]));
       }
     }
   }
 
   @Benchmark
-  public void benchmarkRealisticCase(RecordsState recordsState, Blackhole blackhole) {
-    UnorderedOffsetManager offsetManager = new UnorderedOffsetManager(new MockKafkaConsumer(), null);
+  public void benchmarkRealisticCase(RecordsState recordsState,
+                                     Blackhole blackhole) {
+    UnorderedOffsetManager offsetManager =
+      new UnorderedOffsetManager(new MockKafkaConsumer(), null);
     int partitions = 10;
 
     for (int partition = 0; partition < partitions; partition++) {
       blackhole.consume(
-        offsetManager.recordReceived(recordsState.records[partition][0])
-      );
+        offsetManager.recordReceived(recordsState.records[partition][0]));
     }
 
     for (int partition = 0; partition < partitions; partition++) {
       for (int offset : new int[] {5, 2, 0, 7, 1, 3, 4, 6}) {
-        blackhole.consume(
-          offsetManager.successfullySentToSubscriber(recordsState.records[partition][offset])
-        );
+        blackhole.consume(offsetManager.successfullySentToSubscriber(
+          recordsState.records[partition][offset]));
       }
     }
   }
 
   @Benchmark
-  public void benchmarkMixedABit(RecordsState recordsState, Blackhole blackhole) {
-    UnorderedOffsetManager offsetManager = new UnorderedOffsetManager(new MockKafkaConsumer(), null);
+  public void benchmarkMixedABit(RecordsState recordsState,
+                                 Blackhole blackhole) {
+    UnorderedOffsetManager offsetManager =
+      new UnorderedOffsetManager(new MockKafkaConsumer(), null);
     int partitions = 4;
 
     for (int partition = 0; partition < partitions; partition++) {
       blackhole.consume(
-        offsetManager.recordReceived(recordsState.records[partition][0])
-      );
+        offsetManager.recordReceived(recordsState.records[partition][0]));
     }
 
     for (int i = 0; i < 120; i++) {
       // This will commit in the following order:
       // 1 0 3 2 5 4 ...
-      blackhole.consume(
-        offsetManager.successfullySentToSubscriber(recordsState.records[2][i % 2 == 0 ? i + 1 : i - 1])
-      );
-      blackhole.consume(
-        offsetManager.successfullySentToSubscriber(recordsState.records[1][i % 2 == 0 ? i + 1 : i - 1])
-      );
-      blackhole.consume(
-        offsetManager.successfullySentToSubscriber(recordsState.records[0][i % 2 == 0 ? i + 1 : i - 1])
-      );
-      blackhole.consume(
-        offsetManager.successfullySentToSubscriber(recordsState.records[3][i % 2 == 0 ? i + 1 : i - 1])
-      );
+      blackhole.consume(offsetManager.successfullySentToSubscriber(
+        recordsState.records[2][i % 2 == 0 ? i + 1 : i - 1]));
+      blackhole.consume(offsetManager.successfullySentToSubscriber(
+        recordsState.records[1][i % 2 == 0 ? i + 1 : i - 1]));
+      blackhole.consume(offsetManager.successfullySentToSubscriber(
+        recordsState.records[0][i % 2 == 0 ? i + 1 : i - 1]));
+      blackhole.consume(offsetManager.successfullySentToSubscriber(
+        recordsState.records[3][i % 2 == 0 ? i + 1 : i - 1]));
     }
   }
 
-  static class MockKafkaConsumer implements io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> {
+  static class MockKafkaConsumer
+    implements io.vertx.kafka.client.consumer
+                 .KafkaConsumer<String, CloudEvent> {
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> exceptionHandler(
-      Handler<Throwable> handler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    exceptionHandler(Handler<Throwable> handler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> handler(
-      Handler<KafkaConsumerRecord<String, CloudEvent>> handler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    handler(Handler<KafkaConsumerRecord<String, CloudEvent>> handler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> pause() {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    pause() {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> resume() {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    resume() {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> fetch(long amount) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    fetch(long amount) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> endHandler(
-      Handler<Void> endHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    endHandler(Handler<Void> endHandler) {
       return null;
     }
 
@@ -214,16 +207,15 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> subscribe(
-      String topic,
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    subscribe(String topic, Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> subscribe(
-      Set<String> topics,
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    subscribe(Set<String> topics,
+              Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
@@ -233,9 +225,8 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> subscribe(
-      Pattern pattern,
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    subscribe(Pattern pattern, Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
@@ -245,28 +236,27 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public Future<Void> assign(
-      Set<TopicPartition> topicPartitions) {
+    public Future<Void> assign(Set<TopicPartition> topicPartitions) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> assign(
-      TopicPartition topicPartition,
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    assign(TopicPartition topicPartition,
+           Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> assign(
-      Set<TopicPartition> topicPartitions,
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    assign(Set<TopicPartition> topicPartitions,
+           Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> assignment(
-      Handler<AsyncResult<Set<TopicPartition>>> handler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    assignment(Handler<AsyncResult<Set<TopicPartition>>> handler) {
       return null;
     }
 
@@ -276,8 +266,8 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> listTopics(
-      Handler<AsyncResult<Map<String, List<PartitionInfo>>>> handler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    listTopics(Handler<AsyncResult<Map<String, List<PartitionInfo>>>> handler) {
       return null;
     }
 
@@ -292,14 +282,14 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> unsubscribe(
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    unsubscribe(Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> subscription(
-      Handler<AsyncResult<Set<String>>> handler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    subscription(Handler<AsyncResult<Set<String>>> handler) {
       return null;
     }
 
@@ -314,29 +304,26 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public Future<Void> pause(
-      Set<TopicPartition> topicPartitions) {
+    public Future<Void> pause(Set<TopicPartition> topicPartitions) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> pause(
-      TopicPartition topicPartition,
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    pause(TopicPartition topicPartition,
+          Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> pause(
-      Set<TopicPartition> topicPartitions,
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    pause(Set<TopicPartition> topicPartitions,
+          Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public void paused(
-      Handler<AsyncResult<Set<TopicPartition>>> handler) {
-
+    public void paused(Handler<AsyncResult<Set<TopicPartition>>> handler) {
     }
 
     @Override
@@ -350,34 +337,33 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public Future<Void> resume(
-      Set<TopicPartition> topicPartitions) {
+    public Future<Void> resume(Set<TopicPartition> topicPartitions) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> resume(
-      TopicPartition topicPartition,
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    resume(TopicPartition topicPartition,
+           Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> resume(
-      Set<TopicPartition> topicPartitions,
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    resume(Set<TopicPartition> topicPartitions,
+           Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> partitionsRevokedHandler(
-      Handler<Set<TopicPartition>> handler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    partitionsRevokedHandler(Handler<Set<TopicPartition>> handler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> partitionsAssignedHandler(
-      Handler<Set<TopicPartition>> handler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    partitionsAssignedHandler(Handler<Set<TopicPartition>> handler) {
       return null;
     }
 
@@ -387,9 +373,9 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> seek(
-      TopicPartition topicPartition, long offset,
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    seek(TopicPartition topicPartition, long offset,
+         Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
@@ -399,22 +385,21 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public Future<Void> seekToBeginning(
-      Set<TopicPartition> topicPartitions) {
+    public Future<Void> seekToBeginning(Set<TopicPartition> topicPartitions) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> seekToBeginning(
-      TopicPartition topicPartition,
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    seekToBeginning(TopicPartition topicPartition,
+                    Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> seekToBeginning(
-      Set<TopicPartition> topicPartitions,
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    seekToBeginning(Set<TopicPartition> topicPartitions,
+                    Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
@@ -424,22 +409,21 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public Future<Void> seekToEnd(
-      Set<TopicPartition> topicPartitions) {
+    public Future<Void> seekToEnd(Set<TopicPartition> topicPartitions) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> seekToEnd(
-      TopicPartition topicPartition,
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    seekToEnd(TopicPartition topicPartition,
+              Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> seekToEnd(
-      Set<TopicPartition> topicPartitions,
-      Handler<AsyncResult<Void>> completionHandler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    seekToEnd(Set<TopicPartition> topicPartitions,
+              Handler<AsyncResult<Void>> completionHandler) {
       return null;
     }
 
@@ -449,9 +433,7 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public void commit(
-      Handler<AsyncResult<Void>> completionHandler) {
-
+    public void commit(Handler<AsyncResult<Void>> completionHandler) {
     }
 
     @Override
@@ -463,26 +445,25 @@ public class UnorderedOffsetManagerBenchmark {
     @Override
     public void commit(
       Map<TopicPartition, OffsetAndMetadata> offsets,
-      Handler<AsyncResult<Map<TopicPartition, OffsetAndMetadata>>> completionHandler) {
+      Handler<AsyncResult<Map<TopicPartition, OffsetAndMetadata>>>
+        completionHandler) {
       completionHandler.handle(Future.succeededFuture(offsets));
     }
 
     @Override
     public void committed(TopicPartition topicPartition,
                           Handler<AsyncResult<OffsetAndMetadata>> handler) {
-
     }
 
     @Override
-    public Future<OffsetAndMetadata> committed(
-      TopicPartition topicPartition) {
+    public Future<OffsetAndMetadata> committed(TopicPartition topicPartition) {
       return null;
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> partitionsFor(
-      String topic,
-      Handler<AsyncResult<List<PartitionInfo>>> handler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    partitionsFor(String topic,
+                  Handler<AsyncResult<List<PartitionInfo>>> handler) {
       return null;
     }
 
@@ -492,8 +473,8 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> batchHandler(
-      Handler<KafkaConsumerRecords<String, CloudEvent>> handler) {
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    batchHandler(Handler<KafkaConsumerRecords<String, CloudEvent>> handler) {
       return null;
     }
 
@@ -503,15 +484,12 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public void close(
-      Handler<AsyncResult<Void>> completionHandler) {
-
+    public void close(Handler<AsyncResult<Void>> completionHandler) {
     }
 
     @Override
     public void position(TopicPartition partition,
                          Handler<AsyncResult<Long>> handler) {
-
     }
 
     @Override
@@ -523,7 +501,6 @@ public class UnorderedOffsetManagerBenchmark {
     public void offsetsForTimes(
       Map<TopicPartition, Long> topicPartitionTimestamps,
       Handler<AsyncResult<Map<TopicPartition, OffsetAndTimestamp>>> handler) {
-
     }
 
     @Override
@@ -533,9 +510,9 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public void offsetsForTimes(TopicPartition topicPartition, Long timestamp,
-                                Handler<AsyncResult<OffsetAndTimestamp>> handler) {
-
+    public void offsetsForTimes(
+      TopicPartition topicPartition, Long timestamp,
+      Handler<AsyncResult<OffsetAndTimestamp>> handler) {
     }
 
     @Override
@@ -548,7 +525,6 @@ public class UnorderedOffsetManagerBenchmark {
     public void beginningOffsets(
       Set<TopicPartition> topicPartitions,
       Handler<AsyncResult<Map<TopicPartition, Long>>> handler) {
-
     }
 
     @Override
@@ -560,7 +536,6 @@ public class UnorderedOffsetManagerBenchmark {
     @Override
     public void beginningOffsets(TopicPartition topicPartition,
                                  Handler<AsyncResult<Long>> handler) {
-
     }
 
     @Override
@@ -569,9 +544,9 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public void endOffsets(Set<TopicPartition> topicPartitions,
-                           Handler<AsyncResult<Map<TopicPartition, Long>>> handler) {
-
+    public void endOffsets(
+      Set<TopicPartition> topicPartitions,
+      Handler<AsyncResult<Map<TopicPartition, Long>>> handler) {
     }
 
     @Override
@@ -583,7 +558,6 @@ public class UnorderedOffsetManagerBenchmark {
     @Override
     public void endOffsets(TopicPartition topicPartition,
                            Handler<AsyncResult<Long>> handler) {
-
     }
 
     @Override
@@ -602,21 +576,21 @@ public class UnorderedOffsetManagerBenchmark {
     }
 
     @Override
-    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent> pollTimeout(
+    public io.vertx.kafka.client.consumer.KafkaConsumer<String, CloudEvent>
+    pollTimeout(Duration timeout) {
+      return null;
+    }
+
+    @Override
+    public void poll(
+      Duration timeout,
+      Handler<AsyncResult<KafkaConsumerRecords<String, CloudEvent>>> handler) {
+    }
+
+    @Override
+    public Future<KafkaConsumerRecords<String, CloudEvent>> poll(
       Duration timeout) {
       return null;
     }
-
-    @Override
-    public void poll(Duration timeout,
-                     Handler<AsyncResult<KafkaConsumerRecords<String, CloudEvent>>> handler) {
-
-    }
-
-    @Override
-    public Future<KafkaConsumerRecords<String, CloudEvent>> poll(Duration timeout) {
-      return null;
-    }
   }
-
 }

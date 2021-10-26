@@ -15,8 +15,16 @@
  */
 package dev.knative.eventing.kafka.broker.core.file;
 
-import com.google.protobuf.util.JsonFormat;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -24,37 +32,31 @@ import java.nio.file.Files;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+
+import com.google.protobuf.util.JsonFormat;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import org.slf4j.LoggerFactory;
-
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource1;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.resource2;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class FileWatcherTest {
-
   @Test
   @Timeout(value = 5)
   public void shouldReceiveUpdatesOnUpdate() throws Exception {
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
     final var broker1 = DataPlaneContract.Contract.newBuilder()
-      .addResources(resource1())
-      .setGeneration(1)
-      .build();
+                          .addResources(resource1())
+                          .setGeneration(1)
+                          .build();
 
     final var broker2 = DataPlaneContract.Contract.newBuilder()
-      .addResources(resource2())
-      .setGeneration(2)
-      .build();
+                          .addResources(resource2())
+                          .setGeneration(2)
+                          .build();
 
     final var isFirst = new AtomicBoolean(true);
     final var waitFirst = new CountDownLatch(1);
     final var waitSecond = new CountDownLatch(1);
     final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {
-
       if (isFirst.getAndSet(false)) {
         assertThat(broker).isEqualTo(broker1);
         waitFirst.countDown();
@@ -77,14 +79,11 @@ public class FileWatcherTest {
 
   @Test
   @Timeout(value = 5)
-  public void shouldReadFileWhenStartWatchingWithoutUpdates()
-    throws Exception {
-
+  public void shouldReadFileWhenStartWatchingWithoutUpdates() throws Exception {
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
-    final var broker1 = DataPlaneContract.Contract.newBuilder()
-      .addResources(resource1())
-      .build();
+    final var broker1 =
+      DataPlaneContract.Contract.newBuilder().addResources(resource1()).build();
     write(file, broker1);
 
     final var waitBroker = new CountDownLatch(1);
@@ -103,11 +102,9 @@ public class FileWatcherTest {
   @Test
   @Timeout(value = 5)
   public void shouldNotStartTwice() throws Exception {
-
     final var file = Files.createTempFile("fw-", "-fw").toFile();
 
-    final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {
-    };
+    final Consumer<DataPlaneContract.Contract> brokersConsumer = broker -> {};
 
     try (FileWatcher fw = new FileWatcher(file, brokersConsumer)) {
       // Started once
@@ -118,7 +115,8 @@ public class FileWatcherTest {
     }
   }
 
-  public static void write(File file, DataPlaneContract.Contract contract) throws IOException {
+  public static void write(File file, DataPlaneContract.Contract contract)
+    throws IOException {
     final var f = new File(file.toString());
     try (final var out = new FileWriter(f)) {
       JsonFormat.printer().appendTo(contract, out);

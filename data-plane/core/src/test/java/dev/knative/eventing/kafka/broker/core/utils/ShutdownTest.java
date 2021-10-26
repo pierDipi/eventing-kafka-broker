@@ -15,19 +15,20 @@
  */
 package dev.knative.eventing.kafka.broker.core.utils;
 
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import java.io.Closeable;
-import java.io.IOException;
-import org.junit.jupiter.api.Test;
-
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-public class ShutdownTest {
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 
+import java.io.Closeable;
+import java.io.IOException;
+
+import org.junit.jupiter.api.Test;
+
+public class ShutdownTest {
   @Test
   public void run() throws IOException {
     final var vertx = mockVertxClose();

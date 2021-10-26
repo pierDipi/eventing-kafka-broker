@@ -17,13 +17,14 @@ package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.EgressReconcilerListener;
+
 import io.vertx.core.Future;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class EgressReconcilerListenerMock implements EgressReconcilerListener {
-
   private final List<String> newEgresses;
   private final List<String> updatedEgresses;
   private final List<String> deletedEgresses;
@@ -32,10 +33,13 @@ public class EgressReconcilerListenerMock implements EgressReconcilerListener {
   private final Future<Void> onDeleteDeleteFuture;
 
   public EgressReconcilerListenerMock() {
-    this(Future.succeededFuture(), Future.succeededFuture(), Future.succeededFuture());
+    this(Future.succeededFuture(), Future.succeededFuture(),
+         Future.succeededFuture());
   }
 
-  public EgressReconcilerListenerMock(Future<Void> onNewEgressFuture, Future<Void> onUpdateEgressFuture, Future<Void> onDeleteDeleteFuture) {
+  public EgressReconcilerListenerMock(Future<Void> onNewEgressFuture,
+                                      Future<Void> onUpdateEgressFuture,
+                                      Future<Void> onDeleteDeleteFuture) {
     this.onNewEgressFuture = onNewEgressFuture;
     this.onUpdateEgressFuture = onUpdateEgressFuture;
     this.onDeleteDeleteFuture = onDeleteDeleteFuture;
@@ -45,9 +49,8 @@ public class EgressReconcilerListenerMock implements EgressReconcilerListener {
   }
 
   @Override
-  public Future<Void> onNewEgress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Egress egress) {
+  public Future<Void> onNewEgress(DataPlaneContract.Resource resource,
+                                  DataPlaneContract.Egress egress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(egress);
     this.newEgresses.add(egress.getUid());
@@ -55,9 +58,8 @@ public class EgressReconcilerListenerMock implements EgressReconcilerListener {
   }
 
   @Override
-  public Future<Void> onUpdateEgress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Egress egress) {
+  public Future<Void> onUpdateEgress(DataPlaneContract.Resource resource,
+                                     DataPlaneContract.Egress egress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(egress);
     this.updatedEgresses.add(egress.getUid());
@@ -65,9 +67,8 @@ public class EgressReconcilerListenerMock implements EgressReconcilerListener {
   }
 
   @Override
-  public Future<Void> onDeleteEgress(
-    DataPlaneContract.Resource resource,
-    DataPlaneContract.Egress egress) {
+  public Future<Void> onDeleteEgress(DataPlaneContract.Resource resource,
+                                     DataPlaneContract.Egress egress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(egress);
     this.deletedEgresses.add(egress.getUid());

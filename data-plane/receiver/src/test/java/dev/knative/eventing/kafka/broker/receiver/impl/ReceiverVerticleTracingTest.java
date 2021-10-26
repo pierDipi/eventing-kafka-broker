@@ -15,24 +15,25 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.IngressRequestHandlerImpl;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
+
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
-import io.micrometer.core.instrument.Meter.Id;
-import io.micrometer.core.instrument.cumulative.CumulativeCounter;
-import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
-import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.exporter.logging.LoggingSpanExporter;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
-import io.opentelemetry.sdk.trace.SdkTracerProvider;
-import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
-import io.opentelemetry.sdk.trace.samplers.Sampler;
+
+import org.apache.kafka.clients.producer.MockProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.buffer.Buffer;
@@ -45,12 +46,6 @@ import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
-import org.apache.kafka.clients.producer.MockProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.Properties;
@@ -58,13 +53,21 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.ACCEPTED;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import io.micrometer.core.instrument.Meter.Id;
+import io.micrometer.core.instrument.cumulative.CumulativeCounter;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.exporter.logging.LoggingSpanExporter;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ReceiverVerticleTracingTest {
-
   private static final int TIMEOUT = 10;
   private static final int PORT = 8083;
 
@@ -75,40 +78,41 @@ public class ReceiverVerticleTracingTest {
   private IngressProducerReconcilableStore store;
 
   static {
-    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+    BackendRegistries.setupBackend(
+      new MicrometerMetricsOptions().setRegistryName(
+        Metrics.METRICS_REGISTRY_NAME));
   }
 
   @BeforeEach
   public void setup() throws ExecutionException, InterruptedException {
     this.spanExporter = InMemorySpanExporter.create();
-    SdkTracerProvider tracerProvider = SdkTracerProvider.builder()
-      .addSpanProcessor(SimpleSpanProcessor.create(this.spanExporter))
-      .addSpanProcessor(SimpleSpanProcessor.create(new LoggingSpanExporter()))
-      // Uncomment this line if you want to try locally
-      //.addSpanProcessor(SimpleSpanProcessor.create(ZipkinSpanExporter.builder().build()))
-      .setSampler(Sampler.alwaysOn())
-      .build();
-    OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder()
-      .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-      .setTracerProvider(tracerProvider)
-      .build();
+    SdkTracerProvider tracerProvider =
+      SdkTracerProvider.builder()
+        .addSpanProcessor(SimpleSpanProcessor.create(this.spanExporter))
+        .addSpanProcessor(SimpleSpanProcessor.create(new LoggingSpanExporter()))
+        // Uncomment this line if you want to try locally
+        //.addSpanProcessor(SimpleSpanProcessor.create(ZipkinSpanExporter.builder().build()))
+        .setSampler(Sampler.alwaysOn())
+        .build();
+    OpenTelemetrySdk openTelemetry =
+      OpenTelemetrySdk.builder()
+        .setPropagators(
+          ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+        .setTracerProvider(tracerProvider)
+        .build();
 
-    this.vertx = Vertx.vertx(new VertxOptions().setTracingOptions(new OpenTelemetryOptions(openTelemetry)));
+    this.vertx = Vertx.vertx(new VertxOptions().setTracingOptions(
+      new OpenTelemetryOptions(openTelemetry)));
 
-    this.webClient = WebClient.create(vertx,
-      (WebClientOptions) new WebClientOptions().setTracingPolicy(TracingPolicy.ALWAYS)
-    );
-    this.mockProducer = new MockProducer<>(
-      true,
-      new StringSerializer(),
-      new CloudEventSerializerMock()
-    );
+    this.webClient = WebClient.create(
+      vertx, (WebClientOptions) new WebClientOptions().setTracingPolicy(
+               TracingPolicy.ALWAYS));
+    this.mockProducer = new MockProducer<>(true, new StringSerializer(),
+                                           new CloudEventSerializerMock());
 
     this.store = new IngressProducerReconcilableStore(
-      null,
-      new Properties(),
-      properties -> KafkaProducer.create(vertx, mockProducer)
-    );
+      null, new Properties(),
+      properties -> KafkaProducer.create(vertx, mockProducer));
 
     final var env = mock(ReceiverEnv.class);
     when(env.getLivenessProbePath()).thenReturn("/healthz");
@@ -120,13 +124,11 @@ public class ReceiverVerticleTracingTest {
         .setPort(PORT)
         .setHost("localhost")
         .setTracingPolicy(TracingPolicy.PROPAGATE),
-      v -> store,
-      new IngressRequestHandlerImpl(
-        StrictRequestToRecordMapper.getInstance(),
-        new CumulativeCounter(mock(Id.class)),
-        new CumulativeCounter(mock(Id.class))
-      )
-    );
+      v
+      -> store,
+      new IngressRequestHandlerImpl(StrictRequestToRecordMapper.getInstance(),
+                                    new CumulativeCounter(mock(Id.class)),
+                                    new CumulativeCounter(mock(Id.class))));
 
     vertx.deployVerticle(verticle)
       .toCompletionStage()
@@ -136,27 +138,26 @@ public class ReceiverVerticleTracingTest {
 
   @AfterEach
   public void tearDown() throws ExecutionException, InterruptedException {
-    vertx
-      .close()
-      .toCompletionStage()
-      .toCompletableFuture()
-      .get();
+    vertx.close().toCompletionStage().toCompletableFuture().get();
   }
 
   @Test
-  public void traceIsPropagated() throws ExecutionException, InterruptedException, TimeoutException {
+  public void traceIsPropagated()
+    throws ExecutionException, InterruptedException, TimeoutException {
     CloudEvent inputEvent = new CloudEventBuilder()
-      .withSubject("subject")
-      .withSource(URI.create("/hello"))
-      .withType("type")
-      .withId("1234")
-      .build();
+                              .withSubject("subject")
+                              .withSource(URI.create("/hello"))
+                              .withType("type")
+                              .withId("1234")
+                              .build();
 
-    DataPlaneContract.Resource contract = DataPlaneContract.Resource.newBuilder()
-      .setUid("1")
-      .addTopics("topic-name-42")
-      .setIngress(DataPlaneContract.Ingress.newBuilder().setPath("/broker-ns/broker-name"))
-      .build();
+    DataPlaneContract.Resource contract =
+      DataPlaneContract.Resource.newBuilder()
+        .setUid("1")
+        .addTopics("topic-name-42")
+        .setIngress(DataPlaneContract.Ingress.newBuilder().setPath(
+          "/broker-ns/broker-name"))
+        .build();
 
     String path = "/broker-ns/broker-name";
 
@@ -165,17 +166,19 @@ public class ReceiverVerticleTracingTest {
       .toCompletableFuture()
       .get();
 
-    HttpResponse<Buffer> response = vertx.<HttpResponse<Buffer>>executeBlocking(promise -> {
-      VertxMessageFactory
-        .createWriter(webClient.post(PORT, "localhost", path))
-        .writeBinary(inputEvent)
-        .onComplete(promise);
-    }).toCompletionStage()
-      .toCompletableFuture()
-      .get(TIMEOUT, TimeUnit.SECONDS);
+    HttpResponse<Buffer> response =
+      vertx
+        .<HttpResponse<Buffer>>executeBlocking(promise -> {
+          VertxMessageFactory
+            .createWriter(webClient.post(PORT, "localhost", path))
+            .writeBinary(inputEvent)
+            .onComplete(promise);
+        })
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(TIMEOUT, TimeUnit.SECONDS);
 
-    assertThat(response.statusCode())
-      .isEqualTo(ACCEPTED.code());
+    assertThat(response.statusCode()).isEqualTo(ACCEPTED.code());
 
     if (mockProducer.history().size() > 0) {
       assertThat(mockProducer.history())
@@ -189,7 +192,6 @@ public class ReceiverVerticleTracingTest {
         .isNotEmpty();
     }
 
-    assertThat(spanExporter.getFinishedSpanItems())
-      .hasSize(3);
+    assertThat(spanExporter.getFinishedSpanItems()).hasSize(3);
   }
 }

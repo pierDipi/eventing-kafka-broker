@@ -15,13 +15,13 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.main;
 
-import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
-import java.util.function.Function;
-
 import static java.util.Objects.requireNonNull;
 
-public class ReceiverEnv extends BaseEnv {
+import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 
+import java.util.function.Function;
+
+public class ReceiverEnv extends BaseEnv {
   public static final String INGRESS_PORT = "INGRESS_PORT";
   private final int ingressPort;
 
@@ -31,16 +31,20 @@ public class ReceiverEnv extends BaseEnv {
   public static final String READINESS_PROBE_PATH = "READINESS_PROBE_PATH";
   private final String readinessProbePath;
 
-  public static final String HTTPSERVER_CONFIG_FILE_PATH = "HTTPSERVER_CONFIG_FILE_PATH";
+  public static final String HTTPSERVER_CONFIG_FILE_PATH =
+    "HTTPSERVER_CONFIG_FILE_PATH";
   private final String httpServerConfigFilePath;
 
   public ReceiverEnv(final Function<String, String> envProvider) {
     super(envProvider);
 
     this.ingressPort = Integer.parseInt(envProvider.apply(INGRESS_PORT));
-    this.livenessProbePath = requireNonNull(envProvider.apply(LIVENESS_PROBE_PATH));
-    this.readinessProbePath = requireNonNull(envProvider.apply(READINESS_PROBE_PATH));
-    this.httpServerConfigFilePath = requireNonNull(envProvider.apply(HTTPSERVER_CONFIG_FILE_PATH));
+    this.livenessProbePath =
+      requireNonNull(envProvider.apply(LIVENESS_PROBE_PATH));
+    this.readinessProbePath =
+      requireNonNull(envProvider.apply(READINESS_PROBE_PATH));
+    this.httpServerConfigFilePath =
+      requireNonNull(envProvider.apply(HTTPSERVER_CONFIG_FILE_PATH));
   }
 
   public int getIngressPort() {
@@ -61,11 +65,10 @@ public class ReceiverEnv extends BaseEnv {
 
   @Override
   public String toString() {
-    return "ReceiverEnv{" +
-      "ingressPort=" + ingressPort +
-      ", livenessProbePath='" + livenessProbePath + '\'' +
-      ", readinessProbePath='" + readinessProbePath + '\'' +
-      ", httpServerConfigFilePath='" + httpServerConfigFilePath + '\'' +
-      "} " + super.toString();
+    return "ReceiverEnv{"
+      + "ingressPort=" + ingressPort + ", livenessProbePath='"
+      + livenessProbePath + '\'' + ", readinessProbePath='" + readinessProbePath
+      + '\'' + ", httpServerConfigFilePath='" + httpServerConfigFilePath + '\''
+      + "} " + super.toString();
   }
 }

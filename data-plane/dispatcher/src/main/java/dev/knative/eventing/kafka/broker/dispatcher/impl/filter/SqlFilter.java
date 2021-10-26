@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
+
 import io.cloudevents.CloudEvent;
 import io.cloudevents.sql.EvaluationException;
 import io.cloudevents.sql.EvaluationRuntime;
@@ -24,7 +25,6 @@ import io.cloudevents.sql.Parser;
 import io.cloudevents.sql.Type;
 
 public class SqlFilter implements Filter {
-
   private final Expression expression;
   private final EvaluationRuntime runtime;
 
@@ -37,7 +37,7 @@ public class SqlFilter implements Filter {
   public boolean test(CloudEvent cloudEvent) {
     try {
       Object value = this.expression.tryEvaluate(this.runtime, cloudEvent);
-      return (Boolean) this.runtime.cast(value, Type.BOOLEAN);
+      return (Boolean)this.runtime.cast(value, Type.BOOLEAN);
     } catch (EvaluationException evaluationException) {
       return false;
     }

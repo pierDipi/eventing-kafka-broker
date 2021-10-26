@@ -15,6 +15,18 @@
  */
 package dev.knative.eventing.kafka.broker.core.tracing;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
@@ -30,27 +42,20 @@ import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 public final class TracingConfig {
-
-  private static final Logger logger = LoggerFactory.getLogger(TracingConfig.class);
+  private static final Logger logger =
+    LoggerFactory.getLogger(TracingConfig.class);
 
   private static final String DEFAULT_SERVICE_NAME = "Knative";
-  private static final String SERVICE_NAME = fromEnvOrDefault("SERVICE_NAME", TracingConfig.DEFAULT_SERVICE_NAME);
+  private static final String SERVICE_NAME =
+    fromEnvOrDefault("SERVICE_NAME", TracingConfig.DEFAULT_SERVICE_NAME);
   private static final String SERVICE_NAMESPACE =
     fromEnvOrDefault("SERVICE_NAMESPACE", TracingConfig.DEFAULT_SERVICE_NAME);
-  private static final AttributeKey<String> SERVICE_NAME_KEY = AttributeKey.stringKey("service.name");
-  private static final AttributeKey<String> SERVICE_NAMESPACE_KEY = AttributeKey.stringKey("service.namespace");
+  private static final AttributeKey<String> SERVICE_NAME_KEY =
+    AttributeKey.stringKey("service.name");
+  private static final AttributeKey<String> SERVICE_NAMESPACE_KEY =
+    AttributeKey.stringKey("service.namespace");
 
   public final static String TRACE_ID_KEY = "traceId";
 
@@ -58,13 +63,12 @@ public final class TracingConfig {
   private final String url;
   private final float samplingRate;
 
-  TracingConfig(final Backend backend, final String url, final float samplingRate) {
+  TracingConfig(final Backend backend, final String url,
+                final float samplingRate) {
     if (!backend.equals(Backend.UNKNOWN) && !URI.create(url).isAbsolute()) {
       throw new IllegalArgumentException(String.format(
-        "Backend is %s but the endpoint isn't an absolute URI: %s",
-        backend,
-        url
-      ));
+        "Backend is %s but the endpoint isn't an absolute URI: %s", backend,
+        url));
     }
 
     this.backend = backend;
@@ -77,54 +81,41 @@ public final class TracingConfig {
   }
 
   public OpenTelemetrySdk setup() {
-    logger.info(
-      "Registering tracing configurations {} {} {}",
-      keyValue("backend", getBackend()),
-      keyValue("sampleRate", getSamplingRate()),
-      keyValue("loggingDebugEnabled", logger.isDebugEnabled())
-    );
+    logger.info("Registering tracing configurations {} {} {}",
+                keyValue("backend", getBackend()),
+                keyValue("sampleRate", getSamplingRate()),
+                keyValue("loggingDebugEnabled", logger.isDebugEnabled()));
 
-    SdkTracerProviderBuilder tracerProviderBuilder = SdkTracerProvider.builder();
+    SdkTracerProviderBuilder tracerProviderBuilder =
+      SdkTracerProvider.builder();
 
     tracerProviderBuilder.setResource(
-      Resource.create(Attributes.of(
-        SERVICE_NAME_KEY, SERVICE_NAME,
-        SERVICE_NAMESPACE_KEY, SERVICE_NAMESPACE
-      ))
-    );
+      Resource.create(Attributes.of(SERVICE_NAME_KEY, SERVICE_NAME,
+                                    SERVICE_NAMESPACE_KEY, SERVICE_NAMESPACE)));
     tracerProviderBuilder.setSampler(
-      Sampler.parentBased(Sampler.traceIdRatioBased(getSamplingRate()))
-    );
+      Sampler.parentBased(Sampler.traceIdRatioBased(getSamplingRate())));
 
     if (logger.isDebugEnabled()) {
       logger.debug("Add logging processor");
       tracerProviderBuilder.addSpanProcessor(
-        SimpleSpanProcessor.create(new LoggingSpanExporter())
-      );
+        SimpleSpanProcessor.create(new LoggingSpanExporter()));
     }
     if (getBackend().equals(Backend.ZIPKIN)) {
       if (logger.isDebugEnabled()) {
         logger.debug("Add Zipkin simple processor");
         tracerProviderBuilder.addSpanProcessor(
-          SimpleSpanProcessor.create(zipkinExporter(this))
-        );
+          SimpleSpanProcessor.create(zipkinExporter(this)));
       } else {
         logger.debug("Add Zipkin batch processor");
         tracerProviderBuilder.addSpanProcessor(
-          BatchSpanProcessor
-            .builder(zipkinExporter(this))
-            .build()
-        );
+          BatchSpanProcessor.builder(zipkinExporter(this)).build());
       }
     }
 
     OpenTelemetrySdkBuilder sdkBuilder = OpenTelemetrySdk.builder();
-    sdkBuilder.setTracerProvider(
-      tracerProviderBuilder.build()
-    );
-    sdkBuilder.setPropagators(ContextPropagators.create(
-      W3CTraceContextPropagator.getInstance()
-    ));
+    sdkBuilder.setTracerProvider(tracerProviderBuilder.build());
+    sdkBuilder.setPropagators(
+      ContextPropagators.create(W3CTraceContextPropagator.getInstance()));
 
     return sdkBuilder.buildAndRegisterGlobal();
   }
@@ -143,11 +134,9 @@ public final class TracingConfig {
 
   @Override
   public String toString() {
-    return "TracingConfig{" +
-      "backend=" + backend +
-      ", url='" + url + '\'' +
-      ", samplingRate=" + samplingRate +
-      '}';
+    return "TracingConfig{"
+      + "backend=" + backend + ", url='" + url + '\''
+      + ", samplingRate=" + samplingRate + '}';
   }
 
   // Helper methods
@@ -161,13 +150,13 @@ public final class TracingConfig {
   }
 
   private static SpanExporter zipkinExporter(TracingConfig tracingConfig) {
-    return ZipkinSpanExporter
-      .builder()
+    return ZipkinSpanExporter.builder()
       .setEndpoint(tracingConfig.getUrl())
       .build();
   }
 
-  private static String fromEnvOrDefault(final String key, final String defaultValue) {
+  private static String fromEnvOrDefault(final String key,
+                                         final String defaultValue) {
     final var v = System.getenv(key);
 
     if (v == null || v.isBlank()) {
@@ -187,7 +176,6 @@ public final class TracingConfig {
   // Parser and builder
 
   static class Parser {
-
     static Backend backend(final InputStream in) throws IOException {
       return Backend.from(trim(in));
     }
@@ -230,7 +218,8 @@ public final class TracingConfig {
 
     final var sampleRatePath = sampleRatePath(path);
     if (Files.exists(sampleRatePath)) {
-      try (final var samplingRate = new FileInputStream(sampleRatePath.toString())) {
+      try (final var samplingRate =
+             new FileInputStream(sampleRatePath.toString())) {
         sampleRate = Parser.SamplingRate(samplingRate);
       }
     }

@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+
 import io.vertx.core.AbstractVerticle;
 
 /**
@@ -23,12 +24,12 @@ import io.vertx.core.AbstractVerticle;
  */
 @FunctionalInterface
 public interface ConsumerVerticleFactory {
-
   /**
    * Get a new consumer verticle.
    *
    * @param egress trigger data.
    * @return a new consumer verticle.
    */
-  AbstractVerticle get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress);
+  AbstractVerticle get(final DataPlaneContract.Resource resource,
+                       final DataPlaneContract.Egress egress);
 }

@@ -15,16 +15,17 @@
  */
 package dev.knative.eventing.kafka.broker.core.utils;
 
-import java.util.function.Function;
-
 import static java.util.Objects.requireNonNull;
 
-public class BaseEnv {
+import java.util.function.Function;
 
-  public static final String PRODUCER_CONFIG_FILE_PATH = "PRODUCER_CONFIG_FILE_PATH";
+public class BaseEnv {
+  public static final String PRODUCER_CONFIG_FILE_PATH =
+    "PRODUCER_CONFIG_FILE_PATH";
   private final String producerConfigFilePath;
 
-  public static final String DATA_PLANE_CONFIG_FILE_PATH = "DATA_PLANE_CONFIG_FILE_PATH";
+  public static final String DATA_PLANE_CONFIG_FILE_PATH =
+    "DATA_PLANE_CONFIG_FILE_PATH";
   private final String dataPlaneConfigFilePath;
 
   public static final String METRICS_PORT = "METRICS_PORT";
@@ -33,7 +34,8 @@ public class BaseEnv {
   public static final String METRICS_PATH = "METRICS_PATH";
   private final String metricsPath;
 
-  public static final String METRICS_PUBLISH_QUANTILES = "METRICS_PUBLISH_QUANTILES";
+  public static final String METRICS_PUBLISH_QUANTILES =
+    "METRICS_PUBLISH_QUANTILES";
   private final boolean metricsPublishQuantiles;
 
   public static final String METRICS_JVM_ENABLED = "METRICS_JVM_ENABLED";
@@ -47,13 +49,20 @@ public class BaseEnv {
 
   public BaseEnv(Function<String, String> envProvider) {
     this.metricsPath = requireNonNull(envProvider.apply(METRICS_PATH));
-    this.metricsPort = Integer.parseInt(requireNonNull(envProvider.apply(METRICS_PORT)));
-    this.metricsPublishQuantiles = Boolean.parseBoolean(envProvider.apply(METRICS_PUBLISH_QUANTILES));
-    this.metricsJvmEnabled = Boolean.parseBoolean(envProvider.apply(METRICS_JVM_ENABLED));
-    this.producerConfigFilePath = requireNonNull(envProvider.apply(PRODUCER_CONFIG_FILE_PATH));
-    this.dataPlaneConfigFilePath = requireNonNull(envProvider.apply(DATA_PLANE_CONFIG_FILE_PATH));
-    this.configTracingPath = requireNonNull(envProvider.apply(CONFIG_TRACING_PATH));
-    this.waitStartupSeconds = Integer.parseInt(envProvider.apply(WAIT_STARTUP_SECONDS));
+    this.metricsPort =
+      Integer.parseInt(requireNonNull(envProvider.apply(METRICS_PORT)));
+    this.metricsPublishQuantiles =
+      Boolean.parseBoolean(envProvider.apply(METRICS_PUBLISH_QUANTILES));
+    this.metricsJvmEnabled =
+      Boolean.parseBoolean(envProvider.apply(METRICS_JVM_ENABLED));
+    this.producerConfigFilePath =
+      requireNonNull(envProvider.apply(PRODUCER_CONFIG_FILE_PATH));
+    this.dataPlaneConfigFilePath =
+      requireNonNull(envProvider.apply(DATA_PLANE_CONFIG_FILE_PATH));
+    this.configTracingPath =
+      requireNonNull(envProvider.apply(CONFIG_TRACING_PATH));
+    this.waitStartupSeconds =
+      Integer.parseInt(envProvider.apply(WAIT_STARTUP_SECONDS));
   }
 
   public String getProducerConfigFilePath() {
@@ -90,12 +99,10 @@ public class BaseEnv {
 
   @Override
   public String toString() {
-    return "BaseEnv{" +
-      "producerConfigFilePath='" + producerConfigFilePath + '\'' +
-      ", dataPlaneConfigFilePath='" + dataPlaneConfigFilePath + '\'' +
-      ", metricsPort=" + metricsPort +
-      ", metricsPath='" + metricsPath + '\'' +
-      ", metricsPublishQuantiles=" + metricsPublishQuantiles +
-      '}';
+    return "BaseEnv{"
+      + "producerConfigFilePath='" + producerConfigFilePath + '\''
+      + ", dataPlaneConfigFilePath='" + dataPlaneConfigFilePath + '\''
+      + ", metricsPort=" + metricsPort + ", metricsPath='" + metricsPath + '\''
+      + ", metricsPublishQuantiles=" + metricsPublishQuantiles + '}';
   }
 }

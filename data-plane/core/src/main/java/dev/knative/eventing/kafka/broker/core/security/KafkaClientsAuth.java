@@ -27,24 +27,26 @@ import java.util.Properties;
 import java.util.function.BiConsumer;
 
 public class KafkaClientsAuth {
-
-  public static Properties attachCredentials(final Properties properties, final Credentials credentials) {
+  public static Properties attachCredentials(final Properties properties,
+                                             final Credentials credentials) {
     clientsProperties(properties::setProperty, credentials);
     return properties;
   }
 
-  public static Map<String, Object> attachCredentials(final Map<String, Object> configs,
-                                                      final Credentials credentials) {
+  public static Map<String, Object> attachCredentials(
+    final Map<String, Object> configs, final Credentials credentials) {
     clientsProperties(configs::put, credentials);
     return configs;
   }
 
-  private static void clientsProperties(final BiConsumer<String, String> propertiesSetter,
-                                        final Credentials credentials) {
+  private static void clientsProperties(
+    final BiConsumer<String, String> propertiesSetter,
+    final Credentials credentials) {
     final var protocol = credentials.securityProtocol();
 
     if (protocol != null) {
-      propertiesSetter.accept(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, protocol.name);
+      propertiesSetter.accept(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG,
+                              protocol.name);
       switch (protocol) {
         case SSL -> ssl(propertiesSetter, credentials);
         case SASL_PLAINTEXT -> sasl(propertiesSetter, credentials);

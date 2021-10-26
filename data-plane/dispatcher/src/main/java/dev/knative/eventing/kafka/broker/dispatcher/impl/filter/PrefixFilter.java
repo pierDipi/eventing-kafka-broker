@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 import io.cloudevents.CloudEvent;
 
 public class PrefixFilter extends BaseStringFilter {
-
   public PrefixFilter(String attribute, String expectedValue) {
     super(attribute, expectedValue);
   }

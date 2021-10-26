@@ -15,7 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -25,17 +26,17 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 @ExtendWith(VertxExtension.class)
 public abstract class PreHandlerTest {
-
   private static final int PORT = 43999;
-  protected static final int NEXT_HANDLER_STATUS_CODE = HttpResponseStatus.SERVICE_UNAVAILABLE.code();
+  protected static final int NEXT_HANDLER_STATUS_CODE =
+    HttpResponseStatus.SERVICE_UNAVAILABLE.code();
 
   private WebClient webClient;
   private HttpServer server;
@@ -51,13 +52,14 @@ public abstract class PreHandlerTest {
     Handler<HttpServerRequest> handler = createHandler();
 
     this.server = vertx.createHttpServer(httpServerOptions);
-    this.server.requestHandler(request -> {
-      handler.handle(request);
+    this.server
+      .requestHandler(request -> {
+        handler.handle(request);
 
-      if (!request.isEnded()) {
-        request.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end();
-      }
-    })
+        if (!request.isEnded()) {
+          request.response().setStatusCode(NEXT_HANDLER_STATUS_CODE).end();
+        }
+      })
       .listen(httpServerOptions.getPort(), httpServerOptions.getHost())
       .onComplete(context.succeedingThenComplete());
   }
@@ -68,21 +70,18 @@ public abstract class PreHandlerTest {
     this.server.close().onComplete(context.succeedingThenComplete());
   }
 
-  protected void mustReceiveStatusCodeOnPath(
-    final VertxTestContext context,
-    final int expectedStatusCode,
-    final HttpMethod method,
-    final String path) {
+  protected void mustReceiveStatusCodeOnPath(final VertxTestContext context,
+                                             final int expectedStatusCode,
+                                             final HttpMethod method,
+                                             final String path) {
     webClient.request(method, PORT, "localhost", path)
       .send()
       .onSuccess(response -> context.verify(() -> {
-        assertThat(response.statusCode())
-          .isEqualTo(expectedStatusCode);
+        assertThat(response.statusCode()).isEqualTo(expectedStatusCode);
         context.completeNow();
       }))
       .onFailure(context::failNow);
   }
 
   public abstract Handler<HttpServerRequest> createHandler();
-
 }

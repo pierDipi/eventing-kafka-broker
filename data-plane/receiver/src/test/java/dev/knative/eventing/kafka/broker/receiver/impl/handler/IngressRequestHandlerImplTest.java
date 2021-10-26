@@ -15,11 +15,20 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.RequestToRecordMapper;
+
 import io.cloudevents.CloudEvent;
-import io.micrometer.core.instrument.Counter;
+
+import org.apache.kafka.clients.producer.MockProducer;
+
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
@@ -28,17 +37,11 @@ import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.RecordMetadata;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
-import org.apache.kafka.clients.producer.MockProducer;
+
+import io.micrometer.core.instrument.Counter;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 public class IngressRequestHandlerImplTest {
-
   @Test
   public void shouldSendRecordAndTerminateRequestWithRecordProduced() {
     shouldSendRecord(false, IngressRequestHandlerImpl.RECORD_PRODUCED);
@@ -50,12 +53,11 @@ public class IngressRequestHandlerImplTest {
   }
 
   private static void shouldSendRecord(boolean failedToSend, int statusCode) {
-    final var record = new KafkaProducerRecordImpl<>(
-      "topic", "key", CoreObjects.event(), 10
-    );
+    final var record =
+      new KafkaProducerRecordImpl<>("topic", "key", CoreObjects.event(), 10);
 
-    final RequestToRecordMapper mapper
-      = (request, topic) -> Future.succeededFuture(record);
+    final RequestToRecordMapper mapper =
+      (request, topic) -> Future.succeededFuture(record);
 
     final KafkaProducer<String, CloudEvent> producer = mockProducer();
 
@@ -71,10 +73,7 @@ public class IngressRequestHandlerImplTest {
     final var response = mockResponse(request, statusCode);
 
     final var handler = new IngressRequestHandlerImpl(
-      mapper,
-      mock(Counter.class),
-      mock(Counter.class)
-    );
+      mapper, mock(Counter.class), mock(Counter.class));
 
     handler.handle(request, new IngressProducer() {
       @Override
@@ -95,17 +94,15 @@ public class IngressRequestHandlerImplTest {
   public void shouldReturnBadRequestIfNoRecordCanBeCreated() {
     final var producer = mockProducer();
 
-    final RequestToRecordMapper mapper
-      = (request, topic) -> Future.failedFuture("");
+    final RequestToRecordMapper mapper =
+      (request, topic) -> Future.failedFuture("");
 
     final HttpServerRequest request = mockHttpServerRequest("/hello");
-    final var response = mockResponse(request, IngressRequestHandlerImpl.MAPPER_FAILED);
+    final var response =
+      mockResponse(request, IngressRequestHandlerImpl.MAPPER_FAILED);
 
     final var handler = new IngressRequestHandlerImpl(
-      mapper,
-      mock(Counter.class),
-      mock(Counter.class)
-    );
+      mapper, mock(Counter.class), mock(Counter.class));
 
     handler.handle(request, new IngressProducer() {
       @Override
@@ -119,12 +116,12 @@ public class IngressRequestHandlerImplTest {
       }
     });
 
-    verifySetStatusCodeAndTerminateResponse(IngressRequestHandlerImpl.MAPPER_FAILED, response);
+    verifySetStatusCodeAndTerminateResponse(
+      IngressRequestHandlerImpl.MAPPER_FAILED, response);
   }
 
   private static void verifySetStatusCodeAndTerminateResponse(
-    final int statusCode,
-    final HttpServerResponse response) {
+    final int statusCode, final HttpServerResponse response) {
     verify(response, times(1)).setStatusCode(statusCode);
     verify(response, times(1)).end();
   }
@@ -149,12 +146,10 @@ public class IngressRequestHandlerImplTest {
   }
 
   private static HttpServerResponse mockResponse(
-    final HttpServerRequest request,
-    final int statusCode) {
+    final HttpServerRequest request, final int statusCode) {
     final var response = mock(HttpServerResponse.class);
     when(response.setStatusCode(statusCode)).thenReturn(response);
     when(request.response()).thenReturn(response);
     return response;
   }
-
 }

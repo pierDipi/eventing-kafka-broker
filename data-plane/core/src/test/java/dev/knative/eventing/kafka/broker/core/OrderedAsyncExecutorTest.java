@@ -15,11 +15,14 @@
  */
 package dev.knative.eventing.kafka.broker.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -28,35 +31,27 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 @ExtendWith(VertxExtension.class)
 public class OrderedAsyncExecutorTest {
-
   private static Stream<Arguments> inputArgs() {
-    return Stream.of(
-      Arguments.of(0L, 10),
-      Arguments.of(0L, 100),
-      Arguments.of(0L, 1000),
-      Arguments.of(0L, 10000),
-      Arguments.of(50L, 50),
-      Arguments.of(50L, 50),
-      Arguments.of(50L, 250),
-      Arguments.of(100L, 10),
-      Arguments.of(100L, 100),
-      Arguments.of(1000L, 10)
-    );
+    return Stream.of(Arguments.of(0L, 10), Arguments.of(0L, 100),
+                     Arguments.of(0L, 1000), Arguments.of(0L, 10000),
+                     Arguments.of(50L, 50), Arguments.of(50L, 50),
+                     Arguments.of(50L, 250), Arguments.of(100L, 10),
+                     Arguments.of(100L, 100), Arguments.of(1000L, 10));
   }
 
   @ParameterizedTest(name = "with delay {0}ms and tasks {1}")
   @MethodSource("inputArgs")
-  public void shouldExecuteInOrder(final long millis, final int tasks, Vertx vertx) throws InterruptedException {
+  public void shouldExecuteInOrder(final long millis, final int tasks,
+                                   Vertx vertx) throws InterruptedException {
     Random random = new Random();
 
     // Deploy the verticle
@@ -65,7 +60,8 @@ public class OrderedAsyncExecutorTest {
     vertx.deployVerticle(verticle, v -> startVerticleLatch.countDown());
     startVerticleLatch.await();
 
-    // Rewrite the vertx instance in order to make sure we run always in the same context
+    // Rewrite the vertx instance in order to make sure we run always in the
+    // same context
     vertx = verticle.getVertx();
 
     CountDownLatch tasksLatch = new CountDownLatch(tasks);
@@ -74,20 +70,20 @@ public class OrderedAsyncExecutorTest {
     OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor();
 
     for (int i = 0; i < tasks; i++) {
-      Supplier<Future<?>> task = generateTask(vertx, random, millis, i, tasksLatch, executed);
+      Supplier<Future<?>> task =
+        generateTask(vertx, random, millis, i, tasksLatch, executed);
       vertx.runOnContext((v) -> asyncExecutor.offer(task));
     }
 
-    assertThat(
-      tasksLatch.await(20, TimeUnit.SECONDS) // Longest takes 10 secs
-    ).isTrue();
+    assertThat(tasksLatch.await(20, TimeUnit.SECONDS)  // Longest takes 10 secs
+               )
+      .isTrue();
 
     // Check if tasks were executed in order
-    IntStream.range(0, tasks)
-      .forEach(i -> {
-        int actual = executed.get(i);
-        assertThat(actual).isEqualTo(i);
-      });
+    IntStream.range(0, tasks).forEach(i -> {
+      int actual = executed.get(i);
+      assertThat(actual).isEqualTo(i);
+    });
   }
 
   @Test
@@ -101,7 +97,8 @@ public class OrderedAsyncExecutorTest {
     vertx.deployVerticle(verticle, v -> startVerticleLatch.countDown());
     startVerticleLatch.await();
 
-    // Rewrite the vertx instance in order to make sure we run always in the same context
+    // Rewrite the vertx instance in order to make sure we run always in the
+    // same context
     vertx = verticle.getVertx();
 
     List<Integer> executed = new ArrayList<>(tasks);
@@ -110,7 +107,8 @@ public class OrderedAsyncExecutorTest {
     OrderedAsyncExecutor asyncExecutor = new OrderedAsyncExecutor();
 
     for (int i = 0; i < tasks; i++) {
-      Supplier<Future<?>> task = generateTask(vertx, random, 100, i, tasksLatch, executed);
+      Supplier<Future<?>> task =
+        generateTask(vertx, random, 100, i, tasksLatch, executed);
       vertx.runOnContext((v) -> asyncExecutor.offer(task));
     }
 
@@ -120,16 +118,15 @@ public class OrderedAsyncExecutorTest {
     // We don't need to wait for any event to happen, we just want to make sure
     // that the async executor actually stopped and no other task was executed
     // If this await returns false, then the latch didn't count down to 0
-    assertThat(
-      tasksLatch.await(1, TimeUnit.SECONDS)
-    ).isFalse();
+    assertThat(tasksLatch.await(1, TimeUnit.SECONDS)).isFalse();
 
     assertThat(executed).hasSizeLessThan(tasks);
   }
 
   private Supplier<Future<?>> generateTask(Vertx vertx, Random random,
                                            long millis, int i,
-                                           CountDownLatch latch, List<Integer> executed) {
+                                           CountDownLatch latch,
+                                           List<Integer> executed) {
     if (millis == 0) {
       return () -> {
         executed.add(i);
@@ -138,7 +135,8 @@ public class OrderedAsyncExecutorTest {
       };
     } else {
       // Some random number around the provided millis
-      long delay = Math.round(millis + ((random.nextDouble() - 0.5) * millis * 0.5));
+      long delay =
+        Math.round(millis + ((random.nextDouble() - 0.5) * millis * 0.5));
 
       return () -> {
         Promise<Void> prom = Promise.promise();
@@ -152,7 +150,5 @@ public class OrderedAsyncExecutorTest {
     }
   }
 
-  private class AVerticle extends AbstractVerticle {
-  }
-
+  private class AVerticle extends AbstractVerticle {}
 }

@@ -15,16 +15,14 @@
  */
 package dev.knative.eventing.kafka.broker.core.utils;
 
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
-class LoggingTest {
+import org.junit.jupiter.api.Test;
 
+class LoggingTest {
   @Test
   void testKeyValueLoading() {
-    assertThat(Logging.keyValue("abc", 123))
-      .isNotNull();
+    assertThat(Logging.keyValue("abc", 123)).isNotNull();
   }
 
   @Test
@@ -33,9 +31,10 @@ class LoggingTest {
     String nameOfExpectedClass;
 
     try {
-      nameOfExpectedClass = ClassLoader.getSystemClassLoader()
-        .loadClass("net.logstash.logback.marker.ObjectAppendingMarker")
-        .getName();
+      nameOfExpectedClass =
+        ClassLoader.getSystemClassLoader()
+          .loadClass("net.logstash.logback.marker.ObjectAppendingMarker")
+          .getName();
     } catch (ClassNotFoundException e) {
       nameOfExpectedClass = String.class.getName();
     }
@@ -45,5 +44,4 @@ class LoggingTest {
     assertThat(Logging.keyValue("abc", 123).getClass().getName())
       .isEqualTo(nameOfExpectedClass);
   }
-
 }

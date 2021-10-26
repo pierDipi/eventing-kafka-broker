@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
+
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
@@ -24,7 +25,6 @@ import io.vertx.ext.web.client.HttpResponse;
  * This interface describes a component that handles http responses.
  */
 public interface ResponseHandler extends AsyncCloseable {
-
   /**
    * Handle the response.
    *

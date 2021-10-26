@@ -15,26 +15,27 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
-import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
-import io.vertx.circuitbreaker.CircuitBreaker;
-import io.vertx.ext.web.client.WebClient;
-import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
+
+import io.vertx.circuitbreaker.CircuitBreaker;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 @ExtendWith(VertxExtension.class)
 public class WebClientCloudEventSenderTest {
-
   @Test
-  public void shouldCloseCircuitBreakerAndWebClient(final VertxTestContext context) {
-
+  public void shouldCloseCircuitBreakerAndWebClient(
+    final VertxTestContext context) {
     final var circuitBreaker = mock(CircuitBreaker.class);
     when(circuitBreaker.close()).thenReturn(circuitBreaker);
 
@@ -42,8 +43,7 @@ public class WebClientCloudEventSenderTest {
     doNothing().when(webClient).close();
 
     final var consumerRecordSender = new WebClientCloudEventSender(
-      webClient, circuitBreaker, "http://localhost:12345"
-    );
+      webClient, circuitBreaker, "http://localhost:12345");
 
     consumerRecordSender.close()
       .onFailure(context::failNow)

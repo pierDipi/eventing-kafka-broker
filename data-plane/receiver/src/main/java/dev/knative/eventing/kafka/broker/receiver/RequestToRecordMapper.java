@@ -16,13 +16,13 @@
 package dev.knative.eventing.kafka.broker.receiver;
 
 import io.cloudevents.CloudEvent;
+
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 
 @FunctionalInterface
 public interface RequestToRecordMapper {
-
   /**
    * Map the given HTTP request to a Kafka record.
    *
@@ -31,7 +31,5 @@ public interface RequestToRecordMapper {
    * @return kafka record (record can be null).
    */
   Future<KafkaProducerRecord<String, CloudEvent>> requestToRecord(
-    final HttpServerRequest request,
-    final String topic
-  );
+    final HttpServerRequest request, final String topic);
 }

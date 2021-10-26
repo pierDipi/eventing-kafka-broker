@@ -15,6 +15,12 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.integration;
 
+import static dev.knative.eventing.kafka.broker.core.file.FileWatcherTest.write;
+import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.contract;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
 import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
@@ -23,15 +29,26 @@ import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.reconciler.impl.ResourcesReconcilerMessageHandler;
 import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
 import dev.knative.eventing.kafka.broker.dispatcher.main.ConsumerDeployerVerticle;
+
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.message.MessageReader;
 import io.cloudevents.core.v1.CloudEventBuilder;
 import io.cloudevents.http.vertx.VertxMessageFactory;
+
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
+
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.URI;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -40,28 +57,20 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.TopicPartition;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static dev.knative.eventing.kafka.broker.core.file.FileWatcherTest.write;
-import static dev.knative.eventing.kafka.broker.core.testing.CoreObjects.contract;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 @ExtendWith(VertxExtension.class)
 public class UnorderedConsumerTest {
-
   static {
-    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+    BackendRegistries.setupBackend(
+      new MicrometerMetricsOptions().setRegistryName(
+        Metrics.METRICS_REGISTRY_NAME));
   }
 
-  private static final Logger logger = LoggerFactory.getLogger(UnorderedConsumerTest.class);
+  private static final Logger logger =
+    LoggerFactory.getLogger(UnorderedConsumerTest.class);
   private static final int NUM_SYSTEM_VERTICLES = 1;
 
   private static final String TOPIC = "abc";
@@ -73,29 +82,24 @@ public class UnorderedConsumerTest {
     final var producerConfigs = new Properties();
     final var consumerConfigs = new Properties();
 
-    final var consumerVerticleFactoryMock = new ConsumerVerticleFactoryImplMock(
-      consumerConfigs,
-      producerConfigs
-    );
+    final var consumerVerticleFactoryMock =
+      new ConsumerVerticleFactoryImplMock(consumerConfigs, producerConfigs);
 
     final var event = new CloudEventBuilder()
-      .withType("dev.knative")
-      .withSubject("subject-1")
-      .withSource(URI.create("/api"))
-      .withId("1234")
-      .build();
+                        .withType("dev.knative")
+                        .withSubject("subject-1")
+                        .withSource(URI.create("/api"))
+                        .withId("1234")
+                        .build();
 
-    final var consumerRecords = Arrays.asList(
-      new ConsumerRecord<>(TOPIC, 0, 0, "", event),
-      new ConsumerRecord<>(TOPIC, 0, 1, "", event),
-      new ConsumerRecord<>(TOPIC, 0, 2, "", event)
-    );
+    final var consumerRecords =
+      Arrays.asList(new ConsumerRecord<>(TOPIC, 0, 0, "", event),
+                    new ConsumerRecord<>(TOPIC, 0, 1, "", event),
+                    new ConsumerRecord<>(TOPIC, 0, 2, "", event));
     consumerVerticleFactoryMock.setRecords(consumerRecords);
 
-    final var consumerDeployer = new ConsumerDeployerVerticle(
-      consumerVerticleFactoryMock,
-      100
-    );
+    final var consumerDeployer =
+      new ConsumerDeployerVerticle(consumerVerticleFactoryMock, 100);
 
     vertx.deployVerticle(consumerDeployer)
       .toCompletionStage()
@@ -103,25 +107,30 @@ public class UnorderedConsumerTest {
       .get();
 
     final var contract = contract();
-    final var numEgresses = contract.getResourcesList().stream()
-      .mapToInt(DataPlaneContract.Resource::getEgressesCount)
-      .sum();
+    final var numEgresses =
+      contract.getResourcesList()
+        .stream()
+        .mapToInt(DataPlaneContract.Resource::getEgressesCount)
+        .sum();
 
-    final var waitEvents = new CountDownLatch(numEgresses * consumerRecords.size());
+    final var waitEvents =
+      new CountDownLatch(numEgresses * consumerRecords.size());
     startServer(vertx, new VertxTestContext(), event, waitEvents);
 
     final var file = Files.createTempFile("fw-", "-fw").toFile();
     final var fileWatcher = new FileWatcher(
-      file,
-      new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS)
-    );
+      file, new ContractPublisher(vertx.eventBus(),
+                                  ResourcesReconcilerMessageHandler.ADDRESS));
 
     fileWatcher.start();
 
     write(file, contract);
 
-    await().atMost(6, TimeUnit.SECONDS)
-      .untilAsserted(() -> assertThat(vertx.deploymentIDs()).hasSize(numEgresses + NUM_SYSTEM_VERTICLES));
+    await()
+      .atMost(6, TimeUnit.SECONDS)
+      .untilAsserted(()
+                       -> assertThat(vertx.deploymentIDs())
+                            .hasSize(numEgresses + NUM_SYSTEM_VERTICLES));
 
     waitEvents.await();
 
@@ -131,25 +140,28 @@ public class UnorderedConsumerTest {
     assertThat(producers).hasSameSizeAs(consumers);
 
     final var events = consumerRecords.stream()
-      .map(ConsumerRecord::value)
-      .toArray(CloudEvent[]::new);
+                         .map(ConsumerRecord::value)
+                         .toArray(CloudEvent[] ::new);
     final var partitionKeys = Arrays.stream(events)
-      .map(e -> {
-        final var partitionKey = e.getExtension("partitionkey");
-        if (partitionKey == null) {
-          return null;
-        }
-        return partitionKey.toString();
-      })
-      .collect(Collectors.toList());
+                                .map(e -> {
+                                  final var partitionKey =
+                                    e.getExtension("partitionkey");
+                                  if (partitionKey == null) {
+                                    return null;
+                                  }
+                                  return partitionKey.toString();
+                                })
+                                .collect(Collectors.toList());
 
     await().atMost(6, TimeUnit.SECONDS).untilAsserted(() -> {
       for (final var producerEntry : producers.entrySet()) {
         final var history = producerEntry.getValue().history();
         assertThat(history).hasSameSizeAs(consumerRecords);
 
-        assertThat(history.stream().map(ProducerRecord::value)).containsExactlyInAnyOrder(events);
-        assertThat(history.stream().map(ProducerRecord::key)).containsAnyElementsOf(partitionKeys);
+        assertThat(history.stream().map(ProducerRecord::value))
+          .containsExactlyInAnyOrder(events);
+        assertThat(history.stream().map(ProducerRecord::key))
+          .containsAnyElementsOf(partitionKeys);
       }
       for (final var consumer : consumers.values()) {
         var key = new TopicPartition(TOPIC, 0);
@@ -164,40 +176,34 @@ public class UnorderedConsumerTest {
     fileWatcher.close();
   }
 
-  private static void startServer(
-    final Vertx vertx,
-    final VertxTestContext context,
-    final CloudEvent event,
-    final CountDownLatch waitEvents) throws InterruptedException {
-
+  private static void startServer(final Vertx vertx,
+                                  final VertxTestContext context,
+                                  final CloudEvent event,
+                                  final CountDownLatch waitEvents)
+    throws InterruptedException {
     final var destinationURL = CoreObjects.DESTINATION_URL;
     vertx.createHttpServer()
       .exceptionHandler(context::failNow)
       // request -> message -> event -> check event -> put event in response
-      .requestHandler(request -> VertxMessageFactory
-        .createReader(request)
-        .onFailure(context::failNow)
-        .map(MessageReader::toEvent)
-        .onSuccess(receivedEvent -> {
-          logger.info("received event {}", event);
+      .requestHandler(request
+                      -> VertxMessageFactory.createReader(request)
+                           .onFailure(context::failNow)
+                           .map(MessageReader::toEvent)
+                           .onSuccess(receivedEvent -> {
+                             logger.info("received event {}", event);
 
-          context.verify(() -> {
-            assertThat(receivedEvent).isEqualTo(event);
+                             context.verify(() -> {
+                               assertThat(receivedEvent).isEqualTo(event);
 
-            VertxMessageFactory
-              .createWriter(request.response())
-              .writeBinary(event);
+                               VertxMessageFactory
+                                 .createWriter(request.response())
+                                 .writeBinary(event);
 
-            waitEvents.countDown();
-          });
-
-        })
-      )
-      .listen(
-        destinationURL.getPort(),
-        destinationURL.getHost(),
-        context.succeedingThenComplete()
-      );
+                               waitEvents.countDown();
+                             });
+                           }))
+      .listen(destinationURL.getPort(), destinationURL.getHost(),
+              context.succeedingThenComplete());
 
     context.awaitCompletion(10, TimeUnit.SECONDS);
   }

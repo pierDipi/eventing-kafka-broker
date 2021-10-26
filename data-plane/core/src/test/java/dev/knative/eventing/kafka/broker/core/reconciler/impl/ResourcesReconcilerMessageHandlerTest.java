@@ -15,53 +15,53 @@
  */
 package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 
-import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
-import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
-import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
-import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.core.eventbus.Message;
-import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+import dev.knative.eventing.kafka.broker.core.eventbus.ContractMessageCodec;
+import dev.knative.eventing.kafka.broker.core.eventbus.ContractPublisher;
+import dev.knative.eventing.kafka.broker.core.testing.CoreObjects;
+
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.Message;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 @ExtendWith(VertxExtension.class)
 public class ResourcesReconcilerMessageHandlerTest {
-
   @Test
-  public void publishAndReceiveContractTest(Vertx vertx, VertxTestContext testContext) {
+  public void publishAndReceiveContractTest(Vertx vertx,
+                                            VertxTestContext testContext) {
     ContractMessageCodec.register(vertx.eventBus());
 
     DataPlaneContract.Contract expected = CoreObjects.contract();
 
     ResourcesReconcilerMessageHandler.start(vertx, contract -> {
-      testContext.verify(() ->
-        assertThat(contract)
-          .isEqualTo(expected.getResourcesList())
-      );
+      testContext.verify(
+        () -> assertThat(contract).isEqualTo(expected.getResourcesList()));
       testContext.completeNow();
       return Future.succeededFuture();
     });
 
-    ContractPublisher publisher = new ContractPublisher(vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
+    ContractPublisher publisher = new ContractPublisher(
+      vertx.eventBus(), ResourcesReconcilerMessageHandler.ADDRESS);
     publisher.accept(expected);
   }
 
   @SuppressWarnings("unchecked")
   @Test
   public void shouldReconcileOnConcurrentEnqueue() {
-
     final var reconcileCallsCounter = new AtomicInteger();
 
     final var duringReconcileLatch = new CountDownLatch(1);
@@ -82,10 +82,10 @@ public class ResourcesReconcilerMessageHandlerTest {
 
     final Runnable f = () -> {
       final Message<Object> message = mock(Message.class);
-      when(message.body()).thenReturn(DataPlaneContract.Contract
-        .newBuilder()
-        .setGeneration(contractGenerator.getAndIncrement())
-        .build());
+      when(message.body())
+        .thenReturn(DataPlaneContract.Contract.newBuilder()
+                      .setGeneration(contractGenerator.getAndIncrement())
+                      .build());
       handler.handle(message);
     };
 
@@ -106,7 +106,7 @@ public class ResourcesReconcilerMessageHandlerTest {
       }
     });
 
-    await()
-      .untilAsserted(() -> assertThat(reconcileCallsCounter.get()).isEqualTo(2));
+    await().untilAsserted(
+      () -> assertThat(reconcileCallsCounter.get()).isEqualTo(2));
   }
 }

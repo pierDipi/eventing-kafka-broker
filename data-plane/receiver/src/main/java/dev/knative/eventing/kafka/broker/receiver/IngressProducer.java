@@ -16,22 +16,24 @@
 package dev.knative.eventing.kafka.broker.receiver;
 
 import io.cloudevents.CloudEvent;
+
 import io.vertx.core.Future;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import io.vertx.kafka.client.producer.RecordMetadata;
 
 /**
- * This interface wraps a {@link KafkaProducer} together with the topic where the ingress should produce to.
+ * This interface wraps a {@link KafkaProducer} together with the topic where
+ * the ingress should produce to.
  */
 public interface IngressProducer {
-
   /**
    * Convenience method for {@link KafkaProducer#send(KafkaProducerRecord)}.
    *
    * @see KafkaProducer#send(KafkaProducerRecord)
    */
-  default Future<RecordMetadata> send(KafkaProducerRecord<String, CloudEvent> record) {
+  default Future<RecordMetadata> send(
+    KafkaProducerRecord<String, CloudEvent> record) {
     return getKafkaProducer().send(record);
   }
 
@@ -44,5 +46,4 @@ public interface IngressProducer {
    * @return the topic where the record should be sent to.
    */
   String getTopic();
-
 }

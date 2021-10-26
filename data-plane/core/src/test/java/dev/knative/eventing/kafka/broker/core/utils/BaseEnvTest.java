@@ -18,10 +18,10 @@ package dev.knative.eventing.kafka.broker.core.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.function.Function;
+
 import org.junit.jupiter.api.Test;
 
 public class BaseEnvTest {
-
   private static final Function<String, String> provider = s -> switch (s) {
     case "PRODUCER_CONFIG_FILE_PATH" -> "/tmp/config";
     case "DATA_PLANE_CONFIG_FILE_PATH" -> "/tmp/config-data";

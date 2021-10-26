@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.core.eventbus;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 
@@ -23,12 +24,13 @@ import java.util.function.Consumer;
 
 /**
  * This object publishes all consumed contracts to the event bus.
- * This class requires the codec {@link ContractMessageCodec} registered in the provided event bus.
+ * This class requires the codec {@link ContractMessageCodec} registered in the
+ * provided event bus.
  */
-public class ContractPublisher implements Consumer<DataPlaneContract.Contract>, AutoCloseable {
-
-  private final static DeliveryOptions DELIVERY_OPTIONS = new DeliveryOptions()
-    .setLocalOnly(true);
+public class ContractPublisher
+  implements Consumer<DataPlaneContract.Contract>, AutoCloseable {
+  private final static DeliveryOptions DELIVERY_OPTIONS =
+    new DeliveryOptions().setLocalOnly(true);
 
   private final EventBus eventBus;
   private final String address;

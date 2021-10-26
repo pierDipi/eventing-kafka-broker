@@ -15,22 +15,26 @@
  */
 package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
+
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class ResourcesReconcilerMessageHandler implements Handler<Message<Object>> {
-
-  private static final Logger logger = LoggerFactory.getLogger(ResourcesReconcilerMessageHandler.class);
+public class ResourcesReconcilerMessageHandler
+  implements Handler<Message<Object>> {
+  private static final Logger logger =
+    LoggerFactory.getLogger(ResourcesReconcilerMessageHandler.class);
 
   public final static String ADDRESS = "resourcesreconciler.core";
 
@@ -38,7 +42,8 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
   private final AtomicBoolean reconciling;
   private final AtomicReference<DataPlaneContract.Contract> last;
 
-  public ResourcesReconcilerMessageHandler(final ResourcesReconciler resourcesReconciler) {
+  public ResourcesReconcilerMessageHandler(
+    final ResourcesReconciler resourcesReconciler) {
     this.resourcesReconciler = resourcesReconciler;
     reconciling = new AtomicBoolean();
     last = new AtomicReference<>();
@@ -46,39 +51,39 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
 
   @Override
   public void handle(Message<Object> event) {
-    reconcileLast((DataPlaneContract.Contract) event.body());
+    reconcileLast((DataPlaneContract.Contract)event.body());
   }
 
   private void reconcileLast(final DataPlaneContract.Contract newContract) {
-
     if (newContract != null) {
       last.set(newContract);
 
-      logger.info("Set new contract {}", keyValue("contractGeneration", newContract.getGeneration()));
+      logger.info("Set new contract {}",
+                  keyValue("contractGeneration", newContract.getGeneration()));
     }
 
-    // Our reconciler is on the same verticle of the handler, therefore they use both the same thread.
-    // However, if the reconciler makes an async request or executes a blocking operation, a new contract message to
-    // reconcile might be scheduled to our verticle thread, that might generate inconsistencies.
+    // Our reconciler is on the same verticle of the handler, therefore they use
+    // both the same thread. However, if the reconciler makes an async request
+    // or executes a blocking operation, a new contract message to reconcile
+    // might be scheduled to our verticle thread, that might generate
+    // inconsistencies.
     if (reconciling.compareAndSet(false, true)) {
-
       final var contract = last.get();
 
-      logger.info("Reconciling contract {}", keyValue("contractGeneration", contract.getGeneration()));
+      logger.info("Reconciling contract {}",
+                  keyValue("contractGeneration", contract.getGeneration()));
 
       resourcesReconciler.reconcile(contract.getResourcesList())
-        .onSuccess(v -> logger.info(
-          "Reconciled contract generation {}",
-          keyValue("contractGeneration", contract.getGeneration()))
-        )
-        .onFailure(cause -> logger.error(
-          "Failed to reconcile contract generation {}",
-          keyValue("contractGeneration", contract.getGeneration()),
-          cause
-          )
-        )
+        .onSuccess(v
+                   -> logger.info(
+                     "Reconciled contract generation {}",
+                     keyValue("contractGeneration", contract.getGeneration())))
+        .onFailure(cause
+                   -> logger.error(
+                     "Failed to reconcile contract generation {}",
+                     keyValue("contractGeneration", contract.getGeneration()),
+                     cause))
         .onComplete(r -> {
-
           // We have reconciled the last known contract.
           reconciling.set(false);
 
@@ -91,7 +96,9 @@ public class ResourcesReconcilerMessageHandler implements Handler<Message<Object
     }
   }
 
-  public static MessageConsumer<Object> start(final Vertx vertx, final ResourcesReconciler reconciler) {
-    return vertx.eventBus().localConsumer(ADDRESS, new ResourcesReconcilerMessageHandler(reconciler));
+  public static MessageConsumer<Object> start(
+    final Vertx vertx, final ResourcesReconciler reconciler) {
+    return vertx.eventBus().localConsumer(
+      ADDRESS, new ResourcesReconcilerMessageHandler(reconciler));
   }
 }

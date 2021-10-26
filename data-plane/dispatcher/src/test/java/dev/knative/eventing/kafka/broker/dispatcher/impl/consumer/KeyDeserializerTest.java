@@ -15,21 +15,23 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
-import com.google.common.base.Charsets;
+import static dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer.KEY_TYPE;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+
 import org.apache.kafka.common.serialization.DoubleDeserializer;
 import org.apache.kafka.common.serialization.FloatDeserializer;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 
-import static dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer.KEY_TYPE;
-import static org.assertj.core.api.Assertions.assertThat;
+import com.google.common.base.Charsets;
+import org.junit.jupiter.api.Test;
 
 public class KeyDeserializerTest {
-
   @Test
   public void shouldDeserializeAsUTF8StringWhenNoKeyTypeSpecified() {
     final var deserializer = new KeyDeserializer();
@@ -37,7 +39,7 @@ public class KeyDeserializerTest {
     final var configs = new HashMap<String, String>();
     deserializer.configure(configs, true);
 
-    final var data = new byte[]{1, 2, 3};
+    final var data = new byte[] {1, 2, 3};
     final var got = deserializer.deserialize("t1", data);
 
     assertThat(got).isInstanceOf(String.class);
@@ -52,7 +54,7 @@ public class KeyDeserializerTest {
     configs.put(KEY_TYPE, DataPlaneContract.KeyType.UNRECOGNIZED);
     deserializer.configure(configs, true);
 
-    final var data = new byte[]{1, 2, 3};
+    final var data = new byte[] {1, 2, 3};
     final var got = deserializer.deserialize("t1", data);
 
     assertThat(got).isInstanceOf(String.class);
@@ -67,7 +69,7 @@ public class KeyDeserializerTest {
     configs.put(KEY_TYPE, DataPlaneContract.KeyType.String);
     deserializer.configure(configs, true);
 
-    final var data = new byte[]{1, 2, 3};
+    final var data = new byte[] {1, 2, 3};
     final var got = deserializer.deserialize("t1", data);
 
     assertThat(got).isInstanceOf(String.class);
@@ -82,7 +84,7 @@ public class KeyDeserializerTest {
     configs.put(KEY_TYPE, DataPlaneContract.KeyType.Double);
     deserializer.configure(configs, true);
 
-    final var data = new byte[]{1, 2, 3, 4, 5, 6, 7, 8};
+    final var data = new byte[] {1, 2, 3, 4, 5, 6, 7, 8};
     final var got = deserializer.deserialize("t1", data);
 
     assertThat(got).isInstanceOf(Double.class);
@@ -97,7 +99,7 @@ public class KeyDeserializerTest {
     configs.put(KEY_TYPE, DataPlaneContract.KeyType.Double);
     deserializer.configure(configs, true);
 
-    final var data = new byte[]{1, 2, 3, 4};
+    final var data = new byte[] {1, 2, 3, 4};
     final var got = deserializer.deserialize("t1", data);
 
     assertThat(got).isInstanceOf(Float.class);
@@ -112,13 +114,12 @@ public class KeyDeserializerTest {
     configs.put(KEY_TYPE, DataPlaneContract.KeyType.Double);
     deserializer.configure(configs, true);
 
-    final var data = new byte[]{1, 2, 3, 4, 5, 6, 7};
+    final var data = new byte[] {1, 2, 3, 4, 5, 6, 7};
     final var got = deserializer.deserialize("t1", data);
 
     assertThat(got).isInstanceOf(String.class);
     assertThat(got).isEqualTo(new StringDeserializer().deserialize("t1", data));
   }
-
 
   @Test
   public void shouldDeserializeInteger() {
@@ -128,11 +129,12 @@ public class KeyDeserializerTest {
     configs.put(KEY_TYPE, DataPlaneContract.KeyType.Integer);
     deserializer.configure(configs, true);
 
-    final var data = new byte[]{1, 2, 3, 4};
+    final var data = new byte[] {1, 2, 3, 4};
     final var got = deserializer.deserialize("t1", data);
 
     assertThat(got).isInstanceOf(Integer.class);
-    assertThat(got).isEqualTo(new IntegerDeserializer().deserialize("t1", data));
+    assertThat(got).isEqualTo(
+      new IntegerDeserializer().deserialize("t1", data));
   }
 
   @Test
@@ -143,13 +145,12 @@ public class KeyDeserializerTest {
     configs.put(KEY_TYPE, DataPlaneContract.KeyType.Integer);
     deserializer.configure(configs, true);
 
-    final var data = new byte[]{1, 2, 3};
+    final var data = new byte[] {1, 2, 3};
     final var got = deserializer.deserialize("t1", data);
 
     assertThat(got).isInstanceOf(String.class);
     assertThat(got).isEqualTo(new StringDeserializer().deserialize("t1", data));
   }
-
 
   @Test
   public void shouldDeserializeByteArray() {
@@ -159,7 +160,7 @@ public class KeyDeserializerTest {
     configs.put(KEY_TYPE, DataPlaneContract.KeyType.ByteArray);
     deserializer.configure(configs, true);
 
-    final var data = new byte[]{1, 2, 3, 4};
+    final var data = new byte[] {1, 2, 3, 4};
     final var got = deserializer.deserialize("t1", data);
 
     assertThat(got).isInstanceOf(byte[].class);

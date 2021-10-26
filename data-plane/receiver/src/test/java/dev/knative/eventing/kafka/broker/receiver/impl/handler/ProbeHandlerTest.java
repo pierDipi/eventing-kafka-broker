@@ -15,17 +15,17 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
+import static org.mockito.Mockito.mock;
+
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.junit5.VertxTestContext;
+
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.mock;
-
 public class ProbeHandlerTest extends PreHandlerTest {
-
   private static final String LIVENESS_PATH = "/healthz";
   private static final String READINESS_PATH = "/readyz";
   private static final int OK = HttpResponseStatus.OK.code();
@@ -42,12 +42,14 @@ public class ProbeHandlerTest extends PreHandlerTest {
 
   @Test
   public void notALivenessOrReadinessPath(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE, HttpMethod.GET, "/does-not-exists-42");
+    mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE,
+                                HttpMethod.GET, "/does-not-exists-42");
   }
 
   @Test
   public void notAGetRequest(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE, HttpMethod.POST, "/does-not-exists-42");
+    mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE,
+                                HttpMethod.POST, "/does-not-exists-42");
   }
 
   @Override

@@ -18,22 +18,26 @@ package dev.knative.eventing.kafka.broker.core.metrics;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
+
+import org.apache.kafka.clients.consumer.MockConsumer;
+import org.apache.kafka.clients.consumer.OffsetResetStrategy;
+import org.apache.kafka.clients.producer.MockProducer;
+
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
-import org.apache.kafka.clients.consumer.MockConsumer;
-import org.apache.kafka.clients.consumer.OffsetResetStrategy;
-import org.apache.kafka.clients.producer.MockProducer;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
 public class MetricsTest {
-
   static {
-    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+    BackendRegistries.setupBackend(
+      new MicrometerMetricsOptions().setRegistryName(
+        Metrics.METRICS_REGISTRY_NAME));
   }
 
   @Test
@@ -43,16 +47,15 @@ public class MetricsTest {
   }
 
   @Test
-  public void shouldRegisterAndCloseProducerMetricsThread()
-    throws Exception {
+  public void shouldRegisterAndCloseProducerMetricsThread() throws Exception {
     final var meterBinder = Metrics.register(new MockProducer<>());
     meterBinder.close();
   }
 
   @Test
-  public void shouldRegisterAndCloseConsumerMetricsThread()
-    throws Exception {
-    final var meterBinder = Metrics.register(new MockConsumer<>(OffsetResetStrategy.LATEST));
+  public void shouldRegisterAndCloseConsumerMetricsThread() throws Exception {
+    final var meterBinder =
+      Metrics.register(new MockConsumer<>(OffsetResetStrategy.LATEST));
     meterBinder.close();
   }
 }

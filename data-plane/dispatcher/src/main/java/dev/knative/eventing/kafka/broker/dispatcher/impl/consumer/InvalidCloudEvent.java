@@ -24,12 +24,12 @@ import java.time.OffsetDateTime;
 import java.util.Set;
 
 /**
- * This class wraps the value of a Kafka Message that doesn't follow the Kafka protocol binding for CloudEvents.
- * <p>
- * See {@link InvalidCloudEventInterceptor} and {@link CloudEventDeserializer} for more details.
+ * This class wraps the value of a Kafka Message that doesn't follow the Kafka
+ * protocol binding for CloudEvents. <p> See {@link
+ * InvalidCloudEventInterceptor} and {@link CloudEventDeserializer} for more
+ * details.
  */
 class InvalidCloudEvent implements CloudEvent {
-
   private final byte[] data;
 
   InvalidCloudEvent(byte[] data) {
@@ -86,7 +86,8 @@ class InvalidCloudEvent implements CloudEvent {
   }
 
   @Override
-  public Object getAttribute(String attributeName) throws IllegalArgumentException {
+  public Object getAttribute(String attributeName)
+    throws IllegalArgumentException {
     throw new UnsupportedOperationException();
   }
 

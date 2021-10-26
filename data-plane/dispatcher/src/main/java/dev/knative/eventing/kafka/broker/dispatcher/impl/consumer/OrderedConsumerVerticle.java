@@ -16,32 +16,39 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.core.OrderedAsyncExecutor;
+
 import io.cloudevents.CloudEvent;
+
 import io.vertx.core.Promise;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class OrderedConsumerVerticle extends BaseConsumerVerticle {
-
-  private static final Logger logger = LoggerFactory.getLogger(OrderedConsumerVerticle.class);
+  private static final Logger logger =
+    LoggerFactory.getLogger(OrderedConsumerVerticle.class);
   private static final Duration POLLING_TIMEOUT = Duration.ofMillis(100);
 
-  // poll wait ms = (POLL_WAIT_RECORD_FACTOR * pendingRecords) / (partitions - POLL_WAIT_PARTITION_FACTOR * Math.sqrt(partitions))
-  // Each record takes 10 ms to be processed
+  // poll wait ms = (POLL_WAIT_RECORD_FACTOR * pendingRecords) / (partitions -
+  // POLL_WAIT_PARTITION_FACTOR * Math.sqrt(partitions)) Each record takes 10 ms
+  // to be processed
   private static final double POLL_WAIT_RECORD_FACTOR = 10;
   // This is used to take in account how much the parallelism is effective
-  private static final double POLL_WAIT_PARTITION_FACTOR = 1 / (double) Runtime.getRuntime().availableProcessors();
+  private static final double POLL_WAIT_PARTITION_FACTOR =
+    1 / (double)Runtime.getRuntime().availableProcessors();
   private static final long MAX_POLL_WAIT = 10 * 1000;
   private static final int MIN_POLL_WAIT = 100;
 
-  private final Map<TopicPartition, OrderedAsyncExecutor> recordDispatcherExecutors;
+  private final Map<TopicPartition, OrderedAsyncExecutor>
+    recordDispatcherExecutors;
 
   private int pendingRecords;
   private boolean stopPolling;
@@ -76,7 +83,8 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     this.consumer.poll(POLLING_TIMEOUT)
       .onFailure(t -> {
         if (this.stopPolling) {
-          // The failure might have been caused by stopping the consumer, so we just ignore it
+          // The failure might have been caused by stopping the consumer, so we
+          // just ignore it
           return;
         }
         this.exceptionHandler(t);
@@ -89,7 +97,8 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   }
 
   void schedulePoll() {
-    // Check if we need to poll immediately, or wait a bit for the queues to free
+    // Check if we need to poll immediately, or wait a bit for the queues to
+    // free
     long pollWait = pollWaitMs();
 
     if (pollWait > MIN_POLL_WAIT) {
@@ -116,22 +125,25 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     for (int i = 0; i < records.size(); i++) {
       this.pendingRecords++;
       KafkaConsumerRecord<Object, CloudEvent> record = records.recordAt(i);
-      this.enqueueRecord(new TopicPartition(record.topic(), record.partition()), record);
+      this.enqueueRecord(new TopicPartition(record.topic(), record.partition()),
+                         record);
     }
   }
 
-  void enqueueRecord(TopicPartition topicPartition, KafkaConsumerRecord<Object, CloudEvent> record) {
-    this.recordDispatcherExecutors.computeIfAbsent(topicPartition, (tp) -> new OrderedAsyncExecutor())
-      .offer(() -> this.recordDispatcher.dispatch(record).onComplete(v -> this.pendingRecords--));
+  void enqueueRecord(TopicPartition topicPartition,
+                     KafkaConsumerRecord<Object, CloudEvent> record) {
+    this.recordDispatcherExecutors
+      .computeIfAbsent(topicPartition, (tp) -> new OrderedAsyncExecutor())
+      .offer(()
+               -> this.recordDispatcher.dispatch(record).onComplete(
+                 v -> this.pendingRecords--));
   }
 
   long pollWaitMs() {
     double partitions = this.recordDispatcherExecutors.size();
     long computed = Math.round(
-      (POLL_WAIT_RECORD_FACTOR * pendingRecords) /
-        (partitions - (POLL_WAIT_PARTITION_FACTOR * Math.sqrt(partitions)))
-    );
+      (POLL_WAIT_RECORD_FACTOR * pendingRecords)
+      / (partitions - (POLL_WAIT_PARTITION_FACTOR * Math.sqrt(partitions))));
     return Math.min(computed, MAX_POLL_WAIT);
   }
-
 }

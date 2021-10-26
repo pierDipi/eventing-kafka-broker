@@ -15,14 +15,16 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
+import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
+
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
 
 /**
  * Handler checking that the provided method is allowed.
@@ -30,8 +32,8 @@ import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
  * This class is stateless, hence thread safe and shareable among verticles.
  */
 public class MethodNotAllowedHandler implements Handler<HttpServerRequest> {
-
-  private static final Logger logger = LoggerFactory.getLogger(MethodNotAllowedHandler.class);
+  private static final Logger logger =
+    LoggerFactory.getLogger(MethodNotAllowedHandler.class);
 
   private final Handler<HttpServerRequest> next;
 
@@ -45,8 +47,7 @@ public class MethodNotAllowedHandler implements Handler<HttpServerRequest> {
       request.response().setStatusCode(METHOD_NOT_ALLOWED.code()).end();
 
       logger.warn("Only POST method is allowed. Method not allowed: {}",
-        keyValue("method", request.method())
-      );
+                  keyValue("method", request.method()));
       return;
     }
     this.next.handle(request);

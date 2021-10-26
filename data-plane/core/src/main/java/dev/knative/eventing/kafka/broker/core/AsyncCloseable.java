@@ -21,6 +21,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -29,7 +30,6 @@ import java.util.stream.Collectors;
  */
 @FunctionalInterface
 public interface AsyncCloseable extends Closeable {
-
   /**
    * Close this object.
    *
@@ -46,29 +46,33 @@ public interface AsyncCloseable extends Closeable {
    * Transform an {@link AsyncCloseable} into a blocking {@link AutoCloseable}
    *
    * @param closeable the closeable to convert
-   * @return an implementation of {@link AutoCloseable} that will block when invoked.
+   * @return an implementation of {@link AutoCloseable} that will block when
+   *   invoked.
    */
   static AutoCloseable toAutoCloseable(AsyncCloseable closeable) {
     return () -> closeable.close().toCompletionStage().toCompletableFuture();
   }
 
   /**
-   * Compose several {@link AsyncCloseable} into a single {@link AsyncCloseable}. One close failure will cause the whole close to fail.
+   * Compose several {@link AsyncCloseable} into a single {@link
+   * AsyncCloseable}. One close failure will cause the whole close to fail.
    *
    * @param closeables the closeables to compose
    * @return the composed closeables
    */
   static AsyncCloseable compose(AsyncCloseable... closeables) {
-    return () -> CompositeFuture.all(
-      Arrays.stream(closeables)
-        .map(AsyncCloseable::close)
-        .collect(Collectors.toList())
-    ).mapEmpty();
+    return ()
+             -> CompositeFuture
+                  .all(Arrays.stream(closeables)
+                         .map(AsyncCloseable::close)
+                         .collect(Collectors.toList()))
+                  .mapEmpty();
   }
 
   /**
-   * Wrap the provided blocking {@link AutoCloseable} into an {@link AsyncCloseable}.
-   * This is going to use the current context when the close is invoked.
+   * Wrap the provided blocking {@link AutoCloseable} into an {@link
+   * AsyncCloseable}. This is going to use the current context when the close is
+   * invoked.
    *
    * @param closeable the closeable to wrap
    * @return the wrapped closeable
@@ -98,5 +102,4 @@ public interface AsyncCloseable extends Closeable {
       });
     };
   }
-
 }

@@ -15,19 +15,19 @@
  */
 package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
+
 import io.vertx.core.Future;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public class ResourceReconcilerTestRunner {
-
   public static class ReconcileStep {
-
     private final Collection<DataPlaneContract.Resource> resources;
     private final ResourceReconcilerTestRunner runner;
 
@@ -89,7 +89,8 @@ public class ResourceReconcilerTestRunner {
   private IngressReconcilerListenerMock ingressReconcilerListener;
   private EgressReconcilerListenerMock egressReconcilerListener;
 
-  public ResourceReconcilerTestRunner reconcile(Collection<DataPlaneContract.Resource> resources) {
+  public ResourceReconcilerTestRunner reconcile(
+    Collection<DataPlaneContract.Resource> resources) {
     final var step = new ReconcileStep(resources, this);
     this.reconcileSteps.add(step);
     return this;
@@ -99,7 +100,8 @@ public class ResourceReconcilerTestRunner {
     return this.reconcileSteps.get(this.reconcileSteps.size() - 1);
   }
 
-  public ResourceReconcilerTestRunner enableIngressListener(final IngressReconcilerListenerMock mock) {
+  public ResourceReconcilerTestRunner enableIngressListener(
+    final IngressReconcilerListenerMock mock) {
     assertThat(this.egressReconcilerListener)
       .as("One of ingressListener or egressListener is expected, got both")
       .isNull();
@@ -111,7 +113,8 @@ public class ResourceReconcilerTestRunner {
     return enableIngressListener(new IngressReconcilerListenerMock());
   }
 
-  public ResourceReconcilerTestRunner enableEgressListener(final EgressReconcilerListenerMock mock) {
+  public ResourceReconcilerTestRunner enableEgressListener(
+    final EgressReconcilerListenerMock mock) {
     assertThat(this.ingressReconcilerListener)
       .as("One of ingressListener or egressListener is expected, got both")
       .isNull();
@@ -127,8 +130,7 @@ public class ResourceReconcilerTestRunner {
     final var ingressListener = this.ingressReconcilerListener;
     final var egressListener = this.egressReconcilerListener;
 
-    final var reconcilerBuilder = ResourcesReconciler
-      .builder();
+    final var reconcilerBuilder = ResourcesReconciler.builder();
 
     if (ingressListener != null) {
       reconcilerBuilder.watchIngress(ingressListener);
@@ -178,5 +180,4 @@ public class ResourceReconcilerTestRunner {
       }
     }
   }
-
 }

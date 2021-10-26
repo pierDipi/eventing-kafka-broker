@@ -16,6 +16,7 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.DoubleDeserializer;
 import org.apache.kafka.common.serialization.FloatDeserializer;
@@ -27,24 +28,25 @@ import java.util.Map;
 /**
  * Deserializer for the key of Kafka records.
  * <p>
- * It uses the configuration value associated with {@link KeyDeserializer.KEY_TYPE} to deserialize the key of a consumer record.
- * <p>
+ * It uses the configuration value associated with {@link
+ * KeyDeserializer.KEY_TYPE} to deserialize the key of a consumer record. <p>
  * Internally, it uses Kafka client provided deserializers for deserialization.
  * <p>
  * - When {@code KEY_TYPE = String} it uses {@link StringDeserializer}.
  * <p>
- * - When {@code KEY_TYPE = Integer} it uses {@link IntegerDeserializer} and falls back to {@link StringDeserializer}
- * if the {@code byte[]} is not 4 bytes long.
- * <p>
- * - When {@code KEY_TYPE = Double} it uses {@link FloatDeserializer} if the key is 4 bytes long,
- * {@link DoubleDeserializer} if the key is 8 bytes long and falls back to {@link StringDeserializer} in any other case.
- * <p>
+ * - When {@code KEY_TYPE = Integer} it uses {@link IntegerDeserializer} and
+ * falls back to {@link StringDeserializer} if the {@code byte[]} is not 4 bytes
+ * long. <p>
+ * - When {@code KEY_TYPE = Double} it uses {@link FloatDeserializer} if the key
+ * is 4 bytes long,
+ * {@link DoubleDeserializer} if the key is 8 bytes long and falls back to
+ * {@link StringDeserializer} in any other case. <p>
  * - When {@code KEY_TYPE = ByteArray} it just returns the key.
  * <p>
- * - When {@code KEY_TYPE = UNRECOGNIZED or unspecified} it uses {@link StringDeserializer}.
+ * - When {@code KEY_TYPE = UNRECOGNIZED or unspecified} it uses {@link
+ * StringDeserializer}.
  */
 public class KeyDeserializer implements Deserializer<Object> {
-
   public static final String KEY_TYPE = "cloudevent.key.deserializer.type";
 
   private DataPlaneContract.KeyType keyType;
@@ -59,7 +61,7 @@ public class KeyDeserializer implements Deserializer<Object> {
     if (isKey && configs.containsKey(KEY_TYPE)) {
       final var keyType = configs.get(KEY_TYPE);
       if (keyType != null) {
-        this.keyType = (DataPlaneContract.KeyType) keyType;
+        this.keyType = (DataPlaneContract.KeyType)keyType;
       }
     }
 

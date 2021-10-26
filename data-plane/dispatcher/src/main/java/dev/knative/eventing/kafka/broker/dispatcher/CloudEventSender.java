@@ -16,16 +16,18 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
+
 import io.cloudevents.CloudEvent;
+
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 
 /**
- * This interface describes a component that sends {@link CloudEvent} to some http service and then returns back a response.
+ * This interface describes a component that sends {@link CloudEvent} to some
+ * http service and then returns back a response.
  */
 public interface CloudEventSender extends AsyncCloseable {
-
   /**
    * Send the given event. (the event passed the filter)
    *
@@ -35,10 +37,13 @@ public interface CloudEventSender extends AsyncCloseable {
   Future<HttpResponse<Buffer>> send(CloudEvent event);
 
   /**
-   * Create a noop {@link CloudEventSender} that fails every send with the specified message.
+   * Create a noop {@link CloudEventSender} that fails every send with the
+   * specified message.
    *
    * @param failureMessage future failure message when invoking send.
-   * @return An implementation of this interface that always fails the send invocations with the specified message and always succeeds the close invocations.
+   * @return An implementation of this interface that always fails the send
+   *   invocations with the specified message and always succeeds the close
+   *   invocations.
    */
   static CloudEventSender noop(String failureMessage) {
     return new CloudEventSender() {

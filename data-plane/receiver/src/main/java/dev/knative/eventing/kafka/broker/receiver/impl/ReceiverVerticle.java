@@ -15,12 +15,17 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
+import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Handler;
@@ -30,32 +35,36 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.function.Function;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
-
 /**
  * This verticle is responsible for implementing the logic of the receiver.
  * <p>
- * The receiver is the component responsible for mapping incoming {@link io.cloudevents.CloudEvent} requests to specific Kafka topics.
- * In order to do so, this component:
- * <ul>
- *   <li>Starts an {@link HttpServer} listening for incoming events</li>
- *   <li>Starts a {@link ResourcesReconciler}, listen on the event bus for reconciliation events and keeps track of the {@link dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress} objects and their {@code path => (topic, producer)} mapping</li>
- *   <li>Implements a request handler that invokes a series of {@code preHandlers} (which are assumed to complete synchronously) and then a final {@link IngressRequestHandler} to publish the record to Kafka</li>
+ * The receiver is the component responsible for mapping incoming {@link
+ * io.cloudevents.CloudEvent} requests to specific Kafka topics. In order to do
+ * so, this component: <ul> <li>Starts an {@link HttpServer} listening for
+ * incoming events</li> <li>Starts a {@link ResourcesReconciler}, listen on the
+ * event bus for reconciliation events and keeps track of the {@link
+ * dev.knative.eventing.kafka.broker.contract.DataPlaneContract.Ingress} objects
+ * and their {@code path => (topic, producer)} mapping</li> <li>Implements a
+ * request handler that invokes a series of {@code preHandlers} (which are
+ * assumed to complete synchronously) and then a final {@link
+ * IngressRequestHandler} to publish the record to Kafka</li>
  * </ul>
  */
-public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpServerRequest> {
-
-  private static final Logger logger = LoggerFactory.getLogger(ReceiverVerticle.class);
+public class ReceiverVerticle
+  extends AbstractVerticle implements Handler<HttpServerRequest> {
+  private static final Logger logger =
+    LoggerFactory.getLogger(ReceiverVerticle.class);
 
   private final HttpServerOptions httpServerOptions;
-  private final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory;
+  private final Function<Vertx, IngressProducerReconcilableStore>
+    ingressProducerStoreFactory;
   private final IngressRequestHandler ingressRequestHandler;
   private final ReceiverEnv env;
 
@@ -63,36 +72,34 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
   private MessageConsumer<Object> messageConsumer;
   private IngressProducerReconcilableStore ingressProducerStore;
 
-  public ReceiverVerticle(final ReceiverEnv env,
-                          final HttpServerOptions httpServerOptions,
-                          final Function<Vertx, IngressProducerReconcilableStore> ingressProducerStoreFactory,
-                          final IngressRequestHandler ingressRequestHandler) {
+  public ReceiverVerticle(
+    final ReceiverEnv env, final HttpServerOptions httpServerOptions,
+    final Function<Vertx, IngressProducerReconcilableStore>
+      ingressProducerStoreFactory,
+    final IngressRequestHandler ingressRequestHandler) {
     Objects.requireNonNull(env);
     Objects.requireNonNull(ingressProducerStoreFactory);
     Objects.requireNonNull(ingressRequestHandler);
 
     this.env = env;
-    this.httpServerOptions = httpServerOptions != null ? httpServerOptions : new HttpServerOptions();
+    this.httpServerOptions =
+      httpServerOptions != null ? httpServerOptions : new HttpServerOptions();
     this.ingressProducerStoreFactory = ingressProducerStoreFactory;
     this.ingressRequestHandler = ingressRequestHandler;
   }
 
-
   @Override
   public void start(final Promise<Void> startPromise) {
     this.ingressProducerStore = this.ingressProducerStoreFactory.apply(vertx);
-    this.messageConsumer = ResourcesReconciler
-      .builder()
-      .watchIngress(this.ingressProducerStore)
-      .buildAndListen(vertx);
+    this.messageConsumer = ResourcesReconciler.builder()
+                             .watchIngress(this.ingressProducerStore)
+                             .buildAndListen(vertx);
 
     this.server = vertx.createHttpServer(httpServerOptions);
 
-    final var handler = new ProbeHandler(
-      env.getLivenessProbePath(),
-      env.getReadinessProbePath(),
-      new MethodNotAllowedHandler(this)
-    );
+    final var handler =
+      new ProbeHandler(env.getLivenessProbePath(), env.getReadinessProbePath(),
+                       new MethodNotAllowedHandler(this));
 
     this.server.requestHandler(handler)
       .exceptionHandler(startPromise::tryFail)
@@ -103,25 +110,20 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
   @Override
   public void stop(Promise<Void> stopPromise) {
-    CompositeFuture.all(
-      server.close().mapEmpty(),
-      messageConsumer.unregister()
-    )
+    CompositeFuture.all(server.close().mapEmpty(), messageConsumer.unregister())
       .<Void>mapEmpty()
       .onComplete(stopPromise);
   }
 
   @Override
   public void handle(HttpServerRequest request) {
-
     // Look up for the ingress producer
-    IngressProducer producer = this.ingressProducerStore.resolve(request.path());
+    IngressProducer producer =
+      this.ingressProducerStore.resolve(request.path());
     if (producer == null) {
       request.response().setStatusCode(NOT_FOUND.code()).end();
 
-      logger.warn("Resource not found {}",
-        keyValue("path", request.path())
-      );
+      logger.warn("Resource not found {}", keyValue("path", request.path()));
       return;
     }
 

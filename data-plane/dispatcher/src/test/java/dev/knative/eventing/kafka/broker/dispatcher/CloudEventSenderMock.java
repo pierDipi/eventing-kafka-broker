@@ -16,14 +16,15 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import io.cloudevents.CloudEvent;
+
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
+
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class CloudEventSenderMock implements CloudEventSender {
-
   private final Supplier<Future<Void>> onClose;
   private final Function<CloudEvent, Future<HttpResponse<Buffer>>> onSend;
 

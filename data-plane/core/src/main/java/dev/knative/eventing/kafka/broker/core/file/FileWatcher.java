@@ -15,9 +15,18 @@
  */
 package dev.knative.eventing.kafka.broker.core.file;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.util.JsonFormat;
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -28,26 +37,21 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Objects;
 import java.util.function.Consumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
-import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
 
 /**
  * This class is responsible for watching a given file and reports update.
  * <p>
- * Using {@link #start()}, this class will create a background thread running the file watcher.
- * You can interrupt such thread with {@link #close()}
- * <p>
- * This class is thread safe, and it cannot start more than one watch at the time.
+ * Using {@link #start()}, this class will create a background thread running
+ * the file watcher. You can interrupt such thread with {@link #close()} <p>
+ * This class is thread safe, and it cannot start more than one watch at the
+ * time.
  */
 public class FileWatcher implements AutoCloseable {
-
-  private static final Logger logger = LoggerFactory.getLogger(FileWatcher.class);
+  private static final Logger logger =
+    LoggerFactory.getLogger(FileWatcher.class);
 
   private final File toWatch;
   private final Consumer<DataPlaneContract.Contract> contractConsumer;
@@ -62,7 +66,8 @@ public class FileWatcher implements AutoCloseable {
    * @param contractConsumer updates receiver.
    * @param file             file to watch
    */
-  public FileWatcher(File file, Consumer<DataPlaneContract.Contract> contractConsumer) {
+  public FileWatcher(File file,
+                     Consumer<DataPlaneContract.Contract> contractConsumer) {
     Objects.requireNonNull(file, "provide file");
     Objects.requireNonNull(contractConsumer, "provide consumer");
 
@@ -73,7 +78,8 @@ public class FileWatcher implements AutoCloseable {
 
   /**
    * Start the watcher thread.
-   * This is going to create a new deamon thread, which can be stopped using {@link #close()}.
+   * This is going to create a new deamon thread, which can be stopped using
+   * {@link #close()}.
    *
    * @throws IOException           if an error happened while starting to watch
    * @throws IllegalStateException if the watcher is already running
@@ -81,12 +87,14 @@ public class FileWatcher implements AutoCloseable {
   public void start() throws IOException {
     synchronized (this) {
       if (this.watcherThread != null) {
-        throw new IllegalStateException("Watcher thread is already up and running");
+        throw new IllegalStateException(
+          "Watcher thread is already up and running");
       }
 
       // Start watching
       this.watcher = FileSystems.getDefault().newWatchService();
-      toWatch.getParentFile().toPath().register(this.watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+      toWatch.getParentFile().toPath().register(this.watcher, ENTRY_CREATE,
+                                                ENTRY_DELETE, ENTRY_MODIFY);
 
       // Start the watcher thread
       this.watcherThread = new Thread(null, this::run, "contract-file-watcher");
@@ -107,17 +115,19 @@ public class FileWatcher implements AutoCloseable {
   private void run() {
     try {
       // register the given watch service.
-      // Note: this watch a directory and not the single file we're interested in, so that's the
-      // reason in #watch() we filter watch service events based on the updated file.
-      this.toWatch.getParentFile().toPath().register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+      // Note: this watch a directory and not the single file we're interested
+      // in, so that's the reason in #watch() we filter watch service events
+      // based on the updated file.
+      this.toWatch.getParentFile().toPath().register(
+        watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
     } catch (IOException e) {
       logger.error("Error while starting watching the file", e);
       return;
     }
     logger.info("Started watching {}", toWatch);
 
-    // If the container restarts, the mounted file never gets reconciled, so update as soon as we
-    // start watching
+    // If the container restarts, the mounted file never gets reconciled, so
+    // update as soon as we start watching
     update();
 
     while (!Thread.interrupted()) {
@@ -129,19 +139,19 @@ public class FileWatcher implements AutoCloseable {
         key = watcher.take();
         logger.debug("Contract updates");
       } catch (InterruptedException e) {
-        break; // Looks good, this means Thread.interrupt was invoked
+        break;  // Looks good, this means Thread.interrupt was invoked
       }
 
-      // this should be rare but it can actually happen so check watch key validity
+      // this should be rare but it can actually happen so check watch key
+      // validity
       if (!key.isValid()) {
         logger.warn("Invalid key");
         continue;
       }
 
-      // loop through all watch service events and determine if an update we're interested in
-      // has occurred.
+      // loop through all watch service events and determine if an update we're
+      // interested in has occurred.
       for (final var event : key.pollEvents()) {
-
         final var kind = event.kind();
 
         // check if we're interested in the updated file
@@ -149,7 +159,6 @@ public class FileWatcher implements AutoCloseable {
           shouldUpdate = true;
           break;
         }
-
       }
 
       if (shouldUpdate) {
@@ -172,21 +181,19 @@ public class FileWatcher implements AutoCloseable {
     if (Thread.interrupted()) {
       return;
     }
-    try (
-      final var fileReader = new FileReader(toWatch);
-      final var bufferedReader = new BufferedReader(fileReader)) {
+    try (final var fileReader = new FileReader(toWatch);
+         final var bufferedReader = new BufferedReader(fileReader)) {
       final var contract = parseFromJson(bufferedReader);
       if (contract == null) {
         return;
       }
-      // The check, which is based only on the generation number, works because the control plane doesn't update the
-      // file if nothing changes.
+      // The check, which is based only on the generation number, works because
+      // the control plane doesn't update the file if nothing changes.
       final var previousLastContract = this.lastContract;
       this.lastContract = contract.getGeneration();
       if (contract.getGeneration() == previousLastContract) {
         logger.debug("Contract unchanged {}",
-          keyValue("generation", contract.getGeneration())
-        );
+                     keyValue("generation", contract.getGeneration()));
         return;
       }
       contractConsumer.accept(contract);
@@ -195,7 +202,8 @@ public class FileWatcher implements AutoCloseable {
     }
   }
 
-  private DataPlaneContract.Contract parseFromJson(final Reader content) throws IOException {
+  private DataPlaneContract.Contract parseFromJson(final Reader content)
+    throws IOException {
     try {
       final var contract = DataPlaneContract.Contract.newBuilder();
       JsonFormat.parser().merge(content, contract);

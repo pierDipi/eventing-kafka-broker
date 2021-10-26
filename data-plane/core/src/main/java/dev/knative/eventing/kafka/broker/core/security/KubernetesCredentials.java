@@ -15,18 +15,20 @@
  */
 package dev.knative.eventing.kafka.broker.core.security;
 
-import io.fabric8.kubernetes.api.model.Secret;
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 import org.apache.kafka.common.security.auth.SecurityProtocol;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Base64;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import io.fabric8.kubernetes.api.model.Secret;
 
 class KubernetesCredentials implements Credentials {
-
-  private final static Logger logger = LoggerFactory.getLogger(KubernetesCredentials.class);
+  private final static Logger logger =
+    LoggerFactory.getLogger(KubernetesCredentials.class);
 
   static final String CA_CERTIFICATE_KEY = "ca.crt";
 
@@ -120,7 +122,6 @@ class KubernetesCredentials implements Credentials {
     return userKey;
   }
 
-
   @Override
   public SecurityProtocol securityProtocol() {
     if (secret == null || secret.getData() == null) {
@@ -133,7 +134,8 @@ class KubernetesCredentials implements Credentials {
       }
       final var protocol = new String(Base64.getDecoder().decode(protocolStr));
       if (!SecurityProtocol.names().contains(protocol)) {
-        logger.debug("Security protocol {}", keyValue(SECURITY_PROTOCOL, protocol));
+        logger.debug("Security protocol {}",
+                     keyValue(SECURITY_PROTOCOL, protocol));
         return null;
       }
       this.securityProtocol = SecurityProtocol.forName(protocol);
@@ -151,7 +153,8 @@ class KubernetesCredentials implements Credentials {
       if (SASLMechanism == null) {
         return null;
       }
-      this.SASLMechanism = switch (new String(Base64.getDecoder().decode(SASLMechanism))) {
+      this.SASLMechanism =
+        switch (new String(Base64.getDecoder().decode(SASLMechanism))) {
         case "PLAIN"         -> "PLAIN";
         case "SCRAM-SHA-256" -> "SCRAM-SHA-256";
         case "SCRAM-SHA-512" -> "SCRAM-SHA-512";

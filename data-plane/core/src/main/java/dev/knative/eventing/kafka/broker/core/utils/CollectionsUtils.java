@@ -20,12 +20,10 @@ import java.util.Objects;
 import java.util.Set;
 
 public class CollectionsUtils {
-
   private CollectionsUtils() {
   }
 
   public static class DiffResult<T> {
-
     private final Set<T> added;
     private final Set<T> intersection;
     private final Set<T> removed;
@@ -50,11 +48,9 @@ public class CollectionsUtils {
 
     @Override
     public String toString() {
-      return "DiffResult{" +
-        "added=" + added +
-        ", intersection=" + intersection +
-        ", removed=" + removed +
-        '}';
+      return "DiffResult{"
+        + "added=" + added + ", intersection=" + intersection
+        + ", removed=" + removed + '}';
     }
   }
 
@@ -73,5 +69,4 @@ public class CollectionsUtils {
 
     return new DiffResult<>(added, intersection, removed);
   }
-
 }

@@ -21,7 +21,5 @@ import io.vertx.core.http.HttpServerRequest;
  * This class handles incoming ingress requests.
  */
 public interface IngressRequestHandler {
-
   void handle(HttpServerRequest request, IngressProducer producer);
-
 }

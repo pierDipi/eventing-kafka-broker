@@ -16,17 +16,17 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
 import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
+
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 
 /**
- * {@link NoopResponseHandler} is a response handler that doesn't do anything with a given response.
- * <p>
- * KafkaSource should not be allowed to read and requeue responses.
+ * {@link NoopResponseHandler} is a response handler that doesn't do anything
+ * with a given response. <p> KafkaSource should not be allowed to read and
+ * requeue responses.
  */
 public class NoopResponseHandler implements ResponseHandler {
-
   @Override
   public Future<Void> handle(final HttpResponse<Buffer> response) {
     return Future.succeededFuture();

@@ -23,7 +23,6 @@ import java.util.Objects;
  * @param <T> the type of the value to hold
  */
 public class ReferenceCounter<T> {
-
   private final T value;
   private int refs;
 
@@ -48,7 +47,8 @@ public class ReferenceCounter<T> {
   }
 
   /**
-   * @return true if the count is 0, hence nobody is referring anymore to this value
+   * @return true if the count is 0, hence nobody is referring anymore to this
+   *   value
    */
   public boolean decrementAndCheck() {
     this.refs--;

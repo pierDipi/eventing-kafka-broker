@@ -16,14 +16,15 @@
 package dev.knative.eventing.kafka.broker.dispatcher;
 
 import io.cloudevents.CloudEvent;
+
 import java.util.function.Predicate;
 
 /**
- * This interface provides an abstraction for filtering {@link CloudEvent} instances.
+ * This interface provides an abstraction for filtering {@link CloudEvent}
+ * instances.
  */
 @FunctionalInterface
 public interface Filter extends Predicate<CloudEvent> {
-
   /**
    * @return noop implementation that always returns true
    */

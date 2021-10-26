@@ -15,6 +15,8 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.main;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract.EgressConfig;
 import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
@@ -31,7 +33,6 @@ import dev.knative.eventing.kafka.broker.dispatcher.ResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.KafkaResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.NoopResponseHandler;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
-import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.BaseConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.KeyDeserializer;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedConsumerVerticle;
@@ -39,9 +40,13 @@ import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.OrderedOffsetM
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedConsumerVerticle;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.consumer.UnorderedOffsetManager;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.AttributesFilter;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.http.WebClientCloudEventSender;
+
 import io.cloudevents.CloudEvent;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
+
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AbstractVerticle;
@@ -55,6 +60,10 @@ import io.vertx.kafka.client.common.KafkaClientOptions;
 import io.vertx.kafka.client.common.tracing.ConsumerTracer;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.producer.KafkaProducer;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,18 +76,16 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 
 public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
+  private static final Logger logger =
+    LoggerFactory.getLogger(ConsumerVerticleFactoryImpl.class);
 
-  private static final Logger logger = LoggerFactory.getLogger(ConsumerVerticleFactoryImpl.class);
-
-  private final static CloudEventSender NO_DEAD_LETTER_SINK_SENDER = CloudEventSender.noop("No dead letter sink set");
+  private final static CloudEventSender NO_DEAD_LETTER_SINK_SENDER =
+    CloudEventSender.noop("No dead letter sink set");
 
   private final Map<String, Object> consumerConfigs;
   private final WebClientOptions webClientOptions;
@@ -95,159 +102,179 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
    * @param authProvider     auth provider.
    * @param metricsRegistry  meter registry to use to create metricsRegistry.
    */
-  public ConsumerVerticleFactoryImpl(
-    final Properties consumerConfigs,
-    final WebClientOptions webClientOptions,
-    final Properties producerConfigs,
-    final AuthProvider authProvider,
-    final MeterRegistry metricsRegistry) {
-
+  public ConsumerVerticleFactoryImpl(final Properties consumerConfigs,
+                                     final WebClientOptions webClientOptions,
+                                     final Properties producerConfigs,
+                                     final AuthProvider authProvider,
+                                     final MeterRegistry metricsRegistry) {
     Objects.requireNonNull(consumerConfigs, "provide consumerConfigs");
     Objects.requireNonNull(webClientOptions, "provide webClientOptions");
     Objects.requireNonNull(producerConfigs, "provide producerConfigs");
     Objects.requireNonNull(metricsRegistry, "provide metricsRegistry");
 
-    this.consumerConfigs = consumerConfigs.entrySet()
-      .stream()
-      .map(e -> new SimpleImmutableEntry<>(e.getKey().toString(), e.getValue()))
-      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-    this.producerConfigs = producerConfigs.entrySet()
-      .stream()
-      .map(e -> new SimpleImmutableEntry<>(e.getKey().toString(), e.getValue().toString()))
-      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    this.consumerConfigs =
+      consumerConfigs.entrySet()
+        .stream()
+        .map(
+          e -> new SimpleImmutableEntry<>(e.getKey().toString(), e.getValue()))
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    this.producerConfigs =
+      producerConfigs.entrySet()
+        .stream()
+        .map(e
+             -> new SimpleImmutableEntry<>(e.getKey().toString(),
+                                           e.getValue().toString()))
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     this.webClientOptions = webClientOptions;
     this.authProvider = authProvider;
-    this.eventsSentCounter = metricsRegistry.counter(Metrics.HTTP_EVENTS_SENT_COUNT);
+    this.eventsSentCounter =
+      metricsRegistry.counter(Metrics.HTTP_EVENTS_SENT_COUNT);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public AbstractVerticle get(final DataPlaneContract.Resource resource, final DataPlaneContract.Egress egress) {
+  public AbstractVerticle get(final DataPlaneContract.Resource resource,
+                              final DataPlaneContract.Egress egress) {
     Objects.requireNonNull(resource, "provide resource");
     Objects.requireNonNull(egress, "provide egress");
 
-    // Consumer and producer configs are shared objects and they act as a prototype for each instance.
+    // Consumer and producer configs are shared objects and they act as a
+    // prototype for each instance.
     final var consumerConfigs = new HashMap<>(this.consumerConfigs);
-    consumerConfigs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
-    consumerConfigs.put(ConsumerConfig.GROUP_ID_CONFIG, egress.getConsumerGroup());
+    consumerConfigs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
+                        resource.getBootstrapServers());
+    consumerConfigs.put(ConsumerConfig.GROUP_ID_CONFIG,
+                        egress.getConsumerGroup());
     consumerConfigs.put(KeyDeserializer.KEY_TYPE, egress.getKeyType());
 
     final var producerConfigs = new HashMap<>(this.producerConfigs);
-    producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, resource.getBootstrapServers());
+    producerConfigs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+                        resource.getBootstrapServers());
 
-    final DeliveryOrder deliveryOrder = DeliveryOrder.fromContract(egress.getDeliveryOrder());
+    final DeliveryOrder deliveryOrder =
+      DeliveryOrder.fromContract(egress.getDeliveryOrder());
 
-    final BaseConsumerVerticle.Initializer initializer = (vertx, consumerVerticle) ->
-      (resource.hasAuthSecret() ?
-        authProvider.getCredentials(resource.getAuthSecret().getNamespace(), resource.getAuthSecret().getName()) :
-        Future.succeededFuture(new PlaintextCredentials())
-      ).onSuccess(credentials -> {
-        KafkaClientsAuth.attachCredentials(consumerConfigs, credentials);
-        KafkaClientsAuth.attachCredentials(producerConfigs, credentials);
+    final BaseConsumerVerticle.Initializer initializer =
+      (vertx, consumerVerticle)
+      -> (resource.hasAuthSecret()
+            ? authProvider.getCredentials(
+              resource.getAuthSecret().getNamespace(),
+              resource.getAuthSecret().getName())
+            : Future.succeededFuture(new PlaintextCredentials()))
+           .onSuccess(credentials -> {
+             KafkaClientsAuth.attachCredentials(consumerConfigs, credentials);
+             KafkaClientsAuth.attachCredentials(producerConfigs, credentials);
 
-        final KafkaConsumer<Object, CloudEvent> consumer = createConsumer(vertx, consumerConfigs);
-        AutoCloseable metricsCloser = Metrics.register(consumer.unwrap());
+             final KafkaConsumer<Object, CloudEvent> consumer =
+               createConsumer(vertx, consumerConfigs);
+             AutoCloseable metricsCloser = Metrics.register(consumer.unwrap());
 
-        final var egressConfig =
-          egress.hasEgressConfig() ?
-            egress.getEgressConfig() :
-            resource.getEgressConfig();
+             final var egressConfig = egress.hasEgressConfig()
+                                        ? egress.getEgressConfig()
+                                        : resource.getEgressConfig();
 
-        final var egressSubscriberSender = createConsumerRecordSender(
-          vertx,
-          egress.getDestination(),
-          egressConfig
-        );
+             final var egressSubscriberSender = createConsumerRecordSender(
+               vertx, egress.getDestination(), egressConfig);
 
-        final var egressDeadLetterSender = hasDeadLetterSink(egressConfig)
-          ? createConsumerRecordSender(vertx, egressConfig.getDeadLetter(), egressConfig)
-          : NO_DEAD_LETTER_SINK_SENDER;
+             final var egressDeadLetterSender =
+               hasDeadLetterSink(egressConfig) ? createConsumerRecordSender(
+                 vertx, egressConfig.getDeadLetter(), egressConfig)
+                                               : NO_DEAD_LETTER_SINK_SENDER;
 
-        final var filter = egress.hasFilter() ?
-          new AttributesFilter(egress.getFilter().getAttributesMap()) :
-          Filter.noop();
+             final var filter =
+               egress.hasFilter()
+                 ? new AttributesFilter(egress.getFilter().getAttributesMap())
+                 : Filter.noop();
 
-        final var responseHandler = getNoopResponseHandlerOrDefault(egress, () -> getKafkaResponseHandler(vertx, producerConfigs, resource));
+             final var responseHandler = getNoopResponseHandlerOrDefault(
+               egress,
+               () -> getKafkaResponseHandler(vertx, producerConfigs, resource));
 
-        final RecordDispatcherImpl recordDispatcher = new RecordDispatcherImpl(
-          filter,
-          egressSubscriberSender,
-          egressDeadLetterSender,
-          responseHandler,
-          getOffsetManager(deliveryOrder, consumer, eventsSentCounter::increment),
-          ConsumerTracer.create(
-            ((VertxInternal) vertx).tracer(),
-            new KafkaClientOptions()
-              .setConfig(consumerConfigs)
-              // Make sure the policy is propagate for the manually instantiated consumer tracer
-              .setTracingPolicy(TracingPolicy.PROPAGATE)
-          )
-        );
+             final RecordDispatcherImpl recordDispatcher =
+               new RecordDispatcherImpl(
+                 filter, egressSubscriberSender, egressDeadLetterSender,
+                 responseHandler,
+                 getOffsetManager(deliveryOrder, consumer,
+                                  eventsSentCounter::increment),
+                 ConsumerTracer.create(
+                   ((VertxInternal)vertx).tracer(),
+                   new KafkaClientOptions()
+                     .setConfig(consumerConfigs)
+                     // Make sure the policy is propagate for the manually
+                     // instantiated consumer tracer
+                     .setTracingPolicy(TracingPolicy.PROPAGATE)));
 
-        // Set all the built objects in the consumer verticle
-        consumerVerticle.setRecordDispatcher(recordDispatcher);
-        consumerVerticle.setConsumer(consumer);
-        consumerVerticle.setCloser(AsyncCloseable.wrapAutoCloseable(metricsCloser));
-      })
-        .mapEmpty();
+             // Set all the built objects in the consumer verticle
+             consumerVerticle.setRecordDispatcher(recordDispatcher);
+             consumerVerticle.setConsumer(consumer);
+             consumerVerticle.setCloser(
+               AsyncCloseable.wrapAutoCloseable(metricsCloser));
+           })
+           .mapEmpty();
 
-    return getConsumerVerticle(deliveryOrder, initializer, new HashSet<>(resource.getTopicsList()));
+    return getConsumerVerticle(deliveryOrder, initializer,
+                               new HashSet<>(resource.getTopicsList()));
   }
 
-  static ResponseHandler getNoopResponseHandlerOrDefault(final DataPlaneContract.Egress egress,
-                                                         final Supplier<ResponseHandler> defaultSupplier) {
+  static ResponseHandler getNoopResponseHandlerOrDefault(
+    final DataPlaneContract.Egress egress,
+    final Supplier<ResponseHandler> defaultSupplier) {
     if (egress.hasDiscardReply()) {
       return new NoopResponseHandler();
     }
     return defaultSupplier.get();
   }
 
-  private KafkaResponseHandler getKafkaResponseHandler(final Vertx vertx,
-                                                       final Map<String, Object> producerConfigs,
-                                                       final DataPlaneContract.Resource resource) {
-    final KafkaProducer<String, CloudEvent> producer = createProducer(vertx, producerConfigs);
+  private KafkaResponseHandler getKafkaResponseHandler(
+    final Vertx vertx, final Map<String, Object> producerConfigs,
+    final DataPlaneContract.Resource resource) {
+    final KafkaProducer<String, CloudEvent> producer =
+      createProducer(vertx, producerConfigs);
     return new KafkaResponseHandler(producer, resource.getTopics(0));
   }
 
-  protected KafkaProducer<String, CloudEvent> createProducer(final Vertx vertx,
-                                                             final Map<String, Object> producerConfigs) {
+  protected KafkaProducer<String, CloudEvent> createProducer(
+    final Vertx vertx, final Map<String, Object> producerConfigs) {
     Properties producerProperties = new Properties();
     producerProperties.putAll(producerConfigs);
     return KafkaProducer.create(vertx, producerProperties);
   }
 
-  protected KafkaConsumer<Object, CloudEvent> createConsumer(final Vertx vertx,
-                                                             final Map<String, Object> consumerConfigs) {
+  protected KafkaConsumer<Object, CloudEvent> createConsumer(
+    final Vertx vertx, final Map<String, Object> consumerConfigs) {
     return KafkaConsumer.create(
       vertx,
       new KafkaClientOptions()
         .setConfig(consumerConfigs)
-        // Disable tracing provided by vertx-kafka-client, because it doesn't work well with our dispatch logic.
-        // RecordDispatcher, when receiving a new record, takes care of adding the proper receive record span.
-        .setTracingPolicy(TracingPolicy.IGNORE)
-    );
+        // Disable tracing provided by vertx-kafka-client, because it doesn't
+        // work well with our dispatch logic. RecordDispatcher, when receiving a
+        // new record, takes care of adding the proper receive record span.
+        .setTracingPolicy(TracingPolicy.IGNORE));
   }
 
   private CloudEventSender createConsumerRecordSender(
-    final Vertx vertx,
-    final String target,
-    final EgressConfig egress) {
-
-    final var circuitBreaker = CircuitBreaker
-      .create(target, vertx, createCircuitBreakerOptions(egress))
-      .retryPolicy(computeRetryPolicy(egress))
-      .openHandler(r -> logger.info("Circuit breaker opened {}", keyValue("target", target)))
-      .halfOpenHandler(r -> logger.info("Circuit breaker half-opened {}", keyValue("target", target)))
-      .closeHandler(r -> logger.info("Circuit breaker closed {}", keyValue("target", target)));
+    final Vertx vertx, final String target, final EgressConfig egress) {
+    final var circuitBreaker =
+      CircuitBreaker.create(target, vertx, createCircuitBreakerOptions(egress))
+        .retryPolicy(computeRetryPolicy(egress))
+        .openHandler(r
+                     -> logger.info("Circuit breaker opened {}",
+                                    keyValue("target", target)))
+        .halfOpenHandler(r
+                         -> logger.info("Circuit breaker half-opened {}",
+                                        keyValue("target", target)))
+        .closeHandler(r
+                      -> logger.info("Circuit breaker closed {}",
+                                     keyValue("target", target)));
 
     return new WebClientCloudEventSender(
-      WebClient.create(vertx, this.webClientOptions), circuitBreaker, target
-    );
+      WebClient.create(vertx, this.webClientOptions), circuitBreaker, target);
   }
 
-  private static CircuitBreakerOptions createCircuitBreakerOptions(final DataPlaneContract.EgressConfig egressConfig) {
+  private static CircuitBreakerOptions createCircuitBreakerOptions(
+    final DataPlaneContract.EgressConfig egressConfig) {
     CircuitBreakerOptions options = new CircuitBreakerOptions();
 
     // This disables circuit breaker notifications on the event bus
@@ -255,22 +282,20 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
 
     if (egressConfig != null) {
       // Single request timeout
-      options.setTimeout(
-        egressConfig.getTimeout() > 0 ?
-          egressConfig.getTimeout() :
-          CircuitBreakerOptions.DEFAULT_TIMEOUT
-      );
+      options.setTimeout(egressConfig.getTimeout() > 0
+                           ? egressConfig.getTimeout()
+                           : CircuitBreakerOptions.DEFAULT_TIMEOUT);
 
       // Retry options
       if (egressConfig.getRetry() > 0) {
         options
-          // TODO reset timeout should be configurable or, at least, set by the control plane
-          .setResetTimeout(
-            egressConfig.getBackoffDelay() > 0 ?
-              egressConfig.getBackoffDelay() :
-              CircuitBreakerOptions.DEFAULT_RESET_TIMEOUT
-          )
-          // TODO max failures should be configurable or, at least, set by the control plane
+          // TODO reset timeout should be configurable or, at least, set by the
+          // control plane
+          .setResetTimeout(egressConfig.getBackoffDelay() > 0
+                             ? egressConfig.getBackoffDelay()
+                             : CircuitBreakerOptions.DEFAULT_RESET_TIMEOUT)
+          // TODO max failures should be configurable or, at least, set by the
+          // control plane
           .setMaxFailures(egressConfig.getRetry() * 2)
           .setMaxRetries(egressConfig.getRetry());
       }

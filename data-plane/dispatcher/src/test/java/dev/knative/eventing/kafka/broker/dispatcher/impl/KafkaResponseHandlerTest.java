@@ -15,11 +15,22 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import dev.knative.eventing.kafka.broker.core.metrics.Metrics;
 import dev.knative.eventing.kafka.broker.core.testing.CloudEventSerializerMock;
+
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.provider.EventFormatProvider;
 import io.cloudevents.core.v1.CloudEventBuilder;
+
+import org.apache.kafka.clients.producer.MockProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
+
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -31,42 +42,34 @@ import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+
 import java.net.URI;
 import java.util.concurrent.CountDownLatch;
-import org.apache.kafka.clients.producer.MockProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.serialization.StringSerializer;
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @Execution(ExecutionMode.CONCURRENT)
 @ExtendWith(VertxExtension.class)
 public class KafkaResponseHandlerTest {
-
   static {
-    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+    BackendRegistries.setupBackend(
+      new MicrometerMetricsOptions().setRegistryName(
+        Metrics.METRICS_REGISTRY_NAME));
   }
 
   private static final String TOPIC = "t1";
 
   @Test
-  public void shouldSucceedOnUnknownEncodingAndEmptyResponse(final Vertx vertx, final VertxTestContext context) {
-    final var producer = new MockProducer<>(
-      true,
-      new StringSerializer(),
-      new CloudEventSerializerMock()
-    );
-    final var handler = new KafkaResponseHandler(
-      KafkaProducer.create(vertx, producer), TOPIC
-    );
+  public void shouldSucceedOnUnknownEncodingAndEmptyResponse(
+    final Vertx vertx, final VertxTestContext context) {
+    final var producer = new MockProducer<>(true, new StringSerializer(),
+                                            new CloudEventSerializerMock());
+    final var handler =
+      new KafkaResponseHandler(KafkaProducer.create(vertx, producer), TOPIC);
 
     // Empty response
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
@@ -74,21 +77,17 @@ public class KafkaResponseHandlerTest {
     when(response.body()).thenReturn(Buffer.buffer());
     when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap());
 
-    context
-      .assertComplete(handler.handle(response))
+    context.assertComplete(handler.handle(response))
       .onSuccess(v -> context.completeNow());
   }
 
   @Test
-  public void shouldSucceedOnUnknownEncodingAndNullResponseBody(final Vertx vertx, final VertxTestContext context) {
-    final var producer = new MockProducer<>(
-      true,
-      new StringSerializer(),
-      new CloudEventSerializerMock()
-    );
-    final var handler = new KafkaResponseHandler(
-      KafkaProducer.create(vertx, producer), TOPIC
-    );
+  public void shouldSucceedOnUnknownEncodingAndNullResponseBody(
+    final Vertx vertx, final VertxTestContext context) {
+    final var producer = new MockProducer<>(true, new StringSerializer(),
+                                            new CloudEventSerializerMock());
+    final var handler =
+      new KafkaResponseHandler(KafkaProducer.create(vertx, producer), TOPIC);
 
     // Empty response
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
@@ -96,23 +95,17 @@ public class KafkaResponseHandlerTest {
     when(response.body()).thenReturn(null);
     when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap());
 
-    context
-      .assertComplete(handler.handle(response))
+    context.assertComplete(handler.handle(response))
       .onSuccess(v -> context.completeNow());
   }
 
-
   @Test
-  public void shouldFailOnUnknownEncodingAndNonEmptyResponse(final Vertx vertx, final VertxTestContext context) {
-
-    final var producer = new MockProducer<>(
-      true,
-      new StringSerializer(),
-      new CloudEventSerializerMock()
-    );
-    final var handler = new KafkaResponseHandler(
-      KafkaProducer.create(vertx, producer), TOPIC
-    );
+  public void shouldFailOnUnknownEncodingAndNonEmptyResponse(
+    final Vertx vertx, final VertxTestContext context) {
+    final var producer = new MockProducer<>(true, new StringSerializer(),
+                                            new CloudEventSerializerMock());
+    final var handler =
+      new KafkaResponseHandler(KafkaProducer.create(vertx, producer), TOPIC);
 
     // Empty response
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
@@ -120,40 +113,35 @@ public class KafkaResponseHandlerTest {
     when(response.body()).thenReturn(Buffer.buffer(new byte[] {'a'}));
     when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap());
 
-    context
-      .assertFailure(handler.handle(response))
+    context.assertFailure(handler.handle(response))
       .onSuccess(s -> context.failNow(new Exception("expected failed future")))
       .onFailure(v -> context.completeNow());
   }
 
   @Test
-  public void shouldSendRecord(final Vertx vertx, final VertxTestContext context)
+  public void shouldSendRecord(final Vertx vertx,
+                               final VertxTestContext context)
     throws InterruptedException {
-    final var producer = new MockProducer<>(
-      true,
-      new StringSerializer(),
-      new CloudEventSerializerMock()
-    );
-    final var handler = new KafkaResponseHandler(
-      KafkaProducer.create(vertx, producer), TOPIC
-    );
+    final var producer = new MockProducer<>(true, new StringSerializer(),
+                                            new CloudEventSerializerMock());
+    final var handler =
+      new KafkaResponseHandler(KafkaProducer.create(vertx, producer), TOPIC);
 
     final var event = new CloudEventBuilder()
-      .withId("1234")
-      .withSource(URI.create("/api"))
-      .withSubject("subject")
-      .withType("type")
-      .build();
+                        .withId("1234")
+                        .withSource(URI.create("/api"))
+                        .withSubject("subject")
+                        .withType("type")
+                        .build();
 
     final HttpResponse<Buffer> response = mock(HttpResponse.class);
-    when(response.body()).thenReturn(Buffer.buffer(
-      EventFormatProvider.getInstance()
-        .resolveFormat("application/cloudevents+json")
-        .serialize(event)
-    ));
-    when(response.headers()).thenReturn(MultiMap.caseInsensitiveMultiMap()
-      .set(HttpHeaders.CONTENT_TYPE, "application/cloudevents+json")
-    );
+    when(response.body())
+      .thenReturn(Buffer.buffer(EventFormatProvider.getInstance()
+                                  .resolveFormat("application/cloudevents+json")
+                                  .serialize(event)));
+    when(response.headers())
+      .thenReturn(MultiMap.caseInsensitiveMultiMap().set(
+        HttpHeaders.CONTENT_TYPE, "application/cloudevents+json"));
 
     final var wait = new CountDownLatch(1);
     handler.handle(response)
@@ -169,15 +157,15 @@ public class KafkaResponseHandlerTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void shouldCloseProducer(final Vertx vertx, final VertxTestContext context) {
-    final KafkaProducer<String, CloudEvent> producer = mock(KafkaProducer.class);
+  public void shouldCloseProducer(final Vertx vertx,
+                                  final VertxTestContext context) {
+    final KafkaProducer<String, CloudEvent> producer =
+      mock(KafkaProducer.class);
     when(producer.close()).thenReturn(Future.succeededFuture());
     final var mockProducer = new MockProducer<String, CloudEvent>();
     when(producer.unwrap()).thenReturn(mockProducer);
 
-    final var sinkResponseHandler = new KafkaResponseHandler(
-      producer, "topic"
-    );
+    final var sinkResponseHandler = new KafkaResponseHandler(producer, "topic");
 
     vertx.runOnContext(v -> {
       sinkResponseHandler.close()

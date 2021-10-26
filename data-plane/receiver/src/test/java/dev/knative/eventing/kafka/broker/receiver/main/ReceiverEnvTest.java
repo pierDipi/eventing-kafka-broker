@@ -15,19 +15,20 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.main;
 
-import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ReceiverEnvTest {
+import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 
+import org.junit.jupiter.api.Test;
+
+class ReceiverEnvTest {
   private static final String PORT = "8080";
   private static final String LIVENESS_PATH = "/healthz";
   private static final String READINESS_PATH = "/readyz";
   private static final String PRODUCER_CONFIG_PATH = "/etc/producer";
   private static final String DATA_PLANE_CONFIG_FILE_PATH = "/etc/brokers";
-  private static final String HTTPSERVER_CONFIG_FILE_PATH = "/etc/http-server-config";
+  private static final String HTTPSERVER_CONFIG_FILE_PATH =
+    "/etc/http-server-config";
   private static final String TRACING_CONFIG_PATH = "/etc/tracing";
   private static final String METRICS_JVM_ENABLED = "true";
   public static final int WAIT_STARTUP_SECONDS = 8;

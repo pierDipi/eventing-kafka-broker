@@ -16,8 +16,10 @@
 package dev.knative.eventing.kafka.broker.core.metrics;
 
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
+
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.producer.Producer;
+
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.metrics.MetricsOptions;
 import io.vertx.core.tracing.TracingPolicy;
@@ -26,30 +28,34 @@ import io.vertx.micrometer.MetricsNaming;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.producer.Producer;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 
 public class Metrics {
-
   public static final String METRICS_REGISTRY_NAME = "metrics";
 
-  // Micrometer employs a naming convention that separates lowercase words with a '.' (dot) character.
-  // Different monitoring systems have different recommendations regarding naming convention, and some naming
-  // conventions may be incompatible for one system and not another.
-  // Each Micrometer implementation for a monitoring system comes with a naming convention that transforms lowercase
-  // dot notation names to the monitoring system’s recommended naming convention.
-  // Additionally, this naming convention implementation sanitizes metric names and tags of special characters that
+  // Micrometer employs a naming convention that separates lowercase words with
+  // a '.' (dot) character. Different monitoring systems have different
+  // recommendations regarding naming convention, and some naming conventions
+  // may be incompatible for one system and not another. Each Micrometer
+  // implementation for a monitoring system comes with a naming convention that
+  // transforms lowercase dot notation names to the monitoring system’s
+  // recommended naming convention. Additionally, this naming convention
+  // implementation sanitizes metric names and tags of special characters that
   // are disallowed by the monitoring system.
 
   /**
    * In prometheus format --> http_requests_malformed_total
    */
-  public static final String HTTP_REQUESTS_MALFORMED_COUNT = "http.requests.malformed";
+  public static final String HTTP_REQUESTS_MALFORMED_COUNT =
+    "http.requests.malformed";
 
   /**
    * In prometheus format --> http_requests_produce_total
    */
-  public static final String HTTP_REQUESTS_PRODUCE_COUNT = "http.requests.produce";
+  public static final String HTTP_REQUESTS_PRODUCE_COUNT =
+    "http.requests.produce";
 
   /**
    * In prometheus format --> http_events_sent_total
@@ -68,21 +74,21 @@ public class Metrics {
       .addDisabledMetricsCategory(MetricsDomain.EVENT_BUS)
       .addDisabledMetricsCategory(MetricsDomain.DATAGRAM_SOCKET)
       // NAMED_POOL allocates a lot, so disable it.
-      // See https://github.com/vert-x3/vertx-micrometer-metrics/blob/0646e66de120366c622a7240676d63cb69965ec5/src/main/java/io/vertx/micrometer/impl/meters/Gauges.java#L56-L69
+      // See
+      // https://github.com/vert-x3/vertx-micrometer-metrics/blob/0646e66de120366c622a7240676d63cb69965ec5/src/main/java/io/vertx/micrometer/impl/meters/Gauges.java#L56-L69
       .addDisabledMetricsCategory(MetricsDomain.NAMED_POOLS)
       .setMetricsNaming(MetricsNaming.v4Names())
       .setRegistryName(METRICS_REGISTRY_NAME)
       .setJvmMetricsEnabled(metricsConfigs.isMetricsJvmEnabled())
-      .setPrometheusOptions(new VertxPrometheusOptions()
-        .setEmbeddedServerOptions(new HttpServerOptions()
-          .setPort(metricsConfigs.getMetricsPort())
-          .setTracingPolicy(TracingPolicy.IGNORE)
-        )
-        .setEmbeddedServerEndpoint(metricsConfigs.getMetricsPath())
-        .setPublishQuantiles(metricsConfigs.isPublishQuantilesEnabled())
-        .setStartEmbeddedServer(true)
-        .setEnabled(true)
-      );
+      .setPrometheusOptions(
+        new VertxPrometheusOptions()
+          .setEmbeddedServerOptions(new HttpServerOptions()
+                                      .setPort(metricsConfigs.getMetricsPort())
+                                      .setTracingPolicy(TracingPolicy.IGNORE))
+          .setEmbeddedServerEndpoint(metricsConfigs.getMetricsPath())
+          .setPublishQuantiles(metricsConfigs.isPublishQuantilesEnabled())
+          .setStartEmbeddedServer(true)
+          .setEnabled(true));
   }
 
   /**

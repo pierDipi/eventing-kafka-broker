@@ -16,25 +16,27 @@
 package dev.knative.eventing.kafka.broker.core.utils;
 
 import io.vertx.core.http.HttpServerOptions;
+
 import java.util.Objects;
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class ConfigurationsTest {
-
   private final static String FILE_NAME = "configurations.properties";
   private final static String IDLE_TIMEOUT_KEY = "idleTimeout";
-  private final static String HANDLE_100_CONTINUE_AUTOMATICALLY_KEY = "handle100ContinueAutomatically";
+  private final static String HANDLE_100_CONTINUE_AUTOMATICALLY_KEY =
+    "handle100ContinueAutomatically";
 
   @Test
   public void shouldGetPropertiesFromFilePath() {
-
-    final var config = Configurations.readPropertiesSync(Objects.requireNonNull(
-      getClass().getClassLoader().getResource(FILE_NAME)
-    ).getFile());
+    final var config = Configurations.readPropertiesSync(
+      Objects.requireNonNull(getClass().getClassLoader().getResource(FILE_NAME))
+        .getFile());
 
     final var idleTimeout = config.get(IDLE_TIMEOUT_KEY);
-    final var handle100ContinueAutomatically = config.get(HANDLE_100_CONTINUE_AUTOMATICALLY_KEY);
+    final var handle100ContinueAutomatically =
+      config.get(HANDLE_100_CONTINUE_AUTOMATICALLY_KEY);
 
     Assertions.assertThat(idleTimeout).isEqualTo("42");
     Assertions.assertThat(handle100ContinueAutomatically).isEqualTo("true");
@@ -42,13 +44,13 @@ public class ConfigurationsTest {
 
   @Test
   public void shouldGetPropertiesFromFilePathAsJsonObject() {
-
-    final var config = Configurations.readPropertiesAsJsonSync(Objects.requireNonNull(
-      getClass().getClassLoader().getResource(FILE_NAME)
-    ).getFile());
+    final var config = Configurations.readPropertiesAsJsonSync(
+      Objects.requireNonNull(getClass().getClassLoader().getResource(FILE_NAME))
+        .getFile());
 
     final var idleTimeout = config.getInteger(IDLE_TIMEOUT_KEY);
-    final var handle100ContinueAutomatically = config.getBoolean(HANDLE_100_CONTINUE_AUTOMATICALLY_KEY);
+    final var handle100ContinueAutomatically =
+      config.getBoolean(HANDLE_100_CONTINUE_AUTOMATICALLY_KEY);
 
     Assertions.assertThat(idleTimeout).isEqualTo(42);
     Assertions.assertThat(handle100ContinueAutomatically).isTrue();
@@ -56,14 +58,14 @@ public class ConfigurationsTest {
 
   @Test
   public void shouldSetHttpServerOptions() {
-
-    final var config = Configurations.readPropertiesAsJsonSync(Objects.requireNonNull(
-      getClass().getClassLoader().getResource(FILE_NAME)
-    ).getFile());
+    final var config = Configurations.readPropertiesAsJsonSync(
+      Objects.requireNonNull(getClass().getClassLoader().getResource(FILE_NAME))
+        .getFile());
 
     final var httpServerOptions = new HttpServerOptions(config);
 
     Assertions.assertThat(httpServerOptions.getIdleTimeout()).isEqualTo(42);
-    Assertions.assertThat(httpServerOptions.isHandle100ContinueAutomatically()).isTrue();
+    Assertions.assertThat(httpServerOptions.isHandle100ContinueAutomatically())
+      .isTrue();
   }
 }

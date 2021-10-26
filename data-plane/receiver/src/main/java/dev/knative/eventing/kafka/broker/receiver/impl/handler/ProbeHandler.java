@@ -15,20 +15,20 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 
 import java.util.Objects;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
+
 /**
- * This class is an handler that respond to specified liveness and readiness probes.
- * <p>
- * This class is stateless, hence thread safe and shareable among verticles.
+ * This class is an handler that respond to specified liveness and readiness
+ * probes. <p> This class is stateless, hence thread safe and shareable among
+ * verticles.
  */
 public class ProbeHandler implements Handler<HttpServerRequest> {
-
   protected static final int STATUS_OK = HttpResponseStatus.OK.code();
 
   private final String livenessPath;
@@ -42,8 +42,7 @@ public class ProbeHandler implements Handler<HttpServerRequest> {
    * @param readinessPath request path at which respond to readiness checks.
    * @param next          next handler
    */
-  public ProbeHandler(final String livenessPath,
-                      final String readinessPath,
+  public ProbeHandler(final String livenessPath, final String readinessPath,
                       final Handler<HttpServerRequest> next) {
     Objects.requireNonNull(next);
 
@@ -63,6 +62,7 @@ public class ProbeHandler implements Handler<HttpServerRequest> {
 
   private boolean isProbeRequest(final HttpServerRequest request) {
     return request.method().equals(HttpMethod.GET)
-      && (request.path().equals(livenessPath) || request.path().equals(readinessPath));
+      && (request.path().equals(livenessPath)
+          || request.path().equals(readinessPath));
   }
 }

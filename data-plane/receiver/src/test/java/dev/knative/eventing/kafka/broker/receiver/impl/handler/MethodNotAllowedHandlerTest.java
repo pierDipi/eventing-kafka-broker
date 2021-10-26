@@ -15,25 +15,27 @@
  */
 package dev.knative.eventing.kafka.broker.receiver.impl.handler;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
+import static org.mockito.Mockito.mock;
+
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.junit5.VertxTestContext;
+
 import org.junit.jupiter.api.Test;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
-import static org.mockito.Mockito.mock;
-
 public class MethodNotAllowedHandlerTest extends PreHandlerTest {
-
   @Test
   public void testBadMethod(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, METHOD_NOT_ALLOWED.code(), HttpMethod.GET, "/");
+    mustReceiveStatusCodeOnPath(context, METHOD_NOT_ALLOWED.code(),
+                                HttpMethod.GET, "/");
   }
 
   @Test
   public void testCorrectMethod(final VertxTestContext context) {
-    mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE, HttpMethod.POST, "/");
+    mustReceiveStatusCodeOnPath(context, NEXT_HANDLER_STATUS_CODE,
+                                HttpMethod.POST, "/");
   }
 
   @Override

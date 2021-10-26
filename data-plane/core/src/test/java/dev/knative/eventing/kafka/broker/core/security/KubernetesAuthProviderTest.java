@@ -15,36 +15,40 @@
  */
 package dev.knative.eventing.kafka.broker.core.security;
 
-import io.fabric8.kubernetes.api.model.SecretBuilder;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.apache.kafka.common.security.auth.SecurityProtocol;
+
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+
 import java.util.AbstractMap;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.apache.kafka.common.security.auth.SecurityProtocol;
+
+import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(VertxExtension.class)
 @EnableKubernetesMockClient(https = false, crud = true)
 public class KubernetesAuthProviderTest {
-
   KubernetesServer server;
   KubernetesClient client;
 
   @Test
-  public void getCredentialsFromSecret(final Vertx vertx, final VertxTestContext context) {
+  public void getCredentialsFromSecret(final Vertx vertx,
+                                       final VertxTestContext context) {
     final var data = new HashMap<String, String>();
 
-    data.put(KubernetesCredentials.SECURITY_PROTOCOL, SecurityProtocol.SASL_SSL.name);
+    data.put(KubernetesCredentials.SECURITY_PROTOCOL,
+             SecurityProtocol.SASL_SSL.name);
     data.put(KubernetesCredentials.SASL_MECHANISM, "SCRAM-SHA-512");
 
     data.put(KubernetesCredentials.USER_CERTIFICATE_KEY, "my-user-cert");
@@ -55,35 +59,43 @@ public class KubernetesAuthProviderTest {
 
     data.put(KubernetesCredentials.CA_CERTIFICATE_KEY, "my-ca-certificate");
 
-    final var secret = new SecretBuilder()
-      .withNewMetadata()
-      .withName("my-secret-name")
-      .withNamespace("my-secret-namespace")
-      .endMetadata()
-      .withData(
-        data.entrySet().stream()
-          .map(e -> new AbstractMap.SimpleImmutableEntry<>(e.getKey(), Base64.getEncoder().encodeToString(e.getValue().getBytes())))
-          .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-      )
-      .build();
+    final var secret =
+      new SecretBuilder()
+        .withNewMetadata()
+        .withName("my-secret-name")
+        .withNamespace("my-secret-namespace")
+        .endMetadata()
+        .withData(
+          data.entrySet()
+            .stream()
+            .map(e
+                 -> new AbstractMap.SimpleImmutableEntry<>(
+                   e.getKey(),
+                   Base64.getEncoder().encodeToString(e.getValue().getBytes())))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
+        .build();
 
     client.secrets().inNamespace("my-secret-namespace").create(secret);
 
     final var provider = new KubernetesAuthProvider(client);
 
     vertx.runOnContext(r -> {
-      final var credentialsFuture = provider.getCredentials("my-secret-namespace", "my-secret-name");
+      final var credentialsFuture =
+        provider.getCredentials("my-secret-namespace", "my-secret-name");
 
-      credentialsFuture
-        .onFailure(context::failNow)
+      credentialsFuture.onFailure(context::failNow)
         .onSuccess(credentials -> context.verify(() -> {
+          assertThat(credentials.SASLMechanism())
+            .isEqualTo(data.get(KubernetesCredentials.SASL_MECHANISM));
+          assertThat(credentials.securityProtocol())
+            .isEqualTo(SecurityProtocol.forName(
+              data.get(KubernetesCredentials.SECURITY_PROTOCOL)));
 
-          assertThat(credentials.SASLMechanism()).isEqualTo(data.get(KubernetesCredentials.SASL_MECHANISM));
-          assertThat(credentials.securityProtocol()).isEqualTo(SecurityProtocol.forName(data.get(KubernetesCredentials.SECURITY_PROTOCOL)));
+          assertThat(credentials.userCertificate())
+            .isEqualTo(data.get(KubernetesCredentials.USER_CERTIFICATE_KEY));
 
-          assertThat(credentials.userCertificate()).isEqualTo(data.get(KubernetesCredentials.USER_CERTIFICATE_KEY));
-
-          assertThat(credentials.caCertificates()).isEqualTo(data.get(KubernetesCredentials.CA_CERTIFICATE_KEY));
+          assertThat(credentials.caCertificates())
+            .isEqualTo(data.get(KubernetesCredentials.CA_CERTIFICATE_KEY));
 
           context.completeNow();
         }));
@@ -91,42 +103,56 @@ public class KubernetesAuthProviderTest {
   }
 
   @Test
-  public void shouldFailOnSecretNotFound(final Vertx vertx, final VertxTestContext context) {
-
+  public void shouldFailOnSecretNotFound(final Vertx vertx,
+                                         final VertxTestContext context) {
     final var provider = new KubernetesAuthProvider(client);
 
-    vertx.runOnContext(r -> provider.getCredentials("my-secret-namespace", "my-secret-name-not-found")
-      .onSuccess(ignored -> context.failNow("Unexpected success: expected not found error"))
-      .onFailure(cause -> context.completeNow())
-    );
+    vertx.runOnContext(
+      r
+      -> provider
+           .getCredentials("my-secret-namespace", "my-secret-name-not-found")
+           .onSuccess(
+             ignored
+             -> context.failNow("Unexpected success: expected not found error"))
+           .onFailure(cause -> context.completeNow()));
   }
 
   @Test
-  public void shouldFailOnInvalidSecret(final Vertx vertx, final VertxTestContext context) {
+  public void shouldFailOnInvalidSecret(final Vertx vertx,
+                                        final VertxTestContext context) {
     final var provider = new KubernetesAuthProvider(client);
 
     final var data = new HashMap<String, String>();
 
-    data.put(KubernetesCredentials.SECURITY_PROTOCOL, SecurityProtocol.SASL_SSL.name);
+    data.put(KubernetesCredentials.SECURITY_PROTOCOL,
+             SecurityProtocol.SASL_SSL.name);
     data.put(KubernetesCredentials.SASL_MECHANISM, "SCRAM-SHA-512");
 
-    final var secret = new SecretBuilder()
-      .withNewMetadata()
-      .withName("my-secret-name-invalid")
-      .withNamespace("my-secret-namespace")
-      .endMetadata()
-      .withData(
-        data.entrySet().stream()
-          .map(e -> new AbstractMap.SimpleImmutableEntry<>(e.getKey(), Base64.getEncoder().encodeToString(e.getValue().getBytes())))
-          .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-      )
-      .build();
+    final var secret =
+      new SecretBuilder()
+        .withNewMetadata()
+        .withName("my-secret-name-invalid")
+        .withNamespace("my-secret-namespace")
+        .endMetadata()
+        .withData(
+          data.entrySet()
+            .stream()
+            .map(e
+                 -> new AbstractMap.SimpleImmutableEntry<>(
+                   e.getKey(),
+                   Base64.getEncoder().encodeToString(e.getValue().getBytes())))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
+        .build();
 
     client.secrets().inNamespace("my-secret-namespace").create(secret);
 
-    vertx.runOnContext(r -> provider.getCredentials("my-secret-namespace", "my-secret-name-invalid")
-      .onSuccess(ignored -> context.failNow("Unexpected success: expected invalid secret error"))
-      .onFailure(cause -> context.completeNow())
-    );
+    vertx.runOnContext(
+      r
+      -> provider
+           .getCredentials("my-secret-namespace", "my-secret-name-invalid")
+           .onSuccess(ignored
+                      -> context.failNow(
+                        "Unexpected success: expected invalid secret error"))
+           .onFailure(cause -> context.completeNow()));
   }
 }

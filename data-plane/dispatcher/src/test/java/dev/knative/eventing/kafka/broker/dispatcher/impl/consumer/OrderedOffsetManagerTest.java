@@ -16,56 +16,70 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
-import java.util.List;
+
 import org.apache.kafka.common.TopicPartition;
+
+import io.vertx.kafka.client.consumer.KafkaConsumer;
+
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
 @Execution(value = ExecutionMode.CONCURRENT)
 public class OrderedOffsetManagerTest extends AbstractOffsetManagerTest {
-
   @Override
-  RecordDispatcherListener createOffsetManager(
-    KafkaConsumer<?, ?> consumer) {
+  RecordDispatcherListener createOffsetManager(KafkaConsumer<?, ?> consumer) {
     return new OrderedOffsetManager(consumer, null);
   }
 
   @Test
   public void shouldNotCommitAfterRecordReceived() {
-    assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
-      offsetStrategy.recordReceived(record("aaa", 0, 0));
-    }).isEmpty();
+    assertThatOffsetCommitted(
+      List.of(new TopicPartition("aaa", 0)),
+      offsetStrategy -> { offsetStrategy.recordReceived(record("aaa", 0, 0)); })
+      .isEmpty();
   }
 
   @Test
   public void shouldNotCommitAfterFailedToSendToDeadLetterSink() {
-    assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
-      offsetStrategy.failedToSendToDeadLetterSink(record("aaa", 0, 0), new IllegalStateException());
-    }).isEmpty();
+    assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)),
+                              offsetStrategy -> {
+                                offsetStrategy.failedToSendToDeadLetterSink(
+                                  record("aaa", 0, 0),
+                                  new IllegalStateException());
+                              })
+      .isEmpty();
   }
 
   @Test
   public void shouldNotCommitAfterRecordDiscarded() {
-    assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
-      offsetStrategy.recordDiscarded(record("aaa", 0, 0));
-    }).isEmpty();
+    assertThatOffsetCommitted(
+      List.of(new TopicPartition("aaa", 0)),
+      offsetStrategy -> {
+        offsetStrategy.recordDiscarded(record("aaa", 0, 0));
+      })
+      .isEmpty();
   }
-
 
   @Test
   public void shouldCommitAfterSuccessfullySentToSubscriber() {
-    assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
-      offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 0));
-    }).containsEntry(new TopicPartition("aaa", 0), 1L);
+    assertThatOffsetCommitted(
+      List.of(new TopicPartition("aaa", 0)),
+      offsetStrategy -> {
+        offsetStrategy.successfullySentToSubscriber(record("aaa", 0, 0));
+      })
+      .containsEntry(new TopicPartition("aaa", 0), 1L);
   }
 
   @Test
   public void shouldCommitAfterSuccessfullySentToDeadLetterSink() {
-    assertThatOffsetCommitted(List.of(new TopicPartition("aaa", 0)), offsetStrategy -> {
-      offsetStrategy.successfullySentToDeadLetterSink(record("aaa", 0, 0));
-    }).containsEntry(new TopicPartition("aaa", 0), 1L);
+    assertThatOffsetCommitted(
+      List.of(new TopicPartition("aaa", 0)),
+      offsetStrategy -> {
+        offsetStrategy.successfullySentToDeadLetterSink(record("aaa", 0, 0));
+      })
+      .containsEntry(new TopicPartition("aaa", 0), 1L);
   }
-
 }

@@ -19,10 +19,10 @@ import io.vertx.core.Future;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
 /**
- * This class contains hooks for listening events through the {@link dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher} lifecycle.
+ * This class contains hooks for listening events through the {@link
+ * dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcher} lifecycle.
  */
 public interface RecordDispatcherListener {
-
   /**
    * The given record has been received.
    *
@@ -36,7 +36,8 @@ public interface RecordDispatcherListener {
    * @param record record undeliverable to dead letter sink.
    * @param ex     exception occurred.
    */
-  Future<Void> failedToSendToDeadLetterSink(KafkaConsumerRecord<?, ?> record, Throwable ex);
+  Future<Void> failedToSendToDeadLetterSink(KafkaConsumerRecord<?, ?> record,
+                                            Throwable ex);
 
   /**
    * The given event doesn't pass the filter.
@@ -57,5 +58,6 @@ public interface RecordDispatcherListener {
    *
    * @param record record sent to dead letter sink.
    */
-  Future<Void> successfullySentToDeadLetterSink(KafkaConsumerRecord<?, ?> record);
+  Future<Void> successfullySentToDeadLetterSink(
+    KafkaConsumerRecord<?, ?> record);
 }

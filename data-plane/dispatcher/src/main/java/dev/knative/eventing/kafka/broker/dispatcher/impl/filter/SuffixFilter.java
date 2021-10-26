@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 import io.cloudevents.CloudEvent;
 
 public class SuffixFilter extends BaseStringFilter {
-
   public SuffixFilter(String attribute, String expectedValue) {
     super(attribute, expectedValue);
   }

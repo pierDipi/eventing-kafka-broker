@@ -16,13 +16,17 @@
 
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.jackson.JsonFormat;
 import io.cloudevents.kafka.KafkaMessageFactory;
+
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.header.internals.RecordHeaders;
-import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -30,35 +34,31 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import org.junit.jupiter.api.Test;
 
 public class CloudEventDeserializerTest {
-
-  private final static CloudEvent event = CloudEventBuilder.v1()
-    .withId("123-42")
-    .withDataContentType("application/cloudevents+json")
-    .withDataSchema(URI.create("/api/schema"))
-    .withSource(URI.create("/api/some-source"))
-    .withSubject("a-subject-42")
-    .withType("type")
-    .withData(new byte[]{1})
-    .withTime(OffsetDateTime.of(
-      1985, 4, 12,
-      23, 20, 50, 0,
-      ZoneOffset.UTC
-    ))
-    .build();
+  private final static CloudEvent event =
+    CloudEventBuilder.v1()
+      .withId("123-42")
+      .withDataContentType("application/cloudevents+json")
+      .withDataSchema(URI.create("/api/schema"))
+      .withSource(URI.create("/api/some-source"))
+      .withSubject("a-subject-42")
+      .withType("type")
+      .withData(new byte[] {1})
+      .withTime(OffsetDateTime.of(1985, 4, 12, 23, 20, 50, 0, ZoneOffset.UTC))
+      .build();
 
   @Test
   public void shouldDeserializeValidCloudEventBinary() {
     final var topic = "test";
 
-    final var record = KafkaMessageFactory.createWriter(topic).writeBinary(event);
+    final var record =
+      KafkaMessageFactory.createWriter(topic).writeBinary(event);
 
     final var deserializer = new CloudEventDeserializer();
-    final var outEvent = deserializer.deserialize(topic, record.headers(), record.value());
+    final var outEvent =
+      deserializer.deserialize(topic, record.headers(), record.value());
 
     assertThat(outEvent).isEqualTo(event);
   }
@@ -67,10 +67,12 @@ public class CloudEventDeserializerTest {
   public void shouldDeserializeValidCloudEventStructured() {
     final var topic = "test";
 
-    final var record = KafkaMessageFactory.createWriter(topic).writeStructured(event, JsonFormat.CONTENT_TYPE);
+    final var record = KafkaMessageFactory.createWriter(topic).writeStructured(
+      event, JsonFormat.CONTENT_TYPE);
 
     final var deserializer = new CloudEventDeserializer();
-    CloudEvent outEvent = deserializer.deserialize(topic, record.headers(), record.value());
+    CloudEvent outEvent =
+      deserializer.deserialize(topic, record.headers(), record.value());
 
     assertThat(outEvent).isEqualTo(event);
   }
@@ -79,20 +81,21 @@ public class CloudEventDeserializerTest {
   public void shouldDeserializeInvalidCloudEventWhenEnabled() {
     final var topic = "test";
 
-    final var headers = new RecordHeaders()
-      .add(new RecordHeader("knative", "knative".getBytes(StandardCharsets.UTF_8)));
+    final var headers = new RecordHeaders().add(
+      new RecordHeader("knative", "knative".getBytes(StandardCharsets.UTF_8)));
 
     final var deserializer = new CloudEventDeserializer();
     final var configs = new HashMap<String, String>();
     configs.put(CloudEventDeserializer.INVALID_CE_WRAPPER_ENABLED, "true");
     deserializer.configure(configs, false);
 
-    final var event = deserializer.deserialize(topic, headers, new byte[]{1, 4});
+    final var event =
+      deserializer.deserialize(topic, headers, new byte[] {1, 4});
 
     assertThat(event).isInstanceOf(InvalidCloudEvent.class);
 
     assertThat(event).isInstanceOf(InvalidCloudEvent.class);
-    assertOnInvalidCloudEvent((InvalidCloudEvent) event);
+    assertOnInvalidCloudEvent((InvalidCloudEvent)event);
   }
 
   @Test
@@ -104,26 +107,28 @@ public class CloudEventDeserializerTest {
     configs.put(CloudEventDeserializer.INVALID_CE_WRAPPER_ENABLED, "true");
     deserializer.configure(configs, false);
 
-    final var event = deserializer.deserialize(topic, new byte[]{1, 4});
+    final var event = deserializer.deserialize(topic, new byte[] {1, 4});
 
     assertThat(event).isInstanceOf(InvalidCloudEvent.class);
-    assertOnInvalidCloudEvent((InvalidCloudEvent) event);
+    assertOnInvalidCloudEvent((InvalidCloudEvent)event);
   }
 
   @Test
   public void shouldNotDeserializeInvalidCloudEventWhenDisabled() {
     final var topic = "test";
 
-    final var headers = new RecordHeaders()
-      .add(new RecordHeader("knative", "knative".getBytes(StandardCharsets.UTF_8)));
+    final var headers = new RecordHeaders().add(
+      new RecordHeader("knative", "knative".getBytes(StandardCharsets.UTF_8)));
 
     final var deserializer = new CloudEventDeserializer();
 
     final var configs = new HashMap<String, String>();
     deserializer.configure(configs, false);
 
-    assertThatThrownBy(() -> deserializer.deserialize(topic, headers, new byte[]{1, 4}));
-    assertThatThrownBy(() -> deserializer.deserialize(topic, new byte[]{1, 4}));
+    assertThatThrownBy(
+      () -> deserializer.deserialize(topic, headers, new byte[] {1, 4}));
+    assertThatThrownBy(
+      () -> deserializer.deserialize(topic, new byte[] {1, 4}));
   }
 
   private void assertOnInvalidCloudEvent(InvalidCloudEvent invalid) {

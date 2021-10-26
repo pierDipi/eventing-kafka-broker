@@ -15,15 +15,15 @@
  */
 package dev.knative.eventing.kafka.broker.core.security;
 
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.vertx.core.Future;
+
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 
 /**
  * AuthProvider provides auth credentials.
  */
 @FunctionalInterface
 public interface AuthProvider {
-
   static AuthProvider kubernetes() {
     return new KubernetesAuthProvider(new DefaultKubernetesClient());
   }

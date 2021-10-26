@@ -17,14 +17,15 @@ package dev.knative.eventing.kafka.broker.core.reconciler.impl;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.core.reconciler.IngressReconcilerListener;
+
 import io.vertx.core.Future;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class IngressReconcilerListenerMock implements IngressReconcilerListener {
-
+public class IngressReconcilerListenerMock
+  implements IngressReconcilerListener {
   private final List<String> newIngresses;
   private final List<String> updatedIngresses;
   private final List<String> deletedIngresses;
@@ -33,12 +34,14 @@ public class IngressReconcilerListenerMock implements IngressReconcilerListener 
   private final Future<Void> onDeleteIngressFuture;
 
   public IngressReconcilerListenerMock() {
-    this(Future.succeededFuture(), Future.succeededFuture(), Future.succeededFuture());
+    this(Future.succeededFuture(), Future.succeededFuture(),
+         Future.succeededFuture());
   }
 
-  public IngressReconcilerListenerMock(final Future<Void> onNewIngressFuture,
-                                       final Future<Void> onUpdateIngressFuture,
-                                       final Future<Void> onDeleteIngressFuture) {
+  public IngressReconcilerListenerMock(
+    final Future<Void> onNewIngressFuture,
+    final Future<Void> onUpdateIngressFuture,
+    final Future<Void> onDeleteIngressFuture) {
     this.onNewIngressFuture = onNewIngressFuture;
     this.onUpdateIngressFuture = onUpdateIngressFuture;
     this.onDeleteIngressFuture = onDeleteIngressFuture;
@@ -48,10 +51,8 @@ public class IngressReconcilerListenerMock implements IngressReconcilerListener 
   }
 
   @Override
-  public Future<Void> onNewIngress(
-    final DataPlaneContract.Resource resource,
-    final DataPlaneContract.Ingress ingress) {
-
+  public Future<Void> onNewIngress(final DataPlaneContract.Resource resource,
+                                   final DataPlaneContract.Ingress ingress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(ingress);
 
@@ -60,10 +61,8 @@ public class IngressReconcilerListenerMock implements IngressReconcilerListener 
   }
 
   @Override
-  public Future<Void> onUpdateIngress(
-    final DataPlaneContract.Resource resource,
-    final DataPlaneContract.Ingress ingress) {
-
+  public Future<Void> onUpdateIngress(final DataPlaneContract.Resource resource,
+                                      final DataPlaneContract.Ingress ingress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(ingress);
 
@@ -72,10 +71,8 @@ public class IngressReconcilerListenerMock implements IngressReconcilerListener 
   }
 
   @Override
-  public Future<Void> onDeleteIngress(
-    final DataPlaneContract.Resource resource,
-    final DataPlaneContract.Ingress ingress) {
-
+  public Future<Void> onDeleteIngress(final DataPlaneContract.Resource resource,
+                                      final DataPlaneContract.Ingress ingress) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(ingress);
 

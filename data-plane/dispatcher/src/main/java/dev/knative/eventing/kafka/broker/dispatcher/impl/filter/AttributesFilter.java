@@ -15,11 +15,15 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
+import static java.time.format.DateTimeFormatter.ISO_INSTANT;
+
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
+
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v03.CloudEventV03;
 import io.cloudevents.core.v1.CloudEventV1;
 import io.cloudevents.lang.Nullable;
+
 import java.net.URI;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.List;
@@ -28,23 +32,27 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static java.time.format.DateTimeFormatter.ISO_INSTANT;
-
 public class AttributesFilter implements Filter {
-
   private static final String DEFAULT_STRING = "";
 
-  static final Map<String, Function<CloudEvent, String>> attributesMapper = Map.of(
-    CloudEventV1.SPECVERSION, event -> event.getSpecVersion().toString(),
-    CloudEventV1.ID, CloudEvent::getId,
-    CloudEventV1.TYPE, CloudEvent::getType,
-    CloudEventV1.SOURCE, event -> event.getSource().toString(),
-    CloudEventV1.DATACONTENTTYPE, CloudEvent::getDataContentType,
-    CloudEventV1.DATASCHEMA, event -> getOrDefault(event.getDataSchema(), URI::toString),
-    CloudEventV03.SCHEMAURL, event -> getOrDefault(event.getDataSchema(), URI::toString),
-    CloudEventV1.SUBJECT, CloudEvent::getSubject,
-    CloudEventV1.TIME, event -> getOrDefault(event.getTime(), time -> time.format(ISO_INSTANT))
-  );
+  static final Map<String, Function<CloudEvent, String>> attributesMapper =
+    Map.of(
+      CloudEventV1.SPECVERSION,
+      event
+      -> event.getSpecVersion().toString(),
+      CloudEventV1.ID, CloudEvent::getId, CloudEventV1.TYPE,
+      CloudEvent::getType, CloudEventV1.SOURCE,
+      event
+      -> event.getSource().toString(),
+      CloudEventV1.DATACONTENTTYPE, CloudEvent::getDataContentType,
+      CloudEventV1.DATASCHEMA,
+      event
+      -> getOrDefault(event.getDataSchema(), URI::toString),
+      CloudEventV03.SCHEMAURL,
+      event
+      -> getOrDefault(event.getDataSchema(), URI::toString),
+      CloudEventV1.SUBJECT, CloudEvent::getSubject, CloudEventV1.TIME,
+      event -> getOrDefault(event.getTime(), time -> time.format(ISO_INSTANT)));
 
   // the key represents the function to turn an event into a string value.
   // the value represents the value to match.
@@ -58,35 +66,39 @@ public class AttributesFilter implements Filter {
    * @param attributes attributes to match to pass filter.
    */
   public AttributesFilter(final Map<String, String> attributes) {
-    this.attributes = attributes.entrySet().stream()
-      .filter(entry -> isNotEmpty(entry.getValue()))
-      .map(entry -> new SimpleImmutableEntry<>(
-        attributesMapper.getOrDefault(
-          entry.getKey(),
-          event -> {
-            try {
-              return getOrDefault(event.getAttribute(entry.getKey()), Object::toString);
-            } catch (Exception ex) {
-              return getOrDefault(event.getExtension(entry.getKey()), Object::toString);
-            }
-          }
-        ),
-        entry.getValue()
-      ))
-      .collect(Collectors.toUnmodifiableList());
+    this.attributes =
+      attributes.entrySet()
+        .stream()
+        .filter(entry -> isNotEmpty(entry.getValue()))
+        .map(entry
+             -> new SimpleImmutableEntry<>(
+               attributesMapper.getOrDefault(
+                 entry.getKey(),
+                 event -> {
+                   try {
+                     return getOrDefault(event.getAttribute(entry.getKey()),
+                                         Object::toString);
+                   } catch (Exception ex) {
+                     return getOrDefault(event.getExtension(entry.getKey()),
+                                         Object::toString);
+                   }
+                 }),
+               entry.getValue()))
+        .collect(Collectors.toUnmodifiableList());
   }
 
   /**
-   * Attributes filters events by exact match on event context attributes. Each key in the map is compared with the
-   * equivalent key in the event context. An event passes the filter if all values are equal to the specified values.
-   * Nested context attributes are not supported as keys. Only string values are supported.
+   * Attributes filters events by exact match on event context attributes. Each
+   * key in the map is compared with the equivalent key in the event context. An
+   * event passes the filter if all values are equal to the specified values.
+   * Nested context attributes are not supported as keys. Only string values are
+   * supported.
    *
    * @param event event to match
    * @return true if event matches attributes, otherwise false.
    */
   @Override
   public boolean test(final CloudEvent event) {
-
     for (final var entry : attributes) {
       if (!entry.getKey().apply(event).equals(entry.getValue())) {
         return false;
@@ -96,10 +108,8 @@ public class AttributesFilter implements Filter {
     return true;
   }
 
-  private static <T> String getOrDefault(
-    @Nullable final T s,
-    final Function<T, String> stringProvider) {
-
+  private static <T> String
+  getOrDefault(@Nullable final T s, final Function<T, String> stringProvider) {
     if (s == null) {
       return DEFAULT_STRING;
     }

@@ -15,27 +15,31 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.http;
 
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
+
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.rw.CloudEventRWException;
+
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
-import java.net.URI;
-import java.util.Objects;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import java.net.URI;
+import java.util.Objects;
 
 public final class WebClientCloudEventSender implements CloudEventSender {
-
-  private static final Logger logger = LoggerFactory.getLogger(WebClientCloudEventSender.class);
+  private static final Logger logger =
+    LoggerFactory.getLogger(WebClientCloudEventSender.class);
 
   private final WebClient client;
   private final CircuitBreaker circuitBreaker;
@@ -48,9 +52,12 @@ public final class WebClientCloudEventSender implements CloudEventSender {
    * @param circuitBreaker circuit breaker
    * @param target         subscriber URI
    */
-  public WebClientCloudEventSender(final WebClient client, final CircuitBreaker circuitBreaker, final String target) {
+  public WebClientCloudEventSender(final WebClient client,
+                                   final CircuitBreaker circuitBreaker,
+                                   final String target) {
     Objects.requireNonNull(client, "provide client");
-    if (target == null || target.equals("") || !URI.create(target).isAbsolute()) {
+    if (target == null || target.equals("")
+        || !URI.create(target).isAbsolute()) {
       throw new IllegalArgumentException("provide a valid target");
     }
     Objects.requireNonNull(circuitBreaker, "provide circuitBreaker");
@@ -68,24 +75,25 @@ public final class WebClientCloudEventSender implements CloudEventSender {
       try {
         send(event, breaker);
       } catch (CloudEventRWException e) {
-        logger.error("failed to write event to the request {}", keyValue("subscriberURI", target), e);
+        logger.error("failed to write event to the request {}",
+                     keyValue("subscriberURI", target), e);
         breaker.tryFail(e);
       }
     });
   }
 
-  private void send(final CloudEvent event, final Promise<HttpResponse<Buffer>> breaker) {
-    VertxMessageFactory
-      .createWriter(client.postAbs(target))
+  private void send(final CloudEvent event,
+                    final Promise<HttpResponse<Buffer>> breaker) {
+    VertxMessageFactory.createWriter(client.postAbs(target))
       .writeBinary(event)
       .onFailure(breaker::tryFail)
       .onSuccess(response -> {
-
         if (response.statusCode() >= 300 || response.statusCode() < 200) {
           logError(event, response);
           // TODO determine which status codes are retryable
           //  (channels -> https://github.com/knative/eventing/issues/2411)
-          breaker.tryFail("response status code is not 2xx - got: " + response.statusCode());
+          breaker.tryFail("response status code is not 2xx - got: "
+                          + response.statusCode());
           return;
         }
 
@@ -93,18 +101,17 @@ public final class WebClientCloudEventSender implements CloudEventSender {
       });
   }
 
-  private void logError(final CloudEvent event, final HttpResponse<Buffer> response) {
+  private void logError(final CloudEvent event,
+                        final HttpResponse<Buffer> response) {
     if (logger.isDebugEnabled()) {
       logger.error("failed to send event to subscriber {} {} {}",
-        keyValue("target", target),
-        keyValue("statusCode", response.statusCode()),
-        keyValue("event", event)
-      );
+                   keyValue("target", target),
+                   keyValue("statusCode", response.statusCode()),
+                   keyValue("event", event));
     } else {
       logger.error("failed to send event to subscriber {} {}",
-        keyValue("target", target),
-        keyValue("statusCode", response.statusCode())
-      );
+                   keyValue("target", target),
+                   keyValue("statusCode", response.statusCode()));
     }
   }
 

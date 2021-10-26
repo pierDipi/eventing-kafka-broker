@@ -16,11 +16,12 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
 import dev.knative.eventing.kafka.broker.dispatcher.Filter;
+
 import io.cloudevents.CloudEvent;
+
 import java.util.Set;
 
 public class AnyFilter implements Filter {
-
   private final Set<Filter> filters;
 
   public AnyFilter(Set<Filter> filters) {

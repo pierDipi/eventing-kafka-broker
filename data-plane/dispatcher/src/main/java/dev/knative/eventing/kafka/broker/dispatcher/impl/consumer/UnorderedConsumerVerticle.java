@@ -16,14 +16,16 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.dispatcher.DeliveryOrder;
+
 import io.vertx.core.Promise;
+
 import java.util.Set;
 
 /**
- * This {@link io.vertx.core.Verticle} implements an unordered consumer logic, as described in {@link DeliveryOrder#UNORDERED}.
+ * This {@link io.vertx.core.Verticle} implements an unordered consumer logic,
+ * as described in {@link DeliveryOrder#UNORDERED}.
  */
 public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
-
   public UnorderedConsumerVerticle(Initializer initializer,
                                    Set<String> topics) {
     super(initializer, topics);
@@ -35,5 +37,4 @@ public final class UnorderedConsumerVerticle extends BaseConsumerVerticle {
     this.consumer.handler(record -> this.recordDispatcher.dispatch(record));
     this.consumer.subscribe(this.topics, startPromise);
   }
-
 }

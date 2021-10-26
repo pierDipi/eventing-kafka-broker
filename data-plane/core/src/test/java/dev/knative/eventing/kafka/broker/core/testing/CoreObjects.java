@@ -16,22 +16,21 @@
 package dev.knative.eventing.kafka.broker.core.testing;
 
 import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
+
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 
 public final class CoreObjects {
-
   public static URL DESTINATION_URL;
 
   static {
     try {
-      DESTINATION_URL = new URL(
-        "http", "localhost", 44331, ""
-      );
+      DESTINATION_URL = new URL("http", "localhost", 44331, "");
     } catch (final MalformedURLException e) {
       e.printStackTrace();
     }
@@ -50,10 +49,7 @@ public final class CoreObjects {
     return DataPlaneContract.Resource.newBuilder()
       .setUid("1-1234")
       .addTopics("1-12345")
-      .addAllEgresses(Arrays.asList(
-        egress1(),
-        egress2()
-      ))
+      .addAllEgresses(Arrays.asList(egress1(), egress2()))
       .build();
   }
 
@@ -61,10 +57,7 @@ public final class CoreObjects {
     return DataPlaneContract.Resource.newBuilder()
       .setUid("2-1234")
       .addTopics("2-12345")
-      .addAllEgresses(Arrays.asList(
-        egress3(),
-        egress4()
-      ))
+      .addAllEgresses(Arrays.asList(egress3(), egress4()))
       .build();
   }
 
@@ -73,11 +66,12 @@ public final class CoreObjects {
       .setUid("1-1234567")
       .setConsumerGroup("1-1234567")
       .setDestination(DESTINATION)
-      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
+      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(
+        "type", "dev.knative"))
       .setEgressConfig(DataPlaneContract.EgressConfig.newBuilder()
-        .setRetry(1)
-        .setBackoffDelay(1000)
-        .build())
+                         .setRetry(1)
+                         .setBackoffDelay(1000)
+                         .build())
       .build();
   }
 
@@ -86,7 +80,8 @@ public final class CoreObjects {
       .setUid("2-1234567")
       .setConsumerGroup("2-1234567")
       .setDestination(DESTINATION)
-      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
+      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(
+        "type", "dev.knative"))
       .build();
   }
 
@@ -95,7 +90,8 @@ public final class CoreObjects {
       .setUid("3-1234567")
       .setConsumerGroup("3-1234567")
       .setDestination(DESTINATION)
-      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
+      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(
+        "type", "dev.knative"))
       .build();
   }
 
@@ -104,7 +100,8 @@ public final class CoreObjects {
       .setUid("4-1234567")
       .setConsumerGroup("4-1234567")
       .setDestination(DESTINATION)
-      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
+      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(
+        "type", "dev.knative"))
       .build();
   }
 
@@ -113,7 +110,8 @@ public final class CoreObjects {
       .setUid("5-1234567")
       .setConsumerGroup("5-1234567")
       .setDestination(DESTINATION)
-      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
+      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(
+        "type", "dev.knative"))
       .build();
   }
 
@@ -122,7 +120,8 @@ public final class CoreObjects {
       .setUid("6-1234567")
       .setConsumerGroup("6-1234567")
       .setDestination(DESTINATION)
-      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes("type", "dev.knative"))
+      .setFilter(DataPlaneContract.Filter.newBuilder().putAttributes(
+        "type", "dev.knative"))
       .build();
   }
 
@@ -133,5 +132,4 @@ public final class CoreObjects {
       .withType("test")
       .build();
   }
-
 }

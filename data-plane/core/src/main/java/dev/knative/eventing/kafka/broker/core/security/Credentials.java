@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.core.security;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 
 public interface Credentials {
-
   /**
    * @return CA certificate.
    */
@@ -57,23 +56,29 @@ public interface Credentials {
 
   /**
    * Client config:
-   * sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
+   * sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule
+   * required \
    * username="alice" \
    * password="alice-secret";
    *
    * @return username.
-   * @see <a href="https://kafka.apache.org/documentation/#security_sasl_scram">SASL Scram</a>
+   * @see <a
+   *   href="https://kafka.apache.org/documentation/#security_sasl_scram">SASL
+   *   Scram</a>
    */
   String SASLUsername();
 
   /**
    * Client config:
-   * sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required \
+   * sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule
+   * required \
    * username="alice" \
    * password="alice-secret";
    *
    * @return password.
-   * @see <a href="https://kafka.apache.org/documentation/#security_sasl_scram">SASL Scram</a>
+   * @see <a
+   *   href="https://kafka.apache.org/documentation/#security_sasl_scram">SASL
+   *   Scram</a>
    */
   String SASLPassword();
 }

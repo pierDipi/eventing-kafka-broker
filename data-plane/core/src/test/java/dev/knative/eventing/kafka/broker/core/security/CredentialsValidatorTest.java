@@ -15,15 +15,15 @@
  */
 package dev.knative.eventing.kafka.broker.core.security;
 
-import org.apache.kafka.common.security.auth.SecurityProtocol;
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class CredentialsValidatorTest {
+import org.apache.kafka.common.security.auth.SecurityProtocol;
 
+import org.junit.jupiter.api.Test;
+
+public class CredentialsValidatorTest {
   @Test
   public void securityProtocolPlaintextValid() {
     final var credential = mock(Credentials.class);
@@ -94,7 +94,6 @@ public class CredentialsValidatorTest {
     assertThat(CredentialsValidator.validate(credential)).isNull();
   }
 
-
   @Test
   public void securityProtocolSaslPlaintextScramSha256Valid() {
     securityProtocolSaslPlaintextValid("SCRAM-SHA-256");
@@ -110,11 +109,12 @@ public class CredentialsValidatorTest {
     securityProtocolSaslPlaintextValid("PLAIN");
   }
 
-  private static void securityProtocolSaslPlaintextValid(final String mechanism) {
-
+  private static void securityProtocolSaslPlaintextValid(
+    final String mechanism) {
     final var credential = mock(Credentials.class);
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
+    when(credential.securityProtocol())
+      .thenReturn(SecurityProtocol.SASL_PLAINTEXT);
     when(credential.SASLMechanism()).thenReturn(mechanism);
     when(credential.SASLUsername()).thenReturn("aaa");
     when(credential.SASLPassword()).thenReturn("bbb");
@@ -126,7 +126,8 @@ public class CredentialsValidatorTest {
   public void securityProtocolSaslPlaintextScramSha513InValid() {
     final var credential = mock(Credentials.class);
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
+    when(credential.securityProtocol())
+      .thenReturn(SecurityProtocol.SASL_PLAINTEXT);
     when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-513");
     when(credential.SASLUsername()).thenReturn("aaa");
     when(credential.SASLPassword()).thenReturn("bbb");
@@ -138,7 +139,8 @@ public class CredentialsValidatorTest {
   public void securityProtocolSaslPLAINTEXT_ScramSha51NoUsernameInValid() {
     final var credential = mock(Credentials.class);
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
+    when(credential.securityProtocol())
+      .thenReturn(SecurityProtocol.SASL_PLAINTEXT);
     when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
     when(credential.SASLUsername()).thenReturn("  ");
     when(credential.SASLPassword()).thenReturn("bbb");
@@ -150,7 +152,8 @@ public class CredentialsValidatorTest {
   public void securityProtocolSaslPLAINTEXT_ScramSha51NoPasswordInValid() {
     final var credential = mock(Credentials.class);
 
-    when(credential.securityProtocol()).thenReturn(SecurityProtocol.SASL_PLAINTEXT);
+    when(credential.securityProtocol())
+      .thenReturn(SecurityProtocol.SASL_PLAINTEXT);
     when(credential.SASLMechanism()).thenReturn("SCRAM-SHA-512");
     when(credential.SASLUsername()).thenReturn("bbb");
     when(credential.SASLPassword()).thenReturn("  ");

@@ -18,7 +18,6 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 import io.cloudevents.CloudEvent;
 
 public class ExactFilter extends BaseStringFilter {
-
   public ExactFilter(String attribute, String expectedValue) {
     super(attribute, expectedValue);
   }

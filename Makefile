@@ -4,7 +4,7 @@
 CGO_ENABLED=0
 GOOS=linux
 # Ignore errors if there are no images.
-CORE_IMAGES=./control-plane/cmd/kafka-controller ./control-plane/cmd/webhook-kafka
+CONTROL_PLANE_IMAGES=./control-plane/cmd/kafka-controller ./control-plane/cmd/webhook-kafka
 TEST_IMAGES=$(shell find ./test/test_images ./vendor/knative.dev/eventing/test/test_images -mindepth 1 -maxdepth 1 -type d 2> /dev/null)
 KO_DOCKER_REPO=${DOCKER_REPO_OVERRIDE}
 BRANCH=
@@ -16,7 +16,7 @@ OPENSHIFT=${CURDIR}/../../github.com/openshift/release
 
 # Build and install commands.
 install:
-	for img in $(CORE_IMAGES); do \
+	for img in $(CONTROL_PLANE_IMAGES); do \
 		go install $$img ; \
 	done
 .PHONY: install
@@ -56,7 +56,7 @@ test-e2e-local:
 # Generate Dockerfiles used by ci-operator. The files need to be committed manually.
 generate-dockerfiles:
 	rm -rf openshift/ci-operator/knative-images/*
-	./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/knative-images $(CORE_IMAGES)
+	./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/knative-images $(CONTROL_PLANE_IMAGES)
 	rm -rf openshift/ci-operator/knative-test-images/*
 	./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/knative-test-images $(TEST_IMAGES)
 .PHONY: generate-dockerfiles
@@ -69,5 +69,5 @@ generate-release:
 # Update CI configuration in the $(OPENSHIFT) directory.
 # NOTE: Makes changes outside this repository.
 update-ci:
-	sh ./openshift/ci-operator/update-ci.sh $(OPENSHIFT) $(CORE_IMAGES)
+	sh ./openshift/ci-operator/update-ci.sh $(OPENSHIFT) $(CONTROL_PLANE_IMAGES)
 .PHONY: update-ci

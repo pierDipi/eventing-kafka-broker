@@ -8,11 +8,11 @@ if [[ "$branch" == "knative-next" ]]; then
     branch="knative-nightly"
 fi
 
-core_images=$(find ./openshift/ci-operator/knative-images -mindepth 1 -maxdepth 1 -type d | LC_COLLATE=posix sort)
+control_plane_images=$(find ./openshift/ci-operator/knative-images -mindepth 1 -maxdepth 1 -type d | LC_COLLATE=posix sort)
 test_images=$(find ./openshift/ci-operator/knative-test-images -mindepth 1 -maxdepth 1 -type d | LC_COLLATE=posix sort)
 
 function print_image_dependencies {
-  for img in $core_images; do
+  for img in $control_plane_images; do
     image_base=knative-eventing-kafka-broker-$(basename $img)
     to_image=$(echo ${image_base//[_.]/-})
     to_image=$(echo ${to_image//v0/upgrade-v0})
@@ -129,7 +129,7 @@ resources:
 images:
 EOF
 
-for img in $core_images; do
+for img in $control_plane_images; do
   image_base=$(basename $img)
   to_image=$(echo ${image_base//[_.]/-})
   to_image=$(echo ${to_image//v0/upgrade-v0})

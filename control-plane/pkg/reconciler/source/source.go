@@ -84,24 +84,17 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 	}
 	statusConditionManager.DataPlaneAvailable()
 
-	secret, err := security.Secret(ctx, &SecretLocator{KafkaSource: ks}, r.SecretProviderFunc())
+	netSpecSecretProvider := security.NetSpecSecretProviderFunc(r.SecretLister, ks.GetNamespace(), ks.Spec.Net)
+	secret, err := security.Secret(ctx, &SecretLocator{KafkaSource: ks}, netSpecSecretProvider)
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
-	}
-	if secret != nil {
-		logger.Debug("Secret reference",
-			zap.String("apiVersion", secret.APIVersion),
-			zap.String("name", secret.Name),
-			zap.String("namespace", secret.Namespace),
-			zap.String("kind", secret.Kind),
-		)
 	}
 
 	// get security option for Sarama with secret info in it
 	securityOption := security.NewSaramaSecurityOptionFromSecret(secret)
 
-	if err := r.TrackSecret(secret, ks); err != nil {
-		return fmt.Errorf("failed to track secret: %w", err)
+	if err := security.TrackNetSpecSecrets(r.SecretTracker, ks.Spec.Net, ks); err != nil {
+		return fmt.Errorf("failed to track secrets: %w", err)
 	}
 
 	saramaConfig, err := kafka.GetClusterAdminSaramaConfig(securityOption)

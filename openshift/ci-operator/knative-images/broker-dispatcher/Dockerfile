@@ -27,8 +27,8 @@ COPY /data-plane/core/pom.xml core/pom.xml
 COPY /data-plane/receiver/pom.xml receiver/pom.xml
 COPY /data-plane/dispatcher/pom.xml dispatcher/pom.xml
 COPY /data-plane/contract/pom.xml contract/pom.xml
-COPY /data-plane/./mvnw .
-COPY /data-plane/./.mvn/wrapper .mvn/wrapper
+COPY /data-plane/mvnw .
+COPY /data-plane/.mvn/wrapper .mvn/wrapper
 COPY /data-plane/docker/generate_jdk.sh .
 
 # Install dependencies. Note: don't build a single submodule (recever or dispatcher) since it just slows down
@@ -39,9 +39,9 @@ COPY . .
 
 RUN ./mvnw package -pl=dispatcher -Drelease -am -DskipTests -Deditorconfig.skip --no-transfer-progress
 
-RUN ./generate_jdk.sh /build/dispatcher/target/${APP_JAR}
+RUN ./generate_jdk.sh /build/dispatcher/target/dispatcher-1.0-SNAPSHOT.jar
 
-RUN cp /build/dispatcher/target/${APP_JAR} /app/app.jar
+RUN cp /build/dispatcher/target/dispatcher-1.0-SNAPSHOT.jar /app/app.jar
 
 FROM quay.io/openshift-knative/17-jdk-centos7 as running
 

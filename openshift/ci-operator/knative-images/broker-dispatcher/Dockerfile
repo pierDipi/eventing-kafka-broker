@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-FROM docker.io/eclipse-temurin:17-jdk-centos7 as builder
+FROM quay.io/openshift-knative/17-jdk-centos7 as builder
 
 ARG APP_DIR=/data-plane/dispatcher
 ARG APP_JAR="dispatcher-1.0-SNAPSHOT.jar"
@@ -43,7 +43,7 @@ RUN ./generate_jdk.sh /build/dispatcher/target/${APP_JAR}
 
 RUN cp /build/dispatcher/target/${APP_JAR} /app/app.jar
 
-FROM gcr.io/distroless/java-debian11:base-nonroot as running
+FROM quay.io/openshift-knative/17-jdk-centos7 as running
 
 COPY --from=builder /app /app
 

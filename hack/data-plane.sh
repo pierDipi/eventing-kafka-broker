@@ -43,7 +43,7 @@ readonly dispatcher="${KNATIVE_KAFKA_BROKER_DISPATCHER:-knative-kafka-broker-dis
 
 # The BASE_IMAGE must have system libraries (libc, zlib, etc) compatible with the JAVA_IMAGE because
 # Jlink generates a jdk linked to the same system libraries available on the base images.
-readonly BASE_IMAGE=gcr.io/distroless/java-debian10:base-nonroot # Based on debian:buster
+readonly BASE_IMAGE=quay.io/openshift-knative/17-jdk-centos7
 readonly JAVA_IMAGE=quay.io/openshift-knative/17-jdk-centos7
 
 readonly RECEIVER_JAR="receiver-1.0-SNAPSHOT.jar"

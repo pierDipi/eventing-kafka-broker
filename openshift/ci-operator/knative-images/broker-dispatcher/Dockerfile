@@ -14,25 +14,22 @@
 # limitations under the License.
 #
 
-FROM docker.io/adoptopenjdk/openjdk16:debian as builder
+FROM docker.io/eclipse-temurin:17-jdk-centos7 as builder
 
-ARG APP_DIR
-ARG APP_JAR
+ARG APP_DIR=/data-plane/dispatcher
+ARG APP_JAR="dispatcher-1.0-SNAPSHOT.jar"
 
 WORKDIR /build
 
-# https://github.com/AdoptOpenJDK/openjdk-docker/issues/260
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y binutils
-
-COPY pom.xml .
-COPY .editorconfig .
-COPY core/pom.xml core/pom.xml
-COPY receiver/pom.xml receiver/pom.xml
-COPY dispatcher/pom.xml dispatcher/pom.xml
-COPY contract/pom.xml contract/pom.xml
-COPY ./mvnw .
-COPY ./.mvn/wrapper .mvn/wrapper
-COPY docker/generate_jdk.sh .
+COPY /data-plane/pom.xml .
+COPY /data-plane/.editorconfig .
+COPY /data-plane/core/pom.xml core/pom.xml
+COPY /data-plane/receiver/pom.xml receiver/pom.xml
+COPY /data-plane/dispatcher/pom.xml dispatcher/pom.xml
+COPY /data-plane/contract/pom.xml contract/pom.xml
+COPY /data-plane/./mvnw .
+COPY /data-plane/./.mvn/wrapper .mvn/wrapper
+COPY /data-plane/docker/generate_jdk.sh .
 
 # Install dependencies. Note: don't build a single submodule (recever or dispatcher) since it just slows down
 # consecutive builds.
@@ -40,13 +37,13 @@ RUN ./mvnw install -am -DskipTests -Drelease -Dlicense.skip -Deditorconfig.skip 
 
 COPY . .
 
-RUN ./mvnw package -pl=${APP_DIR} -Drelease -am -DskipTests -Deditorconfig.skip --no-transfer-progress
+RUN ./mvnw package -pl=dispatcher -Drelease -am -DskipTests -Deditorconfig.skip --no-transfer-progress
 
-RUN ./generate_jdk.sh /build/${APP_DIR}/target/${APP_JAR}
+RUN ./generate_jdk.sh /build/dispatcher/target/${APP_JAR}
 
-RUN cp /build/${APP_DIR}/target/${APP_JAR} /app/app.jar
+RUN cp /build/dispatcher/target/${APP_JAR} /app/app.jar
 
-FROM gcr.io/distroless/java-debian10:base-nonroot as running
+FROM gcr.io/distroless/java-debian11:base-nonroot as running
 
 COPY --from=builder /app /app
 

@@ -14,9 +14,12 @@
 # limitations under the License.
 #
 
-FROM quay.io/openshift-knative/17-jdk-centos7 as builder
+ARG JAVA_IMAGE="quay.io/openshift-knative/17-jdk-centos7"
+ARG BASE_IMAGE="quay.io/openshift-knative/17-jdk-centos7"
 
-ARG APP_DIR=/data-plane/dispatcher
+FROM ${JAVA_IMAGE} as builder
+
+ARG APP_DIR=dispatcher
 ARG APP_JAR="dispatcher-1.0-SNAPSHOT.jar"
 
 WORKDIR /build
@@ -35,15 +38,15 @@ COPY /data-plane/docker/generate_jdk.sh .
 # consecutive builds.
 RUN ./mvnw install -am -DskipTests -Drelease -Dlicense.skip -Deditorconfig.skip --no-transfer-progress
 
-COPY . .
+COPY /data-plane/ .
 
-RUN ./mvnw package -pl=dispatcher -Drelease -am -DskipTests -Deditorconfig.skip --no-transfer-progress
+RUN ./mvnw package -Drelease -am -DskipTests -Deditorconfig.skip --no-transfer-progress
 
-RUN ./generate_jdk.sh /build/dispatcher/target/dispatcher-1.0-SNAPSHOT.jar
+RUN ./generate_jdk.sh /build/${APP_DIR}/target/${APP_JAR}
 
-RUN cp /build/dispatcher/target/dispatcher-1.0-SNAPSHOT.jar /app/app.jar
+RUN cp /build/${APP_DIR}/target/${APP_JAR} /app/app.jar
 
-FROM quay.io/openshift-knative/17-jdk-centos7 as running
+FROM ${BASE_IMAGE} as running
 
 COPY --from=builder /app /app
 

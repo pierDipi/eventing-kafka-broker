@@ -35,7 +35,7 @@ COPY /data-plane/docker/generate_jdk.sh .
 # consecutive builds.
 RUN ./mvnw install -am -DskipTests -Drelease -Dlicense.skip -Deditorconfig.skip --no-transfer-progress
 
-COPY . .
+COPY /data-plane/ .
 
 RUN ./mvnw package -pl=dispatcher -Drelease -am -DskipTests -Deditorconfig.skip --no-transfer-progress
 

@@ -64,3 +64,24 @@ function install_serverless(){
   popd
   return $failed
 }
+
+function install_knative_kafka() {
+  header "Installing Knative Kafka Control Plane"
+
+  CP_RELEASE_YAML="openshift/release/knative-eventing-kafka-broker-cp-ci.yaml"
+
+  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-kafka-controller|${KNATIVE_EVENTING_KAFKA_BROKER_KAFKA_CONTROLLER}|g" ${CP_RELEASE_YAML}
+  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-webhook-kafka|${KNATIVE_EVENTING_KAFKA_BROKER_WEBHOOK_KAFKA}|g"       ${CP_RELEASE_YAML}
+
+  oc apply -f ${CP_RELEASE_YAML}
+
+  header "Installing Knative Kafka Data Plane"
+
+  DP_RELEASE_YAML="openshift/release/knative-eventing-kafka-broker-dp-ci.yaml"
+
+  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-dispatcher|${KNATIVE_EVENTING_KAFKA_BROKER_DISPATCHER}|g" ${DP_RELEASE_YAML}
+  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-receiver|${KNATIVE_EVENTING_KAFKA_BROKER_RECEIVER}|g"       ${DP_RELEASE_YAML}
+
+  oc apply -f ${DP_RELEASE_YAML}
+}
+

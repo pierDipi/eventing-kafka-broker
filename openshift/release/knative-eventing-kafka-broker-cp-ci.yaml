@@ -3,6 +3,25 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: kafka-config-logging
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: devel
+data:
+  config.xml: |
+    <configuration>
+      <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+      </appender>
+      <root level="INFO">
+        <appender-ref ref="jsonConsoleAppender"/>
+      </root>
+    </configuration>
+---
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
   name: kafka-broker-config
   namespace: knative-eventing
   labels:

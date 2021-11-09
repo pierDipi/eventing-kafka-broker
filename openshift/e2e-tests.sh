@@ -6,7 +6,7 @@ source "$(dirname "$0")/e2e-common.sh"
 
 set -Eeuox pipefail
 
-##export TEST_IMAGE_TEMPLATE="${EVENTING_KAFKA_TEST_IMAGE_TEMPLATE}"
+export TEST_IMAGE_TEMPLATE="${EVENTING_KAFKA_BROKER_TEST_IMAGE_TEMPLATE}"
 
 env
 
@@ -22,7 +22,7 @@ failed=0
 
 # (( !failed )) && install_tracing || failed=1
 
-# (( !failed )) && run_e2e_tests || failed=1
+(( !failed )) && run_e2e_tests || failed=1
 
 (( failed )) && dump_cluster_state
 

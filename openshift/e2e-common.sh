@@ -88,6 +88,26 @@ function install_serverless(){
 }
 
 function install_knative_kafka() {
+  header "Set Kafka as default Broker"
+  cat <<-EOF | oc apply -f -
+apiVersion: operator.knative.dev/v1alpha1
+kind: KnativeEventing
+metadata:
+  name: knative-eventing
+  namespace: knative-eventing
+spec:
+  defaultBrokerClass: Kafka
+  config:
+    config-br-defaults:
+      default-br-config: |
+        clusterDefault:
+          apiVersion: v1
+          kind: ConfigMap
+          name: kafka-broker-config
+          namespace: knative-eventing
+---
+EOF
+
   header "Installing Knative Kafka Control Plane"
 
   CP_RELEASE_YAML="openshift/release/knative-eventing-kafka-broker-cp-ci.yaml"

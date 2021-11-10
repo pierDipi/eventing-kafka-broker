@@ -26,7 +26,6 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/sink"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/trigger"
 )
 
@@ -41,10 +40,11 @@ func main() {
 		log.Fatal("cannot process environment variables with prefix BROKER", err)
 	}
 
-	sinkEnv, err := config.GetEnvConfig("SINK")
-	if err != nil {
-		log.Fatal("cannot process environment variables with prefix SINK", err)
-	}
+	// we just want the contollers for Broker/Trigger on 0.26
+	//sinkEnv, err := config.GetEnvConfig("SINK")
+	//if err != nil {
+	//	log.Fatal("cannot process environment variables with prefix SINK", err)
+	//}
 
 	sharedmain.Main(
 		component,
@@ -59,9 +59,10 @@ func main() {
 			return trigger.NewController(ctx, watcher, brokerEnv)
 		},
 
-		// KafkaSink controller
-		func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-			return sink.NewController(ctx, watcher, sinkEnv)
-		},
+		// we just want the contollers for Broker/Trigger on 0.26
+		//// KafkaSink controller
+		//func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
+		//	return sink.NewController(ctx, watcher, sinkEnv)
+		//},
 	)
 }

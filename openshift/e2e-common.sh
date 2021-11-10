@@ -1,5 +1,27 @@
 #!/usr/bin/env bash
 
+export EVENTING_NAMESPACE="${EVENTING_NAMESPACE:-knative-eventing}"
+export SYSTEM_NAMESPACE=$EVENTING_NAMESPACE
+export ZIPKIN_NAMESPACE=$EVENTING_NAMESPACE
+export KNATIVE_DEFAULT_NAMESPACE=$EVENTING_NAMESPACE
+export EVENTING_KAFKA_BROKER_TEST_IMAGE_TEMPLATE=$(cat <<-END
+{{- with .Name }}
+{{- if eq . "event-sender"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_EVENT_SENDER{{end -}}
+{{- if eq . "heartbeats"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_HEARTBEATS{{end -}}
+{{- if eq . "recordevents"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_RECORDEVENTS{{end -}}
+{{- if eq . "print"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_PRINT{{end -}}
+{{- if eq . "performance"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_PERFORMANCE{{end -}}
+{{- if eq . "event-flaker"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_EVENT_FLAKER{{end -}}
+{{- if eq . "event-library"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_EVENT_LIBRARY{{end -}}
+{{- if eq . "committed-offset"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_COMMITTED_OFFSET{{end -}}
+{{- if eq . "consumer-group-lag-provider-test"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_CONSUMER_GROUP_LAG_PROVIDER_TEST{{end -}}
+{{- if eq . "kafka-consumer"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_KAFKA_CONSUMER{{end -}}
+{{- if eq . "partitions-replication-verifier"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_PARTITIONS_REPLICATION_VERIFIER{{end -}}
+{{- if eq . "request-sender"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_REQUEST_SENDER{{end -}}
+{{end -}}
+END
+)
+
 function scale_up_workers(){
   local cluster_api_ns="openshift-machine-api"
 
@@ -66,6 +88,26 @@ function install_serverless(){
 }
 
 function install_knative_kafka() {
+  header "Set Kafka as default Broker"
+  cat <<-EOF | oc apply -f -
+apiVersion: operator.knative.dev/v1alpha1
+kind: KnativeEventing
+metadata:
+  name: knative-eventing
+  namespace: knative-eventing
+spec:
+  defaultBrokerClass: Kafka
+  config:
+    config-br-defaults:
+      default-br-config: |
+        clusterDefault:
+          apiVersion: v1
+          kind: ConfigMap
+          name: kafka-broker-config
+          namespace: knative-eventing
+---
+EOF
+
   header "Installing Knative Kafka Control Plane"
 
   CP_RELEASE_YAML="openshift/release/knative-eventing-kafka-broker-cp-ci.yaml"
@@ -74,6 +116,7 @@ function install_knative_kafka() {
   sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-webhook-kafka|${KNATIVE_EVENTING_KAFKA_BROKER_WEBHOOK_KAFKA}|g"       ${CP_RELEASE_YAML}
 
   oc apply -f ${CP_RELEASE_YAML}
+  wait_until_pods_running $EVENTING_NAMESPACE || return 1
 
   header "Installing Knative Kafka Data Plane"
 
@@ -83,5 +126,15 @@ function install_knative_kafka() {
   sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-receiver|${KNATIVE_EVENTING_KAFKA_BROKER_RECEIVER}|g"       ${DP_RELEASE_YAML}
 
   oc apply -f ${DP_RELEASE_YAML}
+  wait_until_pods_running $EVENTING_NAMESPACE || return 1
 }
 
+function run_e2e_tests(){
+
+  # go_test_e2e -timeout=30m ./test/e2e_new \
+  #   -imagetemplate "${TEST_IMAGE_TEMPLATE}" || fail_test "E2E (new) suite failed"
+
+
+  go_test_e2e -timeout=30m ./test/e2e/ \
+    -imagetemplate "${TEST_IMAGE_TEMPLATE}" || fail_test "E2E suite failed"
+}

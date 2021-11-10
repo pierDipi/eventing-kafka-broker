@@ -131,10 +131,10 @@ EOF
 
 function run_e2e_tests(){
 
-  # go_test_e2e -timeout=30m ./test/e2e_new \
-  #   -imagetemplate "${TEST_IMAGE_TEMPLATE}" || fail_test "E2E (new) suite failed"
-
-
   go_test_e2e -timeout=30m ./test/e2e/ \
     -imagetemplate "${TEST_IMAGE_TEMPLATE}" || fail_test "E2E suite failed"
+}
+
+function run_e2e_new_tests(){
+  go_test_e2e -timeout=30m ./test/e2e_new || fail_test "E2E (new) suite failed"
 }

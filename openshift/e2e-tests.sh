@@ -14,9 +14,9 @@ scale_up_workers || exit 1
 
 failed=0
 
-(( !failed )) && kafka_setup || failed=1
-
 (( !failed )) && install_serverless || failed=1
+
+(( !failed )) && kafka_setup || failed=1
 
 (( !failed )) && install_knative_kafka || failed=1
 

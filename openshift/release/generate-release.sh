@@ -17,9 +17,8 @@ fi
 
 # the Broker Control Plane parts
 # The generic CP root folder
-resolve_resources control-plane/config/100-broker cp_broker.yaml $image_prefix $tag
-cat cp_broker.yaml >> $broker_cp_output_file
-rm cp_broker.yaml
+resolve_resources control-plane/config/100-broker $broker_cp_output_file $image_prefix $tag
+
 resolve_resources control-plane/config/200-controller cp_broker.yaml $image_prefix $tag
 cat cp_broker.yaml >> $broker_cp_output_file
 rm cp_broker.yaml
@@ -29,9 +28,7 @@ rm cp_broker.yaml
 
 # the Broker Data Plane folders
 # The generic DP root folder
-resolve_resources data-plane/config dp_broker.yaml $image_prefix $tag
-cat dp_broker.yaml >> $broker_dp_output_file
-rm dp_broker.yaml
+resolve_resources data-plane/config $broker_dp_output_file $image_prefix $tag
 
 # The DP folder for Broker:
 resolve_resources data-plane/config/broker dp_broker.yaml $image_prefix $tag

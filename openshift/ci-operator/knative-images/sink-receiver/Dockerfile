@@ -34,11 +34,11 @@ RUN ./mvnw install -am -DskipTests -Drelease -Dlicense.skip -Deditorconfig.skip 
 
 COPY /data-plane/ .
 
-RUN ./mvnw package -pl=dispatcher -Drelease -am -DskipTests -Deditorconfig.skip --no-transfer-progress
+RUN ./mvnw package -pl=receiver -Drelease -am -DskipTests -Deditorconfig.skip --no-transfer-progress
 
-RUN ./generate_jdk.sh /build/dispatcher/target/dispatcher-1.0-SNAPSHOT.jar
+RUN ./generate_jdk.sh /build/receiver/target/receiver-1.0-SNAPSHOT.jar
 
-RUN cp /build/dispatcher/target/dispatcher-1.0-SNAPSHOT.jar /app/app.jar
+RUN cp /build/receiver/target/receiver-1.0-SNAPSHOT.jar /app/app.jar
 
 FROM quay.io/openshift-knative/17-jdk-centos7 as running
 

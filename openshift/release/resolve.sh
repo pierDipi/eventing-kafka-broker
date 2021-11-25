@@ -23,6 +23,7 @@ function resolve_resources(){
         -e "s+contrib.eventing.knative.dev/release: devel+contrib.eventing.knative.dev/release: ${release}+" \
         -e "s+\${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}+${image_prefix}dispatcher${image_tag}+" \
         -e "s+\${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}+${image_prefix}receiver${image_tag}+" \
+        -e "s+\${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}+${image_prefix}receiver${image_tag}+" \
         -e "s+\(.* image: \)\(knative.dev\)\(.*/\)\(.*\)+\1${image_prefix}\4${image_tag}+g" \
         -e '/^[ \t]*#/d' \
         -e '/^[ \t]*$/d' \

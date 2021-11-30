@@ -20,16 +20,13 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"sync"
 	"testing"
-	"time"
 
 	"k8s.io/utils/pointer"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"github.com/Shopify/sarama"
-	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -68,6 +65,9 @@ const (
 	finalizerName = "brokers.eventing.knative.dev"
 
 	bootstrapServers = "kafka-1:9092,kafka-2:9093"
+
+	DefaultNumPartitions     = 20
+	DefaultReplicationFactor = 5
 )
 
 var (
@@ -106,6 +106,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Objects: []runtime.Object{
 				NewBroker(),
 				NewConfigMap(&configs, nil),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewService(),
 				BrokerReceiverPod(configs.SystemNamespace, map[string]string{
 					base.VolumeGenerationAnnotationKey: "0",
@@ -166,6 +167,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewBroker(
 					WithDelivery(),
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Generation: 1,
 				}, &configs),
@@ -224,6 +226,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewBroker(
 					WithDelivery(WithNoDeadLetterSinkNamespace),
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Generation: 1,
 				}, &configs),
@@ -280,6 +283,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Name: "Failed to create topic",
 			Objects: []runtime.Object{
 				NewBroker(),
+				BrokerConfig(bootstrapServers, 20, 5),
 				BrokerReceiverPod(configs.SystemNamespace, nil),
 				BrokerDispatcherPod(configs.SystemNamespace, nil),
 			},
@@ -318,6 +322,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewBroker(
 					WithDelivery(),
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewService(),
 				BrokerReceiverPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
 				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{base.VolumeGenerationAnnotationKey: "2"}),
@@ -382,6 +387,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Objects: []runtime.Object{
 				NewBroker(),
 				NewConfigMap(&configs, []byte(`{"hello": "world"}`)),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewService(),
 				BrokerReceiverPod(configs.SystemNamespace, nil),
 				BrokerDispatcherPod(configs.SystemNamespace, map[string]string{
@@ -434,6 +440,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Name: "Reconciled normal - preserve config map previous state",
 			Objects: []runtime.Object{
 				NewBroker(),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -526,6 +533,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						}
 					},
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -615,6 +623,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						broker.Spec.Delivery = &eventingduck.DeliverySpec{}
 					},
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -694,6 +703,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Name: "Reconciled normal - increment volume generation",
 			Objects: []runtime.Object{
 				NewBroker(),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -776,6 +786,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 						}
 					},
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -837,6 +848,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Name: "No bootstrap.servers provided",
 			Objects: []runtime.Object{
 				NewBroker(),
+				BrokerConfig("", 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources:  []*contract.Resource{},
 					Generation: 1,
@@ -851,7 +863,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				Eventf(
 					corev1.EventTypeWarning,
 					"InternalError",
-					"failed to get contract configuration: no bootstrap.servers provided",
+					"failed to get contract configuration: invalid configuration - numPartitions: 20 - replicationFactor: 5 - bootstrapServers:  - ConfigMap data: map[bootstrap.servers: default.topic.partitions:20 default.topic.replication.factor:5]",
 				),
 			},
 			WantPatches: []clientgotesting.PatchActionImpl{
@@ -862,7 +874,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					Object: NewBroker(
 						reconcilertesting.WithInitBrokerConditions,
 						BrokerDataPlaneAvailable,
-						BrokerConfigNotParsed("no bootstrap.servers provided"),
+						BrokerConfigNotParsed("invalid configuration - numPartitions: 20 - replicationFactor: 5 - bootstrapServers:  - ConfigMap data: map[bootstrap.servers: default.topic.partitions:20 default.topic.replication.factor:5]"),
 					),
 				},
 			},
@@ -1118,6 +1130,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewBroker(
 					WithDelivery(),
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1228,6 +1241,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 			Name: "no data plane pods running",
 			Objects: []runtime.Object{
 				NewBroker(),
+				BrokerConfig(bootstrapServers, 20, 5),
 			},
 			Key:     testKey,
 			WantErr: true,
@@ -1258,6 +1272,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					WithDelivery(),
 					WithRetry(pointer.Int32Ptr(10), &exponential, pointer.StringPtr("PT2S")),
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Generation: 1,
 				}, &configs),
@@ -1323,6 +1338,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					WithDelivery(),
 					WithRetry(pointer.Int32Ptr(10), &linear, pointer.StringPtr("PT2S")),
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Generation: 1,
 				}, &configs),
@@ -1388,6 +1404,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					WithDelivery(),
 					WithRetry(nil, &linear, pointer.StringPtr("PT2S")),
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Generation: 1,
 				}, &configs),
@@ -1450,6 +1467,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 					WithDelivery(),
 					WithRetry(pointer.Int32Ptr(10), &linear, nil),
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Generation: 1,
 				}, &configs),
@@ -1514,6 +1532,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewBroker(
 					WithDelivery(),
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1562,6 +1581,7 @@ func brokerReconciliation(t *testing.T, format string, configs Configs) {
 				NewBroker(
 					WithDelivery(),
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1635,6 +1655,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Name: "Reconciled normal - no DLS",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1663,6 +1684,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewDeletedBroker(
 					WithDelivery(),
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1689,6 +1711,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Name: "Failed to delete topic",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1726,6 +1749,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 				NewDeletedBroker(
 					WithDelivery(),
 				),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewService(),
 			},
 			Key: testKey,
@@ -1741,6 +1765,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Name: "Reconciled normal - preserve config map previous state",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1778,6 +1803,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Name: "Reconciled normal - topic doesn't exist",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1816,6 +1842,7 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 			Name: "Reconciled normal - no broker found in config map",
 			Objects: []runtime.Object{
 				NewDeletedBroker(),
+				BrokerConfig(bootstrapServers, 20, 5),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
@@ -1843,8 +1870,6 @@ func brokerFinalization(t *testing.T, format string, configs Configs) {
 
 func useTable(t *testing.T, table TableTest, configs *Configs) {
 
-	testCtx, cancel := context.WithCancel(context.Background())
-
 	table.Test(t, NewFactory(configs, func(ctx context.Context, listers *Listers, configs *Configs, row *TableRow) controller.Reconciler {
 
 		defaultTopicDetail := sarama.TopicDetail{
@@ -1860,11 +1885,6 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 		var onDeleteTopicError error
 		if want, ok := row.OtherTestData[wantErrorOnDeleteTopic]; ok {
 			onDeleteTopicError = want.(error)
-		}
-
-		bootstrapServers := ""
-		if bs, ok := row.OtherTestData[BootstrapServersConfigMapKey]; ok {
-			bootstrapServers = bs.(string)
 		}
 
 		expectedTopicDetail := defaultTopicDetail
@@ -1884,9 +1904,7 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,
 			},
-			KafkaDefaultTopicDetails:     defaultTopicDetail,
-			KafkaDefaultTopicDetailsLock: sync.RWMutex{},
-			ConfigMapLister:              listers.GetConfigMapLister(),
+			ConfigMapLister: listers.GetConfigMapLister(),
 			NewKafkaClusterAdmin: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName:   fmt.Sprintf("%s%s-%s", TopicPrefix, BrokerNamespace, BrokerName),
@@ -1898,7 +1916,6 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 			},
 			Configs: configs,
 		}
-		reconciler.SetBootstrapServers(bootstrapServers)
 
 		reconciler.ConfigMapTracker = &FakeTracker{}
 		reconciler.SecretTracker = &FakeTracker{}
@@ -1915,51 +1932,8 @@ func useTable(t *testing.T, table TableTest, configs *Configs) {
 
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))
 
-		// periodically update default topic details to simulate concurrency.
-		go func() {
-
-			ticker := time.NewTicker(10 * time.Millisecond)
-
-			for {
-				select {
-				case <-testCtx.Done():
-					return
-				case <-ticker.C:
-					reconciler.SetDefaultTopicDetails(defaultTopicDetail)
-				}
-			}
-		}()
-
 		return r
 	}))
-
-	cancel()
-}
-
-func TestConfigMapUpdate(t *testing.T) {
-
-	cm := corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "cmname",
-			Namespace: "cmnamespace",
-		},
-		Data: map[string]string{
-			DefaultTopicNumPartitionConfigMapKey:      "42",
-			DefaultTopicReplicationFactorConfigMapKey: "3",
-			BootstrapServersConfigMapKey:              "server1,server2",
-		},
-	}
-
-	reconciler := Reconciler{}
-
-	ctx, _ := SetupFakeContext(t)
-
-	reconciler.ConfigMapUpdated(ctx)(&cm)
-
-	assert.Equal(t, reconciler.KafkaDefaultTopicDetails, sarama.TopicDetail{
-		NumPartitions:     42,
-		ReplicationFactor: 3,
-	})
 }
 
 func patchFinalizers() clientgotesting.PatchActionImpl {

@@ -57,6 +57,9 @@ func NewBroker(options ...reconcilertesting.BrokerOption) runtime.Object {
 		append(
 			[]reconcilertesting.BrokerOption{
 				reconcilertesting.WithBrokerClass(kafka.BrokerClass),
+				WithBrokerConfig(
+					KReference(BrokerConfig("", 20, 5)),
+				),
 				func(broker *eventing.Broker) {
 					broker.UID = BrokerUUID
 				},

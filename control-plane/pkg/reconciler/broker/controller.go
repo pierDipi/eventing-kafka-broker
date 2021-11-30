@@ -19,12 +19,10 @@ package broker
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
@@ -48,9 +46,6 @@ const (
 	DefaultTopicNumPartitionConfigMapKey      = "default.topic.partitions"
 	DefaultTopicReplicationFactorConfigMapKey = "default.topic.replication.factor"
 	BootstrapServersConfigMapKey              = "bootstrap.servers"
-
-	DefaultNumPartitions     = 10
-	DefaultReplicationFactor = 1
 )
 
 func NewController(ctx context.Context, watcher configmap.Watcher, configs *Configs) *controller.Impl {
@@ -72,12 +67,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
 		NewKafkaClusterAdmin: sarama.NewClusterAdmin,
-		KafkaDefaultTopicDetails: sarama.TopicDetail{
-			NumPartitions:     DefaultNumPartitions,
-			ReplicationFactor: DefaultReplicationFactor,
-		},
-		ConfigMapLister: configmapInformer.Lister(),
-		Configs:         configs,
+		ConfigMapLister:      configmapInformer.Lister(),
+		Configs:              configs,
 	}
 
 	logger := logging.FromContext(ctx)
@@ -88,10 +79,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			zap.String("configmap", configs.DataPlaneConfigMapAsString()),
 			zap.Error(err),
 		)
-	}
-
-	if configs.BootstrapServers != "" {
-		reconciler.SetBootstrapServers(configs.BootstrapServers)
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass, func(impl *controller.Impl) controller.Options {
@@ -143,15 +130,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			DeleteFunc: reconciler.OnDeleteObserver,
 		},
 	})
-
-	cm, err := reconciler.KubeClient.CoreV1().ConfigMaps(configs.SystemNamespace).Get(ctx, configs.GeneralConfigMapName, metav1.GetOptions{})
-	if err != nil {
-		panic(fmt.Errorf("failed to get config map %s/%s: %w", configs.SystemNamespace, configs.GeneralConfigMapName, err))
-	}
-
-	reconciler.ConfigMapUpdated(ctx)(cm)
-
-	watcher.Watch(configs.GeneralConfigMapName, reconciler.ConfigMapUpdated(ctx))
 
 	return impl
 }

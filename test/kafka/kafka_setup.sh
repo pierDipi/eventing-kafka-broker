@@ -18,7 +18,7 @@ set -e
 
 source $(dirname $0)/../../vendor/knative.dev/hack/e2e-tests.sh
 
-kubectl create namespace kafka --dry-run -o yaml | kubectl apply -f -
+kubectl create namespace kafka --dry-run=client -o yaml | kubectl apply -f -
 
 sleep 5
 

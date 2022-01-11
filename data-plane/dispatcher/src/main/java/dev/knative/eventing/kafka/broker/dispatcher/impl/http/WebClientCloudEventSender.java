@@ -17,6 +17,7 @@ package dev.knative.eventing.kafka.broker.dispatcher.impl.http;
 
 import dev.knative.eventing.kafka.broker.core.tracing.TracingSpan;
 import dev.knative.eventing.kafka.broker.dispatcher.CloudEventSender;
+import dev.knative.eventing.kafka.broker.dispatcher.impl.ResponseFailureException;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.cloudevents.rw.CloudEventRWException;
@@ -77,6 +78,7 @@ public final class WebClientCloudEventSender implements CloudEventSender {
     });
   }
 
+  @SuppressWarnings("rawtypes")
   private void send(final CloudEvent event, final Promise<HttpResponse<Buffer>> breaker) {
     VertxMessageFactory
       .createWriter(client.postAbs(target))
@@ -89,7 +91,10 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
         if (isRetryableStatusCode(response.statusCode())) {
           logError(event, response);
-          breaker.tryFail("response status code is not 2xx - got: " + response.statusCode());
+          breaker.tryFail(new ResponseFailureException(
+            (java.net.http.HttpResponse) response,
+            "Received failure response, status code: " + response.statusCode())
+          );
           return;
         }
 

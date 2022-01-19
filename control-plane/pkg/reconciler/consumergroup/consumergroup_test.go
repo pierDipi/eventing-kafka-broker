@@ -392,7 +392,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 		},
 		{
-			Name: "Scheduler failed",
+			Name: "Schedulers failed",
 			Objects: []runtime.Object{
 				NewConsumerGroup(
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
@@ -440,7 +440,9 @@ func TestReconcileKind(t *testing.T) {
 	tt.Test(t, NewFactory(nil, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		r := Reconciler{
-			Scheduler:       row.OtherTestData[testSchedulerKey].(scheduler.Scheduler),
+			Schedulers: func(s string) scheduler.Scheduler {
+				return row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
+			},
 			ConsumerLister:  listers.GetConsumerLister(),
 			InternalsClient: fakekafkainternalsclient.Get(ctx).InternalV1alpha1(),
 			NameGenerator:   &CounterGenerator{},

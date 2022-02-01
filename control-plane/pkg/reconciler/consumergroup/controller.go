@@ -77,11 +77,11 @@ func NewController(ctx context.Context) *controller.Impl {
 
 	// TODO(pierDipi) use env variables to configure these.
 	c := SchedulerConfig{
-		RefreshPeriod:       2 * time.Minute,
-		Capacity:            50,
-		SchedulerPolicyType: "",
-		SchedulerPolicy:     schedulerPolicyFromConfigMapOrFail(ctx, ConfigKafkaSchedulerName),
-		DeSchedulerPolicy:   schedulerPolicyFromConfigMapOrFail(ctx, ConfigKafkaDeSchedulerName),
+		RefreshPeriod:       100 * time.Second,
+		Capacity:            20,
+		SchedulerPolicyType: scheduler.MAXFILLUP,
+		//SchedulerPolicy:     schedulerPolicyFromConfigMapOrFail(ctx, ConfigKafkaSchedulerName),
+		//DeSchedulerPolicy:   schedulerPolicyFromConfigMapOrFail(ctx, ConfigKafkaDeSchedulerName),
 	}
 
 	kafkaLister := kafkainformer.Get(ctx).Lister()
@@ -117,6 +117,7 @@ func enqueueConsumerGroupFromConsumer(enqueue func(name types.NamespacedName)) f
 }
 
 func createKafkaSourceScheduler(ctx context.Context, c SchedulerConfig, kafkaLister sources.KafkaSourceLister) scheduler.Scheduler {
+	lister := consumergroup.Get(ctx).Lister()
 	return createStatefulSetScheduler(
 		ctx,
 		SchedulerConfig{
@@ -128,13 +129,13 @@ func createKafkaSourceScheduler(ctx context.Context, c SchedulerConfig, kafkaLis
 			DeSchedulerPolicy:   c.DeSchedulerPolicy,
 		},
 		func() ([]scheduler.VPod, error) {
-			kafkaSources, err := kafkaLister.List(labels.Everything())
+			consumerGroups, err := lister.List(labels.Everything())
 			if err != nil {
 				return nil, err
 			}
-			vpods := make([]scheduler.VPod, len(kafkaSources))
-			for i := 0; i < len(kafkaSources); i++ {
-				vpods[i] = kafkaSources[i]
+			vpods := make([]scheduler.VPod, len(consumerGroups))
+			for i := 0; i < len(consumerGroups); i++ {
+				vpods[i] = consumerGroups[i]
 			}
 			return vpods, nil
 		},
@@ -150,9 +151,8 @@ func createStatefulSetScheduler(ctx context.Context, c SchedulerConfig, lister s
 		c.RefreshPeriod,
 		c.Capacity,
 		c.SchedulerPolicyType,
-		// TODO add nodes to controller cluster role
 		nodeinformer.Get(ctx).Lister(),
-		nil, // TODO No evictor, is this ok?
+		newEvictor(ctx, zap.String("kafka.eventing.knative.dev/component", "evictor")).evict,
 		c.SchedulerPolicy,
 		c.DeSchedulerPolicy,
 	)

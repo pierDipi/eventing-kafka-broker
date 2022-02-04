@@ -1,0 +1,3 @@
+resources:
+  - 100-consumer.yaml
+  - 100-consumergroup.yaml

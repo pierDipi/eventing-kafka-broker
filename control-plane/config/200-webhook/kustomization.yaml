@@ -1,0 +1,8 @@
+resources:
+  - 100-webhook-cluster-role.yaml
+  - 100-webhook-service-account.yaml
+  - 200-webhook-cluster-role-binding.yaml
+  - 400-webhook-secret.yaml
+  - 400-webhook-defaulting.yaml
+  - 400-webhook-validation.yaml
+  - 500-webhook.yaml

@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source $(pwd)/hack/label.sh
-
 readonly CONTROL_PLANE_CONFIG_DIR=control-plane/config
 
 # Note: do not change this function name, it's used during releases.

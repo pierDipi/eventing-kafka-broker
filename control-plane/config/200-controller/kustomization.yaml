@@ -1,0 +1,12 @@
+resources:
+  - 100-config-kafka-descheduler.yaml
+  - 100-config-kafka-leader-election.yaml
+  - 100-config-kafka-scheduler.yaml
+  - 100-config-logging.yaml
+  - 100-config-tracing.yaml
+  - 200-addressable-resolver-cluster-role.yaml
+  - 200-channelable-manipulator-clusterrole.yaml
+  - 200-controller-cluster-role.yaml
+  - 200-controller-service-account.yaml
+  - 201-controller-cluster-role-binding.yaml
+  - 500-controller.yaml

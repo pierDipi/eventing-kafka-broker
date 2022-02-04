@@ -1,0 +1,3 @@
+resources:
+  - ../../../third_party/eventing-kafka-latest/source
+  - 200-sources-observer-aggregated-clusterrole.yaml

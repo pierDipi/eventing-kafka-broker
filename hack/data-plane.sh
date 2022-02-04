@@ -19,8 +19,6 @@
 # - UUID (default: latest)
 # - SKIP_PUSH (default: false) --> images will not be pushed to remote registry, nor to kind local registry
 
-source "$(pwd)"/hack/label.sh
-
 readonly SKIP_PUSH=${SKIP_PUSH:-false}
 
 readonly DATA_PLANE_DIR=data-plane

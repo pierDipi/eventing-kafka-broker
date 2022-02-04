@@ -1,0 +1,9 @@
+- op: replace
+  path: /metadata/name
+  value: kafka-broker-ingress
+- op: replace
+  path: /metadata/labels/app
+  value: kafka-broker-receiver
+- op: replace
+  path: /spec/selector/app
+  value: kafka-broker-receiver

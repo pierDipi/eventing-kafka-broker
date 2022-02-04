@@ -1,0 +1,5 @@
+resources:
+  - 100-config-data-plane.yaml
+  - 200-data-plane-cluster-role.yaml
+  - 200-data-plane-service-account.yaml
+  - 201-data-plane-cluster-role-binding.yaml

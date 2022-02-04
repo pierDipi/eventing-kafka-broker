@@ -1,0 +1,21 @@
+resources:
+  - control-plane/config/100-broker
+  - control-plane/config/100-channel
+  - control-plane/config/100-sink
+  - control-plane/config/100-source
+  - control-plane/config/100-kafka-internal
+  - control-plane/config/200-controller
+  - control-plane/config/200-webhook
+
+commonLabels:
+  kafka.eventing.knative.dev/release: devel
+
+images:
+  - name: knative-kafka-controller
+    newName: ko://knative.dev/eventing-kafka-broker/control-plane/cmd/kafka-controller
+  - name: knative-kafka-webhook
+    newName: ko://knative.dev/eventing-kafka-broker/control-plane/cmd/webhook-kafka
+  - name: knative-kafka-receiver
+    newName: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
+  - name: eventing-kafka-dispatcher
+    newName: ${KNATIVE_KAFKA_DISPATCHER_IMAGE}

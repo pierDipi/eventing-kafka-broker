@@ -1,6 +1,4 @@
----
-
-# Copyright 2021 The Knative Authors
+# Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,23 +15,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kafka-channel-receiver
+  name: kafka-receiver
   namespace: knative-eventing
   labels:
-    app: kafka-channel-receiver
-    kafka.eventing.knative.dev/release: devel
+    app: kafka-receiver
 spec:
   selector:
     matchLabels:
-      app: kafka-channel-receiver
+      app: kafka-receiver
   template:
     metadata:
-      name: kafka-channel-receiver
+      name: kafka-receiver
       labels:
-        app: kafka-channel-receiver
-        kafka.eventing.knative.dev/release: devel
+        app: kafka-receiver
     spec:
-      serviceAccountName: knative-kafka-channel-data-plane
+      serviceAccountName: knative-kafka-data-plane
       securityContext:
         runAsNonRoot: true
       # To avoid node becoming SPOF, spread our replicas to different nodes.
@@ -43,24 +39,24 @@ spec:
             - podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: kafka-channel-receiver
+                    app: kafka-receiver
                 topologyKey: kubernetes.io/hostname
               weight: 100
       containers:
-        - name: kafka-channel-receiver
-          image: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
+        - name: kafka-receiver
+          image: knative-kafka-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
-              name: config-kafka-channel-data-plane
+              name: config-kafka-data-plane
               readOnly: true
-            - mountPath: /etc/channels-subscriptions
-              name: kafka-channel-channels-subscriptions
+            - mountPath: /etc/contract-resources
+              name: kafka-contract-resources
               readOnly: true
             - mountPath: /tmp
               name: cache
             - mountPath: /etc/logging
-              name: kafka-channel-config-logging
+              name: kafka-config-logging
               readOnly: true
             - mountPath: /etc/tracing
               name: config-tracing
@@ -74,7 +70,7 @@ spec:
               protocol: TCP
           env:
             - name: SERVICE_NAME
-              value: "kafka-channel-receiver"
+              value: "kafka-broker-receiver"
             - name: SERVICE_NAMESPACE
               valueFrom:
                 fieldRef:
@@ -82,11 +78,11 @@ spec:
             - name: INGRESS_PORT
               value: "8080"
             - name: PRODUCER_CONFIG_FILE_PATH
-              value: /etc/config/config-kafka-channel-producer.properties
+              value: /etc/config/config-kafka-producer.properties
             - name: HTTPSERVER_CONFIG_FILE_PATH
-              value: /etc/config/config-kafka-channel-httpserver.properties
+              value: /etc/config/config-kafka-httpserver.properties
             - name: DATA_PLANE_CONFIG_FILE_PATH
-              value: /etc/channels-subscriptions/data
+              value: /etc/contract-resources/data
             - name: LIVENESS_PROBE_PATH
               value: /healthz
             - name: READINESS_PROBE_PATH
@@ -141,15 +137,12 @@ spec:
             privileged: false
             readOnlyRootFilesystem: true
       volumes:
-        - name: kafka-channel-channels-subscriptions
+        - name: config-kafka-data-plane
           configMap:
-            name: kafka-channel-channels-subscriptions
-        - name: config-kafka-channel-data-plane
-          configMap:
-            name: config-kafka-channel-data-plane
+            name: config-kafka-data-plane
         - name: cache
           emptyDir: { }
-        - name: kafka-channel-config-logging
+        - name: kafka-config-logging
           configMap:
             name: kafka-config-logging
         - name: config-tracing
@@ -161,14 +154,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: kafka-channel-ingress
+  name: kafka-ingress
   namespace: knative-eventing
   labels:
-    app: kafka-channel-receiver
+    app: kafka-receiver
     kafka.eventing.knative.dev/release: devel
 spec:
   selector:
-    app: kafka-channel-receiver
+    app: kafka-receiver
   ports:
     - name: http
       port: 80

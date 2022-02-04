@@ -17,12 +17,12 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: config-kafka-broker-data-plane
+  name: config-kafka-data-plane
   namespace: knative-eventing
   labels:
     kafka.eventing.knative.dev/release: devel
 data:
-  config-kafka-broker-producer.properties: |
+  config-kafka-producer.properties: |
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
     value.serializer=io.cloudevents.kafka.CloudEventSerializer
     acks=all
@@ -51,7 +51,7 @@ data:
     retry.backoff.ms=100
     # transaction.timeout.ms=60000
     # transactional.id=null
-  config-kafka-broker-consumer.properties: |
+  config-kafka-consumer.properties: |
     key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
     value.deserializer=io.cloudevents.kafka.CloudEventDeserializer
     fetch.min.bytes=1
@@ -114,7 +114,7 @@ data:
     # ssl.keymanager.algorithm
     # ssl.secure.random.implementation
     # ssl.trustmanager.algorithm
-  config-kafka-broker-webclient.properties: |
+  config-kafka-webclient.properties: |
     idleTimeout=10000
-  config-kafka-broker-httpserver.properties: |
+  config-kafka-httpserver.properties: |
     idleTimeout=0

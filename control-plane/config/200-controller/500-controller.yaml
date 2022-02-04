@@ -50,7 +50,7 @@ spec:
 
       containers:
         - name: controller
-          image: ko://knative.dev/eventing-kafka-broker/control-plane/cmd/kafka-controller
+          image: knative-kafka-controller
           imagePullPolicy: IfNotPresent
           env:
             - name: BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE

@@ -1,0 +1,3 @@
+resources:
+  - ../../../third_party/eventing-kafka-latest/channel
+  - 100-kafka-channel-configmap.yaml

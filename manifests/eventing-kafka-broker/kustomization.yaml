@@ -1,0 +1,20 @@
+resources:
+  - ../../data-plane/config/receiver
+  - ../../data-plane/config/dispatcher
+
+patches:
+  - target:
+      group: apps
+      kind: Deployment
+      name: kafka-receiver
+    path: receiver-deployment-patch.yaml
+  - target:
+      kind: Service
+      name: kafka-ingress
+    path: receiver-svc-patch.yaml
+
+images:
+  - name: knative-kafka-receiver
+    newName: ${KNATIVE_KAFKA_RECEIVER_IMAGE}
+  - name: knative-kafka-dispatcher
+    newName: ${KNATIVE_KAFKA_DISPATCHER_IMAGE}

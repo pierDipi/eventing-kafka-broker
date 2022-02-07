@@ -1,0 +1,224 @@
+---
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-kafka-broker-data-plane
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: devel
+data:
+  config-kafka-broker-producer.properties: |
+    key.serializer=org.apache.kafka.common.serialization.StringSerializer
+    value.serializer=io.cloudevents.kafka.CloudEventSerializer
+    acks=1
+    buffer.memory=33554432
+    retries=2147483647
+    batch.size=16384
+    client.dns.lookup=use_all_dns_ips
+    connections.max.idle.ms=600000
+    delivery.timeout.ms=120000
+    linger.ms=0
+    max.block.ms=60000
+    max.request.size=1048576
+    partitioner.class=org.apache.kafka.clients.producer.internals.DefaultPartitioner
+    receive.buffer.bytes=-1
+    request.timeout.ms=30000
+    enable.idempotence=false
+    max.in.flight.requests.per.connection=5
+    metadata.max.age.ms=300000
+    metrics.num.samples=2
+    metrics.recording.level=INFO
+    metrics.sample.window.ms=30000
+    reconnect.backoff.max.ms=1000
+    reconnect.backoff.ms=50
+    retry.backoff.ms=100
+  config-kafka-broker-consumer.properties: |
+    key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+    value.deserializer=io.cloudevents.kafka.CloudEventDeserializer
+    fetch.min.bytes=1
+    heartbeat.interval.ms=3000
+    max.partition.fetch.bytes=1048576
+    session.timeout.ms=10000
+    allow.auto.create.topics=true
+    auto.offset.reset=earliest
+    client.dns.lookup=use_all_dns_ips
+    connections.max.idle.ms=540000
+    default.api.timeout.ms=60000
+    enable.auto.commit=false
+    exclude.internal.topics=true
+    fetch.max.bytes=52428800
+    isolation.level=read_uncommitted
+    max.poll.interval.ms=300000
+    max.poll.records=500
+    receive.buffer.bytes=65536
+    request.timeout.ms=30000
+    security.protocol=PLAINTEXT
+    send.buffer.bytes=131072
+    auto.commit.interval.ms=5000
+    check.crcs=true
+    fetch.max.wait.ms=500
+    metadata.max.age.ms=600000
+    reconnect.backoff.max.ms=1000
+    retry.backoff.ms=100
+  config-kafka-broker-webclient.properties: |
+    idleTimeout=10000
+  config-kafka-broker-httpserver.properties: |
+    idleTimeout=0
+---
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-config-logging
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: devel
+data:
+  config.xml: |
+    <configuration>
+      <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+      </appender>
+      <root level="INFO">
+        <appender-ref ref="jsonConsoleAppender"/>
+      </root>
+    </configuration>
+---
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: knative-kafka-data-plane
+  labels:
+    kafka.eventing.knative.dev/release: devel
+rules:
+  - apiGroups:
+      - "*"
+    resources:
+      - secrets
+    verbs:
+      - get
+---
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: knative-kafka-data-plane
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: devel
+---
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: knative-kafka-data-plane
+  labels:
+    kafka.eventing.knative.dev/release: devel
+subjects:
+  - kind: ServiceAccount
+    name: knative-kafka-data-plane
+    namespace: knative-eventing
+roleRef:
+  kind: ClusterRole
+  name: knative-kafka-data-plane
+  apiGroup: rbac.authorization.k8s.io
+---
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-kafka-sink-data-plane
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: devel
+data:
+  config-kafka-sink-producer.properties: |
+    key.serializer=org.apache.kafka.common.serialization.StringSerializer
+    value.serializer=io.cloudevents.kafka.CloudEventSerializer
+    acks=1
+    buffer.memory=33554432
+    retries=2147483647
+    batch.size=16384
+    client.dns.lookup=use_all_dns_ips
+    connections.max.idle.ms=600000
+    delivery.timeout.ms=120000
+    linger.ms=0
+    max.block.ms=60000
+    max.request.size=1048576
+    partitioner.class=org.apache.kafka.clients.producer.internals.DefaultPartitioner
+    receive.buffer.bytes=-1
+    request.timeout.ms=30000
+    enable.idempotence=false
+    max.in.flight.requests.per.connection=5
+    metadata.max.age.ms=300000
+    metrics.num.samples=2
+    metrics.recording.level=INFO
+    metrics.sample.window.ms=30000
+    reconnect.backoff.max.ms=1000
+    reconnect.backoff.ms=50
+    retry.backoff.ms=100
+  config-kafka-sink-httpserver.properties: |
+    idleTimeout=0
+---
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-config-logging
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: devel
+data:
+  config.xml: |
+    <configuration>
+      <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+      </appender>
+      <root level="INFO">
+        <appender-ref ref="jsonConsoleAppender"/>
+      </root>
+    </configuration>
+---
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: knative-kafka-data-plane
+  labels:
+    kafka.eventing.knative.dev/release: devel
+rules:
+  - apiGroups:
+      - "*"
+    resources:
+      - secrets
+    verbs:
+      - get
+---
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: knative-kafka-data-plane
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: devel
+---
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: knative-kafka-data-plane
+  labels:
+    kafka.eventing.knative.dev/release: devel
+subjects:
+  - kind: ServiceAccount
+    name: knative-kafka-data-plane
+    namespace: knative-eventing
+roleRef:
+  kind: ClusterRole
+  name: knative-kafka-data-plane
+  apiGroup: rbac.authorization.k8s.io
+---
+---

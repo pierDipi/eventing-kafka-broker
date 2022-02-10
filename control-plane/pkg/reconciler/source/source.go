@@ -57,9 +57,16 @@ type Reconciler struct {
 
 	Resolver *resolver.URIResolver
 
-	// NewKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClusterAdmin kafka.NewClusterAdminFunc
+	NewKafkaClient kafka.NewClientFunc
+	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// mock the function used during the reconciliation loop.
+	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
+	// InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
+	// It's convenient to add this as Reconciler field so that we can mock the function used during the
+	// reconciliation loop.
+	InitOffsetsFunc kafka.InitOffsetsFunc
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
@@ -74,7 +81,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 
 	statusConditionManager := base.StatusConditionManager{
 		Object:   ks,
-		Configs:  r.Env,
+		Env:      r.Env,
 		Recorder: controller.GetEventRecorder(ctx),
 	}
 
@@ -104,13 +111,19 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
 	}
 
-	kafkaClusterAdmin, err := r.NewKafkaClusterAdmin(ks.Spec.BootstrapServers, saramaConfig)
+	kafkaClient, err := r.NewKafkaClient(ks.Spec.BootstrapServers, saramaConfig)
 	if err != nil {
-		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
+		return statusConditionManager.TopicsNotPresentOrInvalidErr(ks.Spec.Topics, fmt.Errorf("error getting sarama config: %w", err))
 	}
-	defer kafkaClusterAdmin.Close()
+	defer kafkaClient.Close()
 
-	isValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdmin, ks.Spec.Topics...)
+	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(ks.Spec.BootstrapServers, saramaConfig)
+	if err != nil {
+		return statusConditionManager.TopicsNotPresentOrInvalidErr(ks.Spec.Topics, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
+	}
+	defer kafkaClusterAdminClient.Close()
+
+	isValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdminClient, ks.Spec.Topics...)
 	if err != nil {
 		return statusConditionManager.TopicsNotPresentOrInvalidErr(ks.Spec.Topics, err)
 	}
@@ -118,6 +131,26 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		return statusConditionManager.TopicsNotPresentOrInvalid(ks.Spec.Topics)
 	}
 	statusConditionManager.TopicReady(strings.Join(ks.Spec.Topics, ", "))
+
+	if ks.Spec.InitialOffset == sources.OffsetLatest {
+		logger.Debug("Initializing initial offset",
+			zap.String("initialOffset", string(ks.Spec.InitialOffset)),
+			zap.String("consumerGroup", ks.Spec.ConsumerGroup),
+			zap.Strings("topics", ks.Spec.Topics),
+		)
+		if _, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdminClient, ks.Spec.Topics, ks.Spec.ConsumerGroup); err != nil {
+			return statusConditionManager.InitialOffsetNotCommitted(
+				fmt.Errorf("unable to initialize consumer group %s offsets: %w", ks.Spec.ConsumerGroup, err),
+			)
+		}
+	}
+	statusConditionManager.InitialOffsetsCommitted()
+	// Get resource configuration.
+	resource, err := r.reconcileKafkaSourceResource(ctx, ks, authContext.MultiSecretReference)
+	if err != nil {
+		return statusConditionManager.FailedToResolveSink(err)
+	}
+	statusConditionManager.SinkResolved()
 
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
@@ -135,15 +168,9 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 
 	logger.Debug("Got contract data from config map", zap.Any(base.ContractLogKey, ct))
 
-	// Get resource configuration.
-	resource, err := r.reconcileKafkaSourceResource(ctx, ks, authContext.MultiSecretReference)
-	if err != nil {
-		return statusConditionManager.FailedToGetConfig(err)
-	}
-
-	brokerIndex := coreconfig.FindResource(ct, ks.GetUID())
+	sourceIndex := coreconfig.FindResource(ct, ks.GetUID())
 	// Update contract data with the new contract configuration
-	changed := coreconfig.AddOrUpdateResourceConfig(ct, resource, brokerIndex, logger)
+	changed := coreconfig.AddOrUpdateResourceConfig(ct, resource, sourceIndex, logger)
 
 	logger.Debug("Change detector", zap.Int("changed", changed))
 
@@ -181,7 +208,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *sources.KafkaSource)
 		logger.Debug("Updated dispatcher pod annotation")
 	}
 
-	return statusConditionManager.Reconciled()
+	return nil
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
@@ -234,8 +261,10 @@ func (r *Reconciler) reconcileKafkaSourceResource(ctx context.Context, ks *sourc
 	}
 	destination, err := r.Resolver.URIFromDestinationV1(ctx, destinationSpec, ks)
 	if err != nil {
+		ks.Status.SinkURI = nil
 		return nil, fmt.Errorf("failed to resolve destination: %w", err)
 	}
+	ks.Status.SinkURI = destination
 
 	egressConfig := proto.Clone(&DefaultEgressConfig).(*contract.EgressConfig)
 
@@ -246,6 +275,11 @@ func (r *Reconciler) reconcileKafkaSourceResource(ctx context.Context, ks *sourc
 		Uid:           string(ks.GetUID()),
 		EgressConfig:  egressConfig,
 		DeliveryOrder: DefaultDeliveryOrder,
+		Reference: &contract.Reference{
+			Uuid:      string(ks.GetUID()),
+			Namespace: ks.GetNamespace(),
+			Name:      ks.GetName(),
+		},
 	}
 	// Set key type hint (if any).
 	if keyType, ok := ks.Labels[sources.KafkaKeyTypeLabel]; ok {
@@ -257,10 +291,7 @@ func (r *Reconciler) reconcileKafkaSourceResource(ctx context.Context, ks *sourc
 		BootstrapServers: strings.Join(ks.Spec.BootstrapServers, ","),
 		Egresses:         []*contract.Egress{egress},
 		Auth:             &contract.Resource_AbsentAuth{},
-		Reference: &contract.Reference{
-			Namespace: ks.GetNamespace(),
-			Name:      ks.GetName(),
-		},
+		Reference:        egress.Reference,
 	}
 	if ks.Spec.CloudEventOverrides != nil {
 		resource.CloudEventOverrides = &contract.CloudEventOverrides{

@@ -40,19 +40,18 @@ import (
 func TestNewController(t *testing.T) {
 	ctx, _ := reconcilertesting.SetupFakeContext(t)
 
-	configs := &Configs{
-		Env: config.Env{
-			SystemNamespace:      "cm",
-			GeneralConfigMapName: "cm",
-		},
+	env := &config.Env{
+		SystemNamespace:      "cm",
+		GeneralConfigMapName: "cm",
+		IngressPodPort:       "8080",
 	}
 
 	ctx, _ = fakekubeclient.With(
 		ctx,
 		&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      configs.Env.GeneralConfigMapName,
-				Namespace: configs.Env.SystemNamespace,
+				Name:      env.GeneralConfigMapName,
+				Namespace: env.SystemNamespace,
 			},
 		},
 	)
@@ -68,7 +67,7 @@ func TestNewController(t *testing.T) {
 				Name: "cm",
 			},
 		}),
-		configs,
+		env,
 	)
 	if controller == nil {
 		t.Error("failed to create controller: <nil>")

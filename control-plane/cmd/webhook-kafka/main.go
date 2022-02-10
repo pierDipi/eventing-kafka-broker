@@ -30,6 +30,9 @@ import (
 	"knative.dev/pkg/webhook/resourcesemantics/defaulting"
 	"knative.dev/pkg/webhook/resourcesemantics/validation"
 
+	eventingcorev1beta1 "knative.dev/eventing/pkg/apis/eventing/v1"
+
+	eventingv1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1"
 	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 )
 
@@ -38,16 +41,14 @@ const (
 )
 
 var types = map[schema.GroupVersionKind]resourcesemantics.GenericCRD{
-
 	eventingv1alpha1.SchemeGroupVersion.WithKind("KafkaSink"): &eventingv1alpha1.KafkaSink{},
-	// sourcesv1beta1.SchemeGroupVersion.WithKind("KafkaSource"): &sourcesv1beta1.KafkaSource{},
 }
 
-var callbacks = map[schema.GroupVersionKind]validation.Callback{}
+var validationCallbacks = map[schema.GroupVersionKind]validation.Callback{
+	eventingcorev1beta1.SchemeGroupVersion.WithKind("Broker"): eventingv1.BrokerValidationCallback(),
+}
 
 func NewDefaultingAdmissionController(ctx context.Context, _ configmap.Watcher) *controller.Impl {
-
-	// TODO: need something here for the channel
 
 	// A function that infuses the context passed to Validate/SetDefaults with custom metadata.
 	ctxFunc := func(ctx context.Context) context.Context {
@@ -92,7 +93,7 @@ func NewValidationAdmissionController(ctx context.Context, _ configmap.Watcher) 
 		true,
 
 		// Extra validating callbacks to be applied to resources.
-		callbacks,
+		validationCallbacks,
 	)
 }
 

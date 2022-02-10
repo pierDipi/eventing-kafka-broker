@@ -19,9 +19,7 @@ package testing
 import (
 	"fmt"
 	"io/ioutil"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
+	"time"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -31,9 +29,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 )
 
 const (
@@ -42,6 +45,8 @@ const (
 
 	ServiceNamespace = "test-service-namespace"
 	ServiceName      = "test-service"
+
+	Service2Name = "test-service-2"
 
 	TriggerUUID = "e7185016-5d98-4b54-84e8-3b1cd4acc6b5"
 
@@ -72,6 +77,23 @@ func NewService(mutations ...func(*corev1.Service)) *corev1.Service {
 	return s
 }
 
+func NewService2(mutations ...func(*corev1.Service)) *corev1.Service {
+	s := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      Service2Name,
+			Namespace: ServiceNamespace,
+		},
+	}
+	for _, mut := range mutations {
+		mut(s)
+	}
+	return s
+}
+
 func WithServiceNamespace(ns string) func(s *corev1.Service) {
 	return func(s *corev1.Service) {
 		s.Namespace = ns
@@ -82,10 +104,10 @@ func ServiceURLFrom(ns, name string) string {
 	return fmt.Sprintf("http://%s.%s.svc.cluster.local", name, ns)
 }
 
-func NewConfigMap(configs *Configs, data []byte) runtime.Object {
+func NewConfigMapWithBinaryData(env *config.Env, data []byte) runtime.Object {
 	return reconcilertesting.NewConfigMap(
-		configs.DataPlaneConfigMapName,
-		configs.DataPlaneConfigMapNamespace,
+		env.DataPlaneConfigMapName,
+		env.DataPlaneConfigMapNamespace,
 		func(configMap *corev1.ConfigMap) {
 			if configMap.BinaryData == nil {
 				configMap.BinaryData = make(map[string][]byte, 1)
@@ -98,10 +120,20 @@ func NewConfigMap(configs *Configs, data []byte) runtime.Object {
 	)
 }
 
-func NewConfigMapFromContract(contract *contract.Contract, configs *Configs) runtime.Object {
+func NewConfigMapWithTextData(namespace, name string, data map[string]string) runtime.Object {
+	return reconcilertesting.NewConfigMap(
+		name,
+		namespace,
+		func(configMap *corev1.ConfigMap) {
+			configMap.Data = data
+		},
+	)
+}
+
+func NewConfigMapFromContract(contract *contract.Contract, env *config.Env) runtime.Object {
 	var data []byte
 	var err error
-	if configs.DataPlaneConfigFormat == base.Protobuf {
+	if env.DataPlaneConfigFormat == base.Protobuf {
 		data, err = proto.Marshal(contract)
 	} else {
 		data, err = protojson.Marshal(contract)
@@ -110,18 +142,18 @@ func NewConfigMapFromContract(contract *contract.Contract, configs *Configs) run
 		panic(err)
 	}
 
-	return NewConfigMap(configs, data)
+	return NewConfigMapWithBinaryData(env, data)
 }
 
-func ConfigMapUpdate(configs *Configs, contract *contract.Contract) clientgotesting.UpdateActionImpl {
+func ConfigMapUpdate(env *config.Env, contract *contract.Contract) clientgotesting.UpdateActionImpl {
 	return clientgotesting.NewUpdateAction(
 		schema.GroupVersionResource{
 			Group:    "*",
 			Version:  "v1",
 			Resource: "ConfigMap",
 		},
-		configs.DataPlaneConfigMapNamespace,
-		NewConfigMapFromContract(contract, configs),
+		env.DataPlaneConfigMapNamespace,
+		NewConfigMapFromContract(contract, env),
 	)
 }
 
@@ -162,4 +194,125 @@ func loadCerts() (ca, userKey, userCert []byte) {
 	}
 
 	return ca, userKey, userCert
+}
+
+type KRShapedOption func(obj duckv1.KRShaped)
+
+func WithDeletedTimeStamp(obj duckv1.KRShaped) {
+	metaObj := obj.(metav1.Object)
+	metaObj.SetDeletionTimestamp(&metav1.Time{Time: time.Now()})
+}
+
+func StatusConfigParsed(obj duckv1.KRShaped) {
+	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionConfigParsed)
+}
+
+func StatusConfigNotParsed(reason string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(base.ConditionConfigParsed, reason, "")
+	}
+}
+
+func StatusConfigMapUpdatedReady(env *config.Env) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrueWithReason(
+			base.ConditionConfigMapUpdated,
+			fmt.Sprintf("Config map %s updated", env.DataPlaneConfigMapAsString()),
+			"",
+		)
+	}
+}
+
+func StatusConfigMapNotUpdatedReady(reason, message string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
+			base.ConditionConfigMapUpdated,
+			reason,
+			message,
+		)
+	}
+}
+
+func StatusTopicReadyWithName(topic string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrueWithReason(
+			base.ConditionTopicReady,
+			fmt.Sprintf("Topic %s created", topic),
+			"",
+		)
+	}
+}
+
+func StatusTopicReadyWithOwner(topic, owner string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrueWithReason(
+			base.ConditionTopicReady,
+			fmt.Sprintf("Topic %s (owner %s)", topic, owner),
+			"",
+		)
+	}
+}
+
+func StatusControllerOwnsTopic(topicOwner string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		allocateStatusAnnotations(obj)
+		obj.GetStatus().Annotations[base.TopicOwnerAnnotation] = topicOwner
+	}
+}
+
+func StatusTopicNotPresentErr(topic string, err error) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
+			base.ConditionTopicReady,
+			base.ReasonTopicNotPresentOrInvalid,
+			fmt.Sprintf("topics %v: "+SinkNotPresentErrFormat, []string{topic}, []string{topic}, err),
+		)
+	}
+}
+
+func StatusFailedToCreateTopic(topicName string) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
+			base.ConditionTopicReady,
+			fmt.Sprintf("Failed to create topic: %s", topicName),
+			"%v",
+			fmt.Errorf("failed to create topic"),
+		)
+	}
+}
+
+func StatusInitialOffsetsCommitted(obj duckv1.KRShaped) {
+	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionInitialOffsetsCommitted)
+}
+
+func StatusDataPlaneAvailable(obj duckv1.KRShaped) {
+	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionDataPlaneAvailable)
+}
+
+func StatusDataPlaneNotAvailable(obj duckv1.KRShaped) {
+	obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
+		base.ConditionDataPlaneAvailable,
+		base.ReasonDataPlaneNotAvailable,
+		base.MessageDataPlaneNotAvailable,
+	)
+}
+
+func StatusProbeSucceeded(obj duckv1.KRShaped) {
+	obj.GetConditionSet().Manage(obj.GetStatus()).MarkTrue(base.ConditionProbeSucceeded)
+}
+
+func StatusProbeFailed(status prober.Status) func(obj duckv1.KRShaped) {
+	return func(obj duckv1.KRShaped) {
+		obj.GetConditionSet().Manage(obj.GetStatus()).MarkFalse(
+			base.ConditionProbeSucceeded,
+			"ProbeStatus",
+			fmt.Sprintf("status: %s", status.String()),
+		)
+	}
+}
+
+func allocateStatusAnnotations(obj duckv1.KRShaped) {
+	if obj.GetStatus().Annotations == nil {
+		obj.GetStatus().Annotations = make(map[string]string, 1)
+	}
 }

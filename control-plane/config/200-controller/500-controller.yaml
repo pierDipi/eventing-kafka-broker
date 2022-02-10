@@ -34,7 +34,7 @@ spec:
         kafka.eventing.knative.dev/release: devel
     spec:
       securityContext:
-        runAsNonRoot: false
+        runAsNonRoot: true
       serviceAccountName: kafka-controller
 
       # To avoid node becoming SPOF, spread our replicas to different nodes.
@@ -59,6 +59,8 @@ spec:
               value: knative-eventing
             - name: SINK_DATA_PLANE_CONFIG_MAP_NAMESPACE
               value: knative-eventing
+            - name: SOURCE_DATA_PLANE_CONFIG_MAP_NAMESPACE
+              value: knative-eventing
 
             - name: BROKER_DATA_PLANE_CONFIG_MAP_NAME
               value: kafka-broker-brokers-triggers
@@ -66,12 +68,16 @@ spec:
               value: kafka-channel-channels-subscriptions
             - name: SINK_DATA_PLANE_CONFIG_MAP_NAME
               value: kafka-sink-sinks
+            - name: SOURCE_DATA_PLANE_CONFIG_MAP_NAME
+              value: kafka-source-sources
 
             - name: BROKER_DATA_PLANE_CONFIG_FORMAT
               value: json
             - name: CHANNEL_DATA_PLANE_CONFIG_FORMAT
               value: json
             - name: SINK_DATA_PLANE_CONFIG_FORMAT
+              value: json
+            - name: SOURCE_DATA_PLANE_CONFIG_FORMAT
               value: json
 
             - name: BROKER_INGRESS_NAME
@@ -80,13 +86,24 @@ spec:
               value: kafka-channel-ingress
             - name: SINK_INGRESS_NAME
               value: kafka-sink-ingress
+            - name: SOURCE_INGRESS_NAME
+              value: kafka-source-ingress
 
             - name: BROKER_GENERAL_CONFIG_MAP_NAME
               value: kafka-broker-config
             - name: CHANNEL_GENERAL_CONFIG_MAP_NAME
-              value: kafka-broker-config
+              value: kafka-channel-config
             - name: SINK_GENERAL_CONFIG_MAP_NAME
               value: kafka-broker-config
+            - name: SOURCE_GENERAL_CONFIG_MAP_NAME
+              value: kafka-broker-config
+
+            - name: BROKER_INGRESS_POD_PORT
+              value: "8080"
+            - name: CHANNEL_INGRESS_POD_PORT
+              value: "8080"
+            - name: SINK_INGRESS_POD_PORT
+              value: "8080"
 
             - name: BROKER_SYSTEM_NAMESPACE
               valueFrom:
@@ -100,6 +117,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: SOURCE_SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
 
             - name: BROKER_DEFAULT_BACKOFF_DELAY_MS
               value: "1000" # 1 second
@@ -107,6 +128,9 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+
+            - name: CONFIG_LEADERELECTION_NAME
+              value: config-kafka-leader-election
             - name: CONFIG_LOGGING_NAME
               value: config-logging
             - name: CONFIG_OBSERVABILITY_NAME

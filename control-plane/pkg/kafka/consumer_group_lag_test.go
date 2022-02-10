@@ -213,6 +213,10 @@ type saramaClientMock struct {
 	closed            bool
 }
 
+func (s saramaClientMock) DeleteConsumerGroupOffset(group string, topic string, partition int32) error {
+	panic("implement me")
+}
+
 func (s saramaClientMock) DescribeUserScramCredentials(users []string) ([]*sarama.DescribeUserScramCredentialsResult, error) {
 	return nil, nil
 }
@@ -499,4 +503,9 @@ func fakeKafkaBrokerListener(t *testing.T, addr string) (*sarama.Broker, func())
 		_ = broker.Close()
 		_ = listener.Close()
 	}
+}
+
+func TestPartitionLagString(t *testing.T) {
+	pl := PartitionLag{}
+	require.NotEmpty(t, pl.String())
 }

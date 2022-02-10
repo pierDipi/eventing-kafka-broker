@@ -20,58 +20,69 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
+	"time"
 
 	"github.com/Shopify/sarama"
+
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
+
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
-	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
-	commonconfig "knative.dev/eventing-kafka/pkg/common/config"
-	"knative.dev/eventing-kafka/pkg/common/constants"
-	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
-	commonsarama "knative.dev/eventing-kafka/pkg/common/kafka/sarama"
-	v1 "knative.dev/eventing/pkg/apis/duck/v1"
+
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/system"
 
+	v1 "knative.dev/eventing/pkg/apis/duck/v1"
+
+	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
+	"knative.dev/eventing-kafka/pkg/common/constants"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 const (
 	// TopicPrefix is the Kafka Channel topic prefix - (topic name: knative-messaging-kafka.<channel-namespace>.<channel-name>).
-	TopicPrefix = "knative-messaging-kafka"
+	TopicPrefix          = "knative-messaging-kafka"
+	DefaultDeliveryOrder = contract.DeliveryOrder_ORDERED
 )
 
 type Reconciler struct {
 	*base.Reconciler
+	*config.Env
 
 	Resolver *resolver.URIResolver
 
-	// NewKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClusterAdmin kafka.NewClusterAdminFunc
+	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
 
 	// NewKafkaClient creates new sarama Client. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
 	NewKafkaClient kafka.NewClientFunc
 
+	// InitOffsetsFunc initialize offsets for a provided set of topics and a provided consumer group id.
+	// It's convenient to add this as Reconciler field so that we can mock the function used during the
+	// reconciliation loop.
+	InitOffsetsFunc kafka.InitOffsetsFunc
+
 	ConfigMapLister corelisters.ConfigMapLister
 
-	Configs *config.Env
+	Prober prober.Prober
+
+	IngressHost string
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
@@ -86,7 +97,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	statusConditionManager := base.StatusConditionManager{
 		Object:     channel,
 		SetAddress: channel.Status.SetAddress,
-		Configs:    r.Configs,
+		Env:        r.Env,
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
@@ -103,24 +114,20 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	}
 	logger.Debug("configmap read", zap.Any("configmap", channelConfigMap))
 
-	// parse the config
-	eventingKafkaSettings, err := commonsarama.LoadEventingKafkaSettings(channelConfigMap.Data)
-	if err != nil {
-		return statusConditionManager.FailedToResolveConfig(err)
-	}
-	logger.Debug("config parsed", zap.Any("eventingKafkaSettings", eventingKafkaSettings))
-
 	if err := r.TrackConfigMap(channelConfigMap, channel); err != nil {
 		return fmt.Errorf("failed to track broker config: %w", err)
 	}
 
 	// get topic config
-	topicConfig := r.topicConfig(logger, eventingKafkaSettings, channel)
+	topicConfig, err := r.topicConfig(logger, channelConfigMap, channel)
+	if err != nil {
+		return statusConditionManager.FailedToResolveConfig(err)
+	}
 	logger.Debug("topic config resolved", zap.Any("config", topicConfig))
 	statusConditionManager.ConfigResolved()
 
 	// get the secret to access Kafka
-	secret, err := r.secret(ctx, channelConfigMap)
+	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap}, r.SecretProviderFunc())
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
@@ -140,7 +147,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
-	topicName := topic(TopicPrefix, channel)
+	topicName := kafka.ChannelTopic(TopicPrefix, channel)
 
 	kafkaClusterAdminSaramaConfig, err := kafka.GetSaramaConfig(saramaSecurityOption)
 	if err != nil {
@@ -155,11 +162,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin sarama config: %w", err))
 	}
 
-	kafkaClusterAdmin, err := r.NewKafkaClusterAdmin(topicConfig.BootstrapServers, kafkaClusterAdminSaramaConfig)
+	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(topicConfig.BootstrapServers, kafkaClusterAdminSaramaConfig)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
 	}
-	defer kafkaClusterAdmin.Close()
+	defer kafkaClusterAdminClient.Close()
 
 	kafkaClient, err := r.NewKafkaClient(topicConfig.BootstrapServers, kafkaClientSaramaConfig)
 	if err != nil {
@@ -168,7 +175,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	defer kafkaClient.Close()
 
 	// create the topic
-	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdmin, logger, topicName, topicConfig)
+	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topic, err)
 	}
@@ -178,7 +185,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	// Get data plane config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
-		return statusConditionManager.FailedToGetConfig(err)
+		return statusConditionManager.FailedToResolveConfig(err)
 	}
 	logger.Debug("Got contract config map")
 
@@ -192,13 +199,13 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	// Get resource configuration
 	channelResource, err := r.getChannelContractResource(ctx, topic, channel, secret, topicConfig)
 	if err != nil {
-		return statusConditionManager.FailedToGetConfig(err)
+		return statusConditionManager.FailedToResolveConfig(err)
 	}
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&channel.Status.DeliveryStatus, channelResource.EgressConfig)
 
 	// we still update the contract configMap even though there's an error.
 	// however, we record this error to make the reconciler try again.
-	subscriptionError := r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdmin, channel, channelResource)
+	subscriptionError := r.reconcileSubscribers(ctx, kafkaClient, kafkaClusterAdminClient, channel, channelResource)
 
 	// Update contract data with the new contract configuration (add/update channel resource)
 	channelIndex := coreconfig.FindResource(ct, channel.UID)
@@ -259,7 +266,22 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		return subscriptionError
 	}
 
-	return statusConditionManager.Reconciled()
+	address := receiver.Address(r.IngressHost, channel)
+	proberAddressable := prober.Addressable{
+		Address: address,
+		ResourceKey: types.NamespacedName{
+			Namespace: channel.GetNamespace(),
+			Name:      channel.GetName(),
+		},
+	}
+
+	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusReady {
+		statusConditionManager.ProbesStatusNotReady(status)
+		return nil // Object will get re-queued once probe status changes.
+	}
+	statusConditionManager.Addressable(address)
+
+	return nil
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, channel *messagingv1beta1.KafkaChannel) reconciler.Event {
@@ -274,7 +296,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get contract config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
+		return fmt.Errorf("failed to get contract config map %s: %w", r.DataPlaneConfigMapAsString(), err)
 	}
 	logger.Debug("Got contract config map")
 
@@ -301,6 +323,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 		logger.Debug("Contract config map updated")
 	}
 
+	channel.Status.Address = nil
+
 	// We update receiver and dispatcher pods annotation regardless of our contract changed or not due to the fact
 	// that in a previous reconciliation we might have failed to update one of our data plane pod annotation, so we want
 	// to update anyway remaining annotations with the contract generation that was saved in the CM.
@@ -315,12 +339,24 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 		return err
 	}
 
-	// TODO probe (as in #974) and check if status code is 404 otherwise requeue and return.
 	//  Rationale: after deleting a topic closing a producer ends up blocking and requesting metadata for max.block.ms
 	//  because topic metadata aren't available anymore.
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
+	address := receiver.Address(r.IngressHost, channel)
+	proberAddressable := prober.Addressable{
+		Address: address,
+		ResourceKey: types.NamespacedName{
+			Namespace: channel.GetNamespace(),
+			Name:      channel.GetName(),
+		},
+	}
+	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusNotReady {
+		// Return a requeueKeyError that doesn't generate an event and it re-queues the object
+		// for a new reconciliation.
+		return controller.NewRequeueAfter(5 * time.Second)
+	}
 
 	// get the channel configmap
 	channelConfigMap, err := r.channelConfigMap()
@@ -329,19 +365,16 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 	logger.Debug("configmap read", zap.Any("configmap", channelConfigMap))
 
-	// parse the config
-	eventingKafkaSettings, err := commonsarama.LoadEventingKafkaSettings(channelConfigMap.Data)
-	if err != nil {
-		return err
-	}
-	logger.Debug("config parsed", zap.Any("eventingKafkaSettings", eventingKafkaSettings))
-
 	// get topic config
-	topicConfig := r.topicConfig(logger, eventingKafkaSettings, channel)
+	topicConfig, err := r.topicConfig(logger, channelConfigMap, channel)
+	if err != nil {
+		return fmt.Errorf("failed to resolve channel config: %w", err)
+	}
+
 	logger.Debug("topic config resolved", zap.Any("config", topicConfig))
 
 	// get the secret to access Kafka
-	secret, err := r.secret(ctx, channelConfigMap)
+	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap}, r.SecretProviderFunc())
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
@@ -364,15 +397,15 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
 	}
 
-	kafkaClusterAdmin, err := r.NewKafkaClusterAdmin(topicConfig.BootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(topicConfig.BootstrapServers, saramaConfig)
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
-	defer kafkaClusterAdmin.Close()
+	defer kafkaClusterAdminClient.Close()
 
-	topic, err := kafka.DeleteTopic(kafkaClusterAdmin, topic(TopicPrefix, channel))
+	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, kafka.ChannelTopic(TopicPrefix, channel))
 	if err != nil {
 		return err
 	}
@@ -425,7 +458,7 @@ func (r *Reconciler) reconcileSubscriber(ctx context.Context, kafkaClient sarama
 	subscriberIndex := coreconfig.FindEgress(channelContractResource.Egresses, subscriberSpec.UID)
 	subscriberConfig, err := r.getSubscriberConfig(ctx, channel, subscriberSpec)
 	if err != nil {
-		return fmt.Errorf("failed to resolve subscriber config: %v", zap.Error(err))
+		return fmt.Errorf("failed to resolve subscriber config: %w", err)
 	}
 
 	coreconfig.AddOrUpdateEgressConfigForResource(channelContractResource, subscriberConfig, subscriberIndex)
@@ -439,9 +472,9 @@ func (r *Reconciler) reconcileInitialOffset(ctx context.Context, channel *messag
 		return nil
 	}
 
-	topicName := topic(TopicPrefix, channel)
+	topicName := kafka.ChannelTopic(TopicPrefix, channel)
 	groupID := consumerGroup(channel, sub)
-	_, err := offset.InitOffsets(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID)
+	_, err := r.InitOffsetsFunc(ctx, kafkaClient, kafkaClusterAdmin, []string{topicName}, groupID)
 	return err
 }
 
@@ -449,14 +482,22 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 	egress := &contract.Egress{
 		Destination:   subscriber.SubscriberURI.String(),
 		ConsumerGroup: consumerGroup(channel, subscriber),
+		DeliveryOrder: DefaultDeliveryOrder,
 		Uid:           string(subscriber.UID),
+		ReplyStrategy: &contract.Egress_DiscardReply{},
 	}
 
-	subscriptionEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, subscriber.Delivery, r.Configs.DefaultBackoffDelayMs)
+	if subscriber.ReplyURI != nil {
+		egress.ReplyStrategy = &contract.Egress_ReplyUrl{
+			ReplyUrl: subscriber.ReplyURI.String(),
+		}
+	}
+
+	subscriptionEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, subscriber.Delivery, r.DefaultBackoffDelayMs)
 	if err != nil {
 		return nil, err
 	}
-	channelEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.Configs.DefaultBackoffDelayMs)
+	channelEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.DefaultBackoffDelayMs)
 	if err != nil {
 		return nil, err
 	}
@@ -471,15 +512,20 @@ func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
 	// TODO: do we want to support namespaced channels? they're not supported at the moment.
 
 	namespace := system.Namespace()
-	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(constants.SettingsConfigMapName)
+	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(r.Env.GeneralConfigMapName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, constants.SettingsConfigMapName, err)
+		return nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, r.Env.GeneralConfigMapName, err)
 	}
 
 	return cm, nil
 }
 
-func (r *Reconciler) topicConfig(logger *zap.Logger, eventingKafkaConfig *commonconfig.EventingKafkaConfig, channel *messagingv1beta1.KafkaChannel) *kafka.TopicConfig {
+func (r *Reconciler) topicConfig(logger *zap.Logger, cm *corev1.ConfigMap, channel *messagingv1beta1.KafkaChannel) (*kafka.TopicConfig, error) {
+	bootstrapServers, err := kafka.BootstrapServersFromConfigMap(logger, cm)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get bootstrapServers from configmap: %w - ConfigMap data: %v", err, cm.Data)
+	}
+
 	// Parse & Format the RetentionDuration into Sarama retention.ms string
 	retentionDuration, err := channel.Spec.ParseRetentionDuration()
 	if err != nil {
@@ -497,12 +543,8 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, eventingKafkaConfig *common
 				constants.KafkaTopicConfigRetentionMs: &retentionMillisString,
 			},
 		},
-		BootstrapServers: strings.Split(eventingKafkaConfig.Kafka.Brokers, ","),
-	}
-}
-
-func (r *Reconciler) secret(ctx context.Context, channelConfig *corev1.ConfigMap) (*corev1.Secret, error) {
-	return security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfig}, r.SecretProviderFunc())
+		BootstrapServers: bootstrapServers,
+	}, nil
 }
 
 func (r *Reconciler) getChannelContractResource(ctx context.Context, topic string, channel *messagingv1beta1.KafkaChannel, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
@@ -515,6 +557,11 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 			},
 		},
 		BootstrapServers: config.GetBootstrapServers(),
+		Reference: &contract.Reference{
+			Uuid:      string(channel.GetUID()),
+			Namespace: channel.GetNamespace(),
+			Name:      channel.GetName(),
+		},
 	}
 
 	if secret != nil {
@@ -528,19 +575,13 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		}
 	}
 
-	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.Configs.DefaultBackoffDelayMs)
+	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, channel, channel.Spec.Delivery, r.DefaultBackoffDelayMs)
 	if err != nil {
 		return nil, err
 	}
 	resource.EgressConfig = egressConfig
 
 	return resource, nil
-}
-
-// topic returns a topic name given a topic prefix and a generic object.
-// This function uses a different format than the kafkatopic.Topic function
-func topic(prefix string, obj metav1.Object) string {
-	return fmt.Sprintf("%s.%s.%s", prefix, obj.GetNamespace(), obj.GetName())
 }
 
 // consumerGroup returns a consumerGroup name for the given channel and subscription

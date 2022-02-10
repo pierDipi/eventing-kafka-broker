@@ -48,6 +48,14 @@ type MockKafkaClusterAdmin struct {
 	T *testing.T
 }
 
+func (m *MockKafkaClusterAdmin) DeleteConsumerGroupOffset(group string, topic string, partition int32) error {
+	panic("implement me")
+}
+
+func (m *MockKafkaClusterAdmin) Controller() (*sarama.Broker, error) {
+	panic("implement me")
+}
+
 func (m *MockKafkaClusterAdmin) DescribeUserScramCredentials(users []string) ([]*sarama.DescribeUserScramCredentialsResult, error) {
 	return nil, nil
 }

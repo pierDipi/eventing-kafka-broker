@@ -18,12 +18,12 @@ package testing
 
 import (
 	"fmt"
-	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/sets"
 	clientgotesting "k8s.io/client-go/testing"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
@@ -31,6 +31,10 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
@@ -42,11 +46,16 @@ const (
 	BrokerUUID      = "e7185016-5d98-4b54-84e8-3b1cd4acc6b4"
 	BrokerNamespace = "test-namespace"
 	BrokerName      = "test-broker"
+
+	TriggerName      = "test-trigger"
+	TriggerNamespace = "test-namespace"
+
+	ConfigMapFinalizerName = "kafka.brokers.eventing.knative.dev/" + BrokerNamespace + "-" + BrokerName
 )
 
 func BrokerTopic() string {
 	broker := NewBroker().(metav1.Object)
-	return kafka.Topic(TopicPrefix, broker)
+	return kafka.BrokerTopic(TopicPrefix, broker)
 }
 
 // NewBroker creates a new Broker with broker class equals to kafka.BrokerClass.
@@ -57,6 +66,9 @@ func NewBroker(options ...reconcilertesting.BrokerOption) runtime.Object {
 		append(
 			[]reconcilertesting.BrokerOption{
 				reconcilertesting.WithBrokerClass(kafka.BrokerClass),
+				WithBrokerConfig(
+					KReference(BrokerConfig("", 20, 5)),
+				),
 				func(broker *eventing.Broker) {
 					broker.UID = BrokerUUID
 				},
@@ -71,7 +83,7 @@ func NewDeletedBroker(options ...reconcilertesting.BrokerOption) runtime.Object 
 		append(
 			options,
 			func(broker *eventing.Broker) {
-				broker.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+				WithDeletedTimeStamp(broker)
 			},
 		)...,
 	)
@@ -126,19 +138,32 @@ type CMOption func(cm *corev1.ConfigMap)
 func BrokerConfig(bootstrapServers string, numPartitions, replicationFactor int, options ...CMOption) *corev1.ConfigMap {
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: ConfigMapNamespace,
-			Name:      ConfigMapName,
+			Namespace:  ConfigMapNamespace,
+			Name:       ConfigMapName,
+			Finalizers: []string{"finalizer-that-we-should-not-drop"},
 		},
 		Data: map[string]string{
-			BootstrapServersConfigMapKey:              bootstrapServers,
-			DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", replicationFactor),
-			DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", numPartitions),
+			kafka.BootstrapServersConfigMapKey:              bootstrapServers,
+			kafka.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", replicationFactor),
+			kafka.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", numPartitions),
 		},
 	}
 	for _, opt := range options {
 		opt(cm)
 	}
 	return cm
+}
+
+func BrokerConfigFinalizer(finalizerName string) CMOption {
+	return func(cm *corev1.ConfigMap) {
+		cm.Finalizers = append(cm.Finalizers, finalizerName)
+	}
+}
+
+func BrokerConfigFinalizerRemove(finalizerName string) CMOption {
+	return func(cm *corev1.ConfigMap) {
+		cm.Finalizers = sets.NewString(cm.Finalizers...).Delete(finalizerName).List()
+	}
 }
 
 func BrokerAuthConfig(name string) CMOption {
@@ -168,57 +193,61 @@ func BrokerReady(broker *eventing.Broker) {
 	}
 }
 
-func BrokerConfigMapUpdatedReady(configs *Configs) func(broker *eventing.Broker) {
+func StatusBrokerConfigMapUpdatedReady(env *config.Env) func(broker *eventing.Broker) {
 	return func(broker *eventing.Broker) {
-		broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrueWithReason(
-			base.ConditionConfigMapUpdated,
-			fmt.Sprintf("Config map %s updated", configs.DataPlaneConfigMapAsString()),
-			"",
-		)
+		StatusConfigMapUpdatedReady(env)(broker)
 	}
 }
 
-func BrokerTopicReady(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrueWithReason(
-		base.ConditionTopicReady,
-		fmt.Sprintf("Topic %s created", kafka.Topic(TopicPrefix, broker)),
-		"",
-	)
+func StatusBrokerTopicReady(broker *eventing.Broker) {
+	StatusTopicReadyWithName(kafka.BrokerTopic(TopicPrefix, broker))(broker)
 }
 
-func BrokerDataPlaneAvailable(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionDataPlaneAvailable)
+func StatusBrokerDataPlaneAvailable(broker *eventing.Broker) {
+	StatusDataPlaneAvailable(broker)
 }
 
-func BrokerDataPlaneNotAvailable(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
-		base.ConditionDataPlaneAvailable,
-		base.ReasonDataPlaneNotAvailable,
-		base.MessageDataPlaneNotAvailable,
-	)
+func StatusBrokerDataPlaneNotAvailable(broker *eventing.Broker) {
+	StatusDataPlaneNotAvailable(broker)
 }
 
-func BrokerConfigParsed(broker *eventing.Broker) {
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkTrue(base.ConditionConfigParsed)
+func StatusBrokerConfigParsed(broker *eventing.Broker) {
+	StatusConfigParsed(broker)
 }
 
-func BrokerConfigNotParsed(reason string) func(broker *eventing.Broker) {
+func StatusBrokerConfigNotParsed(reason string) func(broker *eventing.Broker) {
 	return func(broker *eventing.Broker) {
-		broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(base.ConditionConfigParsed, reason, "")
+		StatusConfigNotParsed(reason)(broker)
 	}
 }
 
-func BrokerAddressable(configs *Configs) func(broker *eventing.Broker) {
+func BrokerAddressable(env *config.Env) func(broker *eventing.Broker) {
 
 	return func(broker *eventing.Broker) {
 
 		broker.Status.Address.URL = &apis.URL{
 			Scheme: "http",
-			Host:   network.GetServiceHostname(configs.IngressName, configs.SystemNamespace),
+			Host:   network.GetServiceHostname(env.IngressName, env.SystemNamespace),
 			Path:   fmt.Sprintf("/%s/%s", broker.Namespace, broker.Name),
 		}
 
 		broker.GetConditionSet().Manage(&broker.Status).MarkTrue(base.ConditionAddressable)
+	}
+}
+
+func BrokerReference() *contract.Reference {
+	return &contract.Reference{
+		Uuid:      BrokerUUID,
+		Namespace: BrokerNamespace,
+		Name:      BrokerName,
+	}
+}
+
+func TriggerReference() *contract.Reference {
+	return &contract.Reference{
+		Uuid:      TriggerUUID,
+		Namespace: TriggerNamespace,
+		Name:      TriggerName,
 	}
 }
 
@@ -228,30 +257,9 @@ func BrokerDLSResolved(uri string) func(broker *eventing.Broker) {
 	}
 }
 
-func BrokerFailedToCreateTopic(broker *eventing.Broker) {
+func StatusBrokerFailedToCreateTopic(broker *eventing.Broker) {
 
-	broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
-		base.ConditionTopicReady,
-		fmt.Sprintf("Failed to create topic: %s", BrokerTopic()),
-		"%v",
-		fmt.Errorf("failed to create topic"),
-	)
-
-}
-
-func BrokerFailedToGetConfigMap(configs *Configs) func(broker *eventing.Broker) {
-
-	return func(broker *eventing.Broker) {
-
-		broker.GetConditionSet().Manage(broker.GetStatus()).MarkFalse(
-			base.ConditionConfigMapUpdated,
-			fmt.Sprintf(
-				"Failed to get ConfigMap: %s",
-				configs.DataPlaneConfigMapAsString(),
-			),
-			`configmaps "knative-eventing" not found`,
-		)
-	}
+	StatusFailedToCreateTopic(BrokerTopic())(broker)
 
 }
 
@@ -317,4 +325,14 @@ func BrokerReceiverPodUpdate(namespace string, annotations map[string]string) cl
 		namespace,
 		BrokerReceiverPod(namespace, annotations),
 	)
+}
+
+func StatusBrokerProbeSucceeded(broker *eventing.Broker) {
+	StatusProbeSucceeded(broker)
+}
+
+func StatusBrokerProbeFailed(status prober.Status) reconcilertesting.BrokerOption {
+	return func(broker *eventing.Broker) {
+		StatusProbeFailed(status)(broker)
+	}
 }

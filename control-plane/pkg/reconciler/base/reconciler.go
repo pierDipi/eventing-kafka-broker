@@ -88,7 +88,7 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) IsReceiverRunning() bool {
-	pods, err := r.PodLister.List(r.receiverSelector())
+	pods, err := r.PodLister.List(r.ReceiverSelector())
 	return err == nil && len(pods) > 0 && isAtLeastOneRunning(pods)
 }
 
@@ -171,10 +171,15 @@ func GetDataPlaneConfigMapData(logger *zap.Logger, dataPlaneConfigMap *corev1.Co
 	}
 	if err != nil {
 
-		logger.Warn("Failed to unmarshal config map", zap.Error(err))
+		// Because of https://github.com/golang/protobuf/issues/1314, we cannot use the error message in the unit tests.
+		// Also, the error here should only happen when there is an implementation issue as the configmap is only
+		// to be touched by the controller.
+		// Thus, let's not have the error message in the returned error. Instead, let's just print it.
+
+		logger.Error("Failed to unmarshal contract", zap.Any("content", dataPlaneDataRaw), zap.Error(err))
 
 		// let the caller decide if it want to continue or fail on an error.
-		return ct, fmt.Errorf("failed to unmarshal contract: '%s' - %w", dataPlaneDataRaw, err)
+		return ct, fmt.Errorf("failed to unmarshal contract: '%s'", dataPlaneDataRaw)
 	}
 
 	return ct, nil
@@ -194,7 +199,10 @@ func (r *Reconciler) UpdateDataPlaneConfigMap(ctx context.Context, contract *con
 		return fmt.Errorf("failed to marshal contract: %w", err)
 	}
 
-	// Update config map data. TODO is it safe to update this config map? do we need to copy it?
+	// Update config map data.
+	if configMap.BinaryData == nil {
+		configMap.BinaryData = make(map[string][]byte, 1)
+	}
 	configMap.BinaryData[ConfigMapDataKey] = data
 
 	_, err = r.KubeClient.CoreV1().ConfigMaps(configMap.Namespace).Update(ctx, configMap, metav1.UpdateOptions{})
@@ -211,18 +219,18 @@ func (r *Reconciler) UpdateDispatcherPodsAnnotation(ctx context.Context, logger 
 	if errors != nil {
 		return fmt.Errorf("failed to list dispatcher pods in namespace %s: %w", r.SystemNamespace, errors)
 	}
-	return r.updatePodsAnnotation(ctx, logger, "dispatcher", volumeGeneration, pods)
+	return r.UpdatePodsAnnotation(ctx, logger, "dispatcher", volumeGeneration, pods)
 }
 
 func (r *Reconciler) UpdateReceiverPodsAnnotation(ctx context.Context, logger *zap.Logger, volumeGeneration uint64) error {
-	pods, errors := r.PodLister.Pods(r.SystemNamespace).List(r.receiverSelector())
+	pods, errors := r.PodLister.Pods(r.SystemNamespace).List(r.ReceiverSelector())
 	if errors != nil {
 		return fmt.Errorf("failed to list receiver pods in namespace %s: %w", r.SystemNamespace, errors)
 	}
-	return r.updatePodsAnnotation(ctx, logger, "receiver", volumeGeneration, pods)
+	return r.UpdatePodsAnnotation(ctx, logger, "receiver", volumeGeneration, pods)
 }
 
-func (r *Reconciler) updatePodsAnnotation(ctx context.Context, logger *zap.Logger, component string, volumeGeneration uint64, pods []*corev1.Pod) error {
+func (r *Reconciler) UpdatePodsAnnotation(ctx context.Context, logger *zap.Logger, component string, volumeGeneration uint64, pods []*corev1.Pod) error {
 
 	var errors error
 
@@ -262,7 +270,7 @@ func (r *Reconciler) updatePodsAnnotation(ctx context.Context, logger *zap.Logge
 	return errors
 }
 
-func (r *Reconciler) receiverSelector() labels.Selector {
+func (r *Reconciler) ReceiverSelector() labels.Selector {
 	return labels.SelectorFromSet(map[string]string{"app": r.ReceiverLabel})
 }
 

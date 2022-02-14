@@ -141,5 +141,5 @@ function run_conformance_tests(){
 }
 
 function run_e2e_new_tests(){
-  go_test_e2e -timeout=100m ./test/e2e_new || fail_test "E2E (new) suite failed"
+  go_test_e2e -timeout=100m ./test/e2e_new/... || fail_test "E2E (new) suite failed"
 }

@@ -249,7 +249,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-broker-receiver
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.0.0
 spec:
   selector:
     matchLabels:
@@ -259,7 +259,7 @@ spec:
       name: kafka-broker-receiver
       labels:
         app: kafka-broker-receiver
-        kafka.eventing.knative.dev/release: devel
+        kafka.eventing.knative.dev/release: v1.0.0
     spec:
       serviceAccountName: knative-kafka-broker-data-plane
       securityContext:
@@ -388,7 +388,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-broker-receiver
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.0.0
 spec:
   selector:
     app: kafka-broker-receiver
@@ -411,7 +411,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-broker-dispatcher
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.0.0
 spec:
   selector:
     matchLabels:
@@ -421,7 +421,7 @@ spec:
       name: kafka-broker-dispatcher
       labels:
         app: kafka-broker-dispatcher
-        kafka.eventing.knative.dev/release: devel
+        kafka.eventing.knative.dev/release: v1.0.0
     spec:
       serviceAccountName: knative-kafka-broker-data-plane
       securityContext:
@@ -924,7 +924,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-sink-receiver
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.0.0
 spec:
   selector:
     app: kafka-sink-receiver
@@ -947,7 +947,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-sink-receiver
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.0.0
 spec:
   selector:
     matchLabels:
@@ -957,7 +957,7 @@ spec:
       name: kafka-sink-receiver
       labels:
         app: kafka-sink-receiver
-        kafka.eventing.knative.dev/release: devel
+        kafka.eventing.knative.dev/release: v1.0.0
     spec:
       serviceAccountName: knative-kafka-sink-data-plane
       securityContext:

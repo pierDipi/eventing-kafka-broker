@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
 function resolve_resources(){
+  echo $@
+
   local dir=$1
   local resolved_file_name=$2
   local image_prefix=$3
-  local image_tag=$4
-
-  [[ -n $image_tag ]] && image_tag=":$image_tag"
+  local image_tag=${4-":"}
 
   echo "Writing resolved yaml to $resolved_file_name"
 
-  > $resolved_file_name
+  >> $resolved_file_name
 
   for yaml in "$dir"/*.yaml; do
     echo "---" >> $resolved_file_name
@@ -20,7 +20,7 @@ function resolve_resources(){
     # 4. Remove empty lines
     sed -e "s+\(.* image: \)\(knative.dev\)\(.*/\)\(test/\)\(.*\)+\1\2 \3\4test-\5+g" \
         -e "s+ko://++" \
-        -e "s+contrib.eventing.knative.dev/release: devel+contrib.eventing.knative.dev/release: ${release}+" \
+        -e "s+kafka.eventing.knative.dev/release: devel+kafka.eventing.knative.dev/release: ${release}+" \
         -e "s+\${KNATIVE_KAFKA_BROKER_DISPATCHER_IMAGE}+${image_prefix}broker-dispatcher${image_tag}+" \
         -e "s+\${KNATIVE_KAFKA_BROKER_RECEIVER_IMAGE}+${image_prefix}broker-receiver${image_tag}+" \
         -e "s+\${KNATIVE_KAFKA_SINK_RECEIVER_IMAGE}+${image_prefix}broker-receiver${image_tag}+" \

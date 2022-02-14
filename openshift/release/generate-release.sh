@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 source $(dirname $0)/resolve.sh
+
+git apply openshift/patches/*
+git commit -am ":fire: Apply carried patches."
 
 release=$1
 

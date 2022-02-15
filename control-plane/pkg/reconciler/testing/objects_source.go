@@ -17,19 +17,16 @@
 package testing
 
 import (
-	"fmt"
-	"strings"
-	"time"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
+	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 )
 
 const (
@@ -44,9 +41,7 @@ var (
 	SourceTopics = []string{"t1", "t2"}
 )
 
-type SourceOption func(ks *sources.KafkaSource)
-
-func NewSource(options ...SourceOption) *sources.KafkaSource {
+func NewSource(options ...KRShapedOption) *sources.KafkaSource {
 	s := &sources.KafkaSource{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: SourceNamespace,
@@ -71,19 +66,18 @@ func NewSource(options ...SourceOption) *sources.KafkaSource {
 	return s
 }
 
-func NewDeletedSource(options ...SourceOption) runtime.Object {
+func NewDeletedSource(options ...KRShapedOption) runtime.Object {
 	return NewSource(
 		append(
 			options,
-			func(source *sources.KafkaSource) {
-				source.DeletionTimestamp = &metav1.Time{Time: time.Now()}
-			},
+			WithDeletedTimeStamp,
 		)...,
 	)
 }
 
-func WithKeyType(keyType string) SourceOption {
-	return func(ks *sources.KafkaSource) {
+func WithKeyType(keyType string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
 		if ks.Labels == nil {
 			ks.Labels = make(map[string]string, 1)
 		}
@@ -91,8 +85,9 @@ func WithKeyType(keyType string) SourceOption {
 	}
 }
 
-func WithCloudEventOverrides(overrides *duckv1.CloudEventOverrides) SourceOption {
-	return func(ks *sources.KafkaSource) {
+func WithCloudEventOverrides(overrides *duckv1.CloudEventOverrides) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
 		ks.Spec.CloudEventOverrides = overrides
 	}
 }
@@ -113,26 +108,23 @@ func NewSourceSinkReference() duckv1.Destination {
 	}
 }
 
-func SourceConfigMapUpdatedReady(configs *Configs) func(source *sources.KafkaSource) {
-	return func(source *sources.KafkaSource) {
-		source.GetConditionSet().Manage(source.GetStatus()).MarkTrueWithReason(
-			base.ConditionConfigMapUpdated,
-			fmt.Sprintf("Config map %s updated", configs.DataPlaneConfigMapAsString()),
-			"",
-		)
+func NewSourceSink2Reference() duckv1.Destination {
+	s := NewService2()
+	return duckv1.Destination{
+		Ref: &duckv1.KReference{
+			Kind:       s.Kind,
+			Namespace:  s.Namespace,
+			Name:       s.Name,
+			APIVersion: s.APIVersion,
+		},
 	}
 }
 
-func SourceTopicsReady(source *sources.KafkaSource) {
-	source.GetConditionSet().Manage(source.GetStatus()).MarkTrueWithReason(
-		base.ConditionTopicReady,
-		fmt.Sprintf("Topic %s created", strings.Join(SourceTopics, ", ")),
-		"",
-	)
-}
-
-func SourceDataPlaneAvailable(source *sources.KafkaSource) {
-	source.GetConditionSet().Manage(source.GetStatus()).MarkTrue(base.ConditionDataPlaneAvailable)
+func WithSourceSink(d duckv1.Destination) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		s := obj.(*sources.KafkaSource)
+		s.Spec.Sink = d
+	}
 }
 
 func SourceDispatcherPod(namespace string, annotations map[string]string) runtime.Object {
@@ -152,5 +144,43 @@ func SourceDispatcherPod(namespace string, annotations map[string]string) runtim
 		Status: corev1.PodStatus{
 			Phase: corev1.PodRunning,
 		},
+	}
+}
+
+func InitSourceConditions(obj duckv1.KRShaped) {
+	sink := obj.(*sources.KafkaSource)
+	sink.Status.InitializeConditions()
+}
+
+func StatusSourceSinkResolved(uri string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		res, _ := apis.ParseURL(uri)
+		ks.Status.SinkURI = res
+		if !res.IsEmpty() {
+			ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(sources.KafkaConditionSinkProvided)
+		} else {
+			ks.GetConditionSet().Manage(ks.GetStatus()).MarkUnknown(sources.KafkaConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
+		}
+	}
+}
+
+func StatusSourceSinkNotResolved(err string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ks := obj.(*sources.KafkaSource)
+		ks.Status.SinkURI = nil
+		ks.GetConditionSet().Manage(ks.GetStatus()).MarkFalse(
+			sources.KafkaConditionSinkProvided,
+			"FailedToResolveSink",
+			err,
+		)
+	}
+}
+
+func SourceReference() *contract.Reference {
+	return &contract.Reference{
+		Namespace: SourceNamespace,
+		Name:      SourceName,
+		Uuid:      SourceUUID,
 	}
 }

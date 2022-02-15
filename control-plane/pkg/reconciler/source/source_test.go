@@ -19,6 +19,7 @@ package source_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Shopify/sarama"
@@ -33,6 +34,8 @@ import (
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
@@ -42,7 +45,6 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/broker"
 	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
@@ -51,6 +53,15 @@ import (
 const (
 	finalizerName = "kafkasources.sources.knative.dev"
 )
+
+var DefaultEnv = &config.Env{
+	DataPlaneConfigMapNamespace: "knative-eventing",
+	DataPlaneConfigMapName:      "kafka-source-sources",
+	GeneralConfigMapName:        "kafka-broker-config",
+	IngressName:                 "kafka-source-ingress",
+	SystemNamespace:             "knative-eventing",
+	DataPlaneConfigFormat:       base.Json,
+}
 
 var (
 	finalizerUpdatedEvent = Eventf(
@@ -64,7 +75,7 @@ func TestReconcileKind(t *testing.T) {
 
 	sources.RegisterAlternateKafkaConditionSet(base.EgressConditionSet)
 
-	configs := *DefaultConfigs
+	env := *DefaultEnv
 	testKey := fmt.Sprintf("%s/%s", SourceNamespace, SourceName)
 
 	table := TableTest{
@@ -73,13 +84,13 @@ func TestReconcileKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewSourceSinkObject(),
 				NewSource(),
-				SourceDispatcherPod(configs.SystemNamespace, map[string]string{
+				SourceDispatcherPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -94,28 +105,31 @@ func TestReconcileKind(t *testing.T) {
 									EgressConfig:  &DefaultEgressConfig,
 									DeliveryOrder: DefaultDeliveryOrder,
 									ReplyStrategy: &contract.Egress_DiscardReply{},
+									Reference:     SourceReference(),
 								},
 							},
 							Auth:      &contract.Resource_AbsentAuth{},
-							Reference: &contract.Reference{Namespace: SourceNamespace, Name: SourceName},
+							Reference: SourceReference(),
 						},
 					},
 				}),
-				SourceDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				SourceDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve":           "value_to_preserve",
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&configs, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
-						SourceConfigMapUpdatedReady(&configs),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
+						StatusSourceSinkResolved(ServiceURL),
 					),
 				},
 			},
@@ -133,13 +147,13 @@ func TestReconcileKind(t *testing.T) {
 				NewSource(WithCloudEventOverrides(&duckv1.CloudEventOverrides{
 					Extensions: map[string]string{"a": "foo", "b": "foo"},
 				})),
-				SourceDispatcherPod(configs.SystemNamespace, map[string]string{
+				SourceDispatcherPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -157,21 +171,22 @@ func TestReconcileKind(t *testing.T) {
 									EgressConfig:  &DefaultEgressConfig,
 									DeliveryOrder: DefaultDeliveryOrder,
 									ReplyStrategy: &contract.Egress_DiscardReply{},
+									Reference:     SourceReference(),
 								},
 							},
 							Auth:      &contract.Resource_AbsentAuth{},
-							Reference: &contract.Reference{Namespace: SourceNamespace, Name: SourceName},
+							Reference: SourceReference(),
 						},
 					},
 				}),
-				SourceDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				SourceDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve":           "value_to_preserve",
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&configs, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
@@ -179,9 +194,11 @@ func TestReconcileKind(t *testing.T) {
 						WithCloudEventOverrides(&duckv1.CloudEventOverrides{
 							Extensions: map[string]string{"a": "foo", "b": "foo"},
 						}),
-						SourceConfigMapUpdatedReady(&configs),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
+						StatusSourceSinkResolved(ServiceURL),
 					),
 				},
 			},
@@ -197,13 +214,13 @@ func TestReconcileKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewSourceSinkObject(),
 				NewSource(WithKeyType("string")),
-				SourceDispatcherPod(configs.SystemNamespace, map[string]string{
+				SourceDispatcherPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -219,29 +236,32 @@ func TestReconcileKind(t *testing.T) {
 									DeliveryOrder: DefaultDeliveryOrder,
 									KeyType:       contract.KeyType_String,
 									ReplyStrategy: &contract.Egress_DiscardReply{},
+									Reference:     SourceReference(),
 								},
 							},
 							Auth:      &contract.Resource_AbsentAuth{},
-							Reference: &contract.Reference{Namespace: SourceNamespace, Name: SourceName},
+							Reference: SourceReference(),
 						},
 					},
 				}),
-				SourceDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				SourceDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve":           "value_to_preserve",
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&configs, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
 						WithKeyType("string"),
-						SourceConfigMapUpdatedReady(&configs),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
+						StatusSourceSinkResolved(ServiceURL),
 					),
 				},
 			},
@@ -257,13 +277,13 @@ func TestReconcileKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewSourceSinkObject(),
 				NewSource(WithKeyType("int")),
-				SourceDispatcherPod(configs.SystemNamespace, map[string]string{
+				SourceDispatcherPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -279,29 +299,32 @@ func TestReconcileKind(t *testing.T) {
 									DeliveryOrder: DefaultDeliveryOrder,
 									KeyType:       contract.KeyType_Integer,
 									ReplyStrategy: &contract.Egress_DiscardReply{},
+									Reference:     SourceReference(),
 								},
 							},
 							Auth:      &contract.Resource_AbsentAuth{},
-							Reference: &contract.Reference{Namespace: SourceNamespace, Name: SourceName},
+							Reference: SourceReference(),
 						},
 					},
 				}),
-				SourceDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				SourceDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve":           "value_to_preserve",
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&configs, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
 						WithKeyType("int"),
-						SourceConfigMapUpdatedReady(&configs),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
+						StatusSourceSinkResolved(ServiceURL),
 					),
 				},
 			},
@@ -317,13 +340,13 @@ func TestReconcileKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewSourceSinkObject(),
 				NewSource(WithKeyType("byte-array")),
-				SourceDispatcherPod(configs.SystemNamespace, map[string]string{
+				SourceDispatcherPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -339,29 +362,32 @@ func TestReconcileKind(t *testing.T) {
 									DeliveryOrder: DefaultDeliveryOrder,
 									KeyType:       contract.KeyType_ByteArray,
 									ReplyStrategy: &contract.Egress_DiscardReply{},
+									Reference:     SourceReference(),
 								},
 							},
 							Auth:      &contract.Resource_AbsentAuth{},
-							Reference: &contract.Reference{Namespace: SourceNamespace, Name: SourceName},
+							Reference: SourceReference(),
 						},
 					},
 				}),
-				SourceDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				SourceDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve":           "value_to_preserve",
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&configs, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
 						WithKeyType("byte-array"),
-						SourceConfigMapUpdatedReady(&configs),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
+						StatusSourceSinkResolved(ServiceURL),
 					),
 				},
 			},
@@ -377,13 +403,13 @@ func TestReconcileKind(t *testing.T) {
 			Objects: []runtime.Object{
 				NewSourceSinkObject(),
 				NewSource(WithKeyType("float")),
-				SourceDispatcherPod(configs.SystemNamespace, map[string]string{
+				SourceDispatcherPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Generation: 1,
 					Resources: []*contract.Resource{
 						{
@@ -399,29 +425,32 @@ func TestReconcileKind(t *testing.T) {
 									DeliveryOrder: DefaultDeliveryOrder,
 									KeyType:       contract.KeyType_Double,
 									ReplyStrategy: &contract.Egress_DiscardReply{},
+									Reference:     SourceReference(),
 								},
 							},
 							Auth:      &contract.Resource_AbsentAuth{},
-							Reference: &contract.Reference{Namespace: SourceNamespace, Name: SourceName},
+							Reference: SourceReference(),
 						},
 					},
 				}),
-				SourceDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				SourceDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve":           "value_to_preserve",
 					base.VolumeGenerationAnnotationKey: "1",
 				}),
 			},
 			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
 			WantCreates: []runtime.Object{
-				NewConfigMap(&configs, nil),
+				NewConfigMapWithBinaryData(&env, nil),
 			},
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: NewSource(
 						WithKeyType("float"),
-						SourceConfigMapUpdatedReady(&configs),
-						SourceTopicsReady,
-						SourceDataPlaneAvailable,
+						StatusConfigMapUpdatedReady(&env),
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
+						StatusSourceSinkResolved(ServiceURL),
 					),
 				},
 			},
@@ -432,13 +461,43 @@ func TestReconcileKind(t *testing.T) {
 				finalizerUpdatedEvent,
 			},
 		},
+		{
+			Name: "Reconciled failed - no sink",
+			Objects: []runtime.Object{
+				NewSource(),
+				SourceDispatcherPod(env.SystemNamespace, map[string]string{
+					"annotation_to_preserve": "value_to_preserve",
+				}),
+			},
+			Key:                     testKey,
+			SkipNamespaceValidation: true, // WantCreates compare the broker namespace with configmap namespace, so skip it
+			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
+				{
+					Object: NewSource(
+						InitSourceConditions,
+						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
+						StatusDataPlaneAvailable,
+						StatusInitialOffsetsCommitted,
+						StatusSourceSinkNotResolved("failed to resolve destination: services \"test-service\" not found"),
+					),
+				},
+			},
+			WantPatches: []clientgotesting.PatchActionImpl{
+				patchFinalizers(),
+			},
+			WantEvents: []string{
+				finalizerUpdatedEvent,
+				"Warning InternalError failed to resolve sink: failed to resolve destination: services \"test-service\" not found",
+			},
+			WantErr: true,
+		},
 	}
 
-	useTable(t, table, configs)
+	useTable(t, table, env)
 }
 
-func useTable(t *testing.T, table TableTest, configs broker.Configs) {
-	table.Test(t, NewFactory(&configs, func(ctx context.Context, listers *Listers, configs *broker.Configs, row *TableRow) controller.Reconciler {
+func useTable(t *testing.T, table TableTest, env config.Env) {
+	table.Test(t, NewFactory(&env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
 		var topicMetadata []*sarama.TopicMetadata
 		for _, t := range SourceTopics {
@@ -450,14 +509,20 @@ func useTable(t *testing.T, table TableTest, configs broker.Configs) {
 				KubeClient:                  kubeclient.Get(ctx),
 				PodLister:                   listers.GetPodLister(),
 				SecretLister:                listers.GetSecretLister(),
-				DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
-				DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
-				SystemNamespace:             configs.SystemNamespace,
+				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
+				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
+				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
+				SystemNamespace:             env.SystemNamespace,
 				DispatcherLabel:             base.SourceDispatcherLabel,
 			},
-			Env: &configs.Env,
-			NewKafkaClusterAdmin: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
+			Env: env,
+			InitOffsetsFunc: func(ctx context.Context, kafkaClient sarama.Client, kafkaAdminClient sarama.ClusterAdmin, topics []string, consumerGroup string) (int32, error) {
+				return 1, nil
+			},
+			NewKafkaClient: func(addrs []string, config *sarama.Config) (sarama.Client, error) {
+				return &kafkatesting.MockKafkaClient{}, nil
+			},
+			NewKafkaClusterAdminClient: func(_ []string, _ *sarama.Config) (sarama.ClusterAdmin, error) {
 				return &kafkatesting.MockKafkaClusterAdmin{
 					ExpectedTopicName:                      "",
 					ExpectedTopicDetail:                    sarama.TopicDetail{},
@@ -494,7 +559,7 @@ func TestFinalizeKind(t *testing.T) {
 
 	sources.RegisterAlternateKafkaConditionSet(base.EgressConditionSet)
 
-	configs := *DefaultConfigs
+	env := *DefaultEnv
 	testKey := fmt.Sprintf("%s/%s", SourceNamespace, SourceName)
 
 	table := TableTest{
@@ -511,18 +576,18 @@ func TestFinalizeKind(t *testing.T) {
 							BootstrapServers: SourceBootstrapServers,
 						},
 					},
-				}, &configs),
-				SourceDispatcherPod(configs.SystemNamespace, map[string]string{
+				}, &env),
+				SourceDispatcherPod(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve": "value_to_preserve",
 				}),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(&configs, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Generation: 2,
 					Resources:  []*contract.Resource{},
 				}),
-				SourceDispatcherPodUpdate(configs.SystemNamespace, map[string]string{
+				SourceDispatcherPodUpdate(env.SystemNamespace, map[string]string{
 					"annotation_to_preserve":           "value_to_preserve",
 					base.VolumeGenerationAnnotationKey: "2",
 				}),
@@ -531,7 +596,7 @@ func TestFinalizeKind(t *testing.T) {
 		},
 	}
 
-	useTable(t, table, configs)
+	useTable(t, table, env)
 }
 
 func SourceDispatcherPodUpdate(namespace string, annotations map[string]string) clientgotesting.UpdateActionImpl {

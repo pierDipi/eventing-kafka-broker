@@ -19,7 +19,7 @@ metadata:
   labels:
     kafka.eventing.knative.dev/release: devel
 webhooks:
-  - admissionReviewVersions: ["v1", "v1beta1"]
+  - admissionReviewVersions: [ "v1", "v1beta1" ]
     clientConfig:
       service:
         name: kafka-webhook-eventing

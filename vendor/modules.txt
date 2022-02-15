@@ -361,6 +361,7 @@ go.opentelemetry.io/otel/label
 go.opentelemetry.io/otel/propagation
 go.opentelemetry.io/otel/trace
 # go.uber.org/atomic v1.9.0
+## explicit
 go.uber.org/atomic
 # go.uber.org/automaxprocs v1.4.0
 go.uber.org/automaxprocs
@@ -1200,6 +1201,7 @@ knative.dev/eventing-kafka/pkg/client/injection/client/fake
 knative.dev/eventing-kafka/pkg/client/injection/informers/factory
 knative.dev/eventing-kafka/pkg/client/injection/informers/factory/fake
 knative.dev/eventing-kafka/pkg/client/injection/informers/messaging/v1beta1/kafkachannel
+knative.dev/eventing-kafka/pkg/client/injection/informers/messaging/v1beta1/kafkachannel/fake
 knative.dev/eventing-kafka/pkg/client/injection/informers/sources/v1beta1/kafkasource
 knative.dev/eventing-kafka/pkg/client/injection/informers/sources/v1beta1/kafkasource/fake
 knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel

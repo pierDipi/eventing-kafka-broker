@@ -64,6 +64,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: CONFIG_LEADERELECTION_NAME
+              value: config-kafka-leader-election
             - name: CONFIG_LOGGING_NAME
               value: config-logging
             - name: METRICS_DOMAIN
@@ -118,5 +120,8 @@ spec:
     - name: https-webhook
       port: 443
       targetPort: 8443
+    - name: http-metrics
+      port: 9090
+      targetPort: 9090
   selector:
     app: kafka-webhook-eventing

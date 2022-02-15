@@ -43,8 +43,6 @@ import (
 
 const (
 	deliveryOrderAnnotation = "kafka.eventing.knative.dev/delivery.order"
-	deliveryOrderOrdered    = "ordered"
-	deliveryOrderUnordered  = "unordered"
 )
 
 type Reconciler struct {
@@ -54,7 +52,7 @@ type Reconciler struct {
 	EventingClient eventingclientset.Interface
 	Resolver       *resolver.URIResolver
 
-	Configs *config.Env
+	Env *config.Env
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, trigger *eventing.Trigger) reconciler.Event {
@@ -68,7 +66,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 	statusConditionManager := statusConditionManager{
 		Trigger:  trigger,
-		Configs:  r.Configs,
+		Configs:  r.Env,
 		Recorder: controller.GetEventRecorder(ctx),
 	}
 
@@ -101,7 +99,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, trigger *eventing.Trigge
 
 		logger.Debug("broker deleted", zap.String("finalizeDuringReconcile", "deleted"))
 
-		// The associated broker doesn't exist anymore, so clean up Trigger resources.
+		// The associated broker doesn't exist anymore, so clean up Trigger resources and owning consumer group resource.
 		return r.FinalizeKind(ctx, trigger)
 	}
 
@@ -201,7 +199,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 	// Get data plane config map.
 	dataPlaneConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get data plane config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
+		return fmt.Errorf("failed to get data plane config map %s: %w", r.Env.DataPlaneConfigMapAsString(), err)
 	}
 
 	logger.Debug("Got data plane config map")
@@ -248,7 +246,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, trigger *eventing.Trigger
 		return err
 	}
 
-	logger.Debug("Updated data plane config map", zap.String("configmap", r.Configs.DataPlaneConfigMapAsString()))
+	logger.Debug("Updated data plane config map", zap.String("configmap", r.Env.DataPlaneConfigMapAsString()))
 
 	// Update volume generation annotation of dispatcher pods
 	if err := r.UpdateDispatcherPodsAnnotation(ctx, logger, ct.Generation); err != nil {
@@ -277,6 +275,11 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 		Destination:   destination.String(),
 		ConsumerGroup: string(trigger.UID),
 		Uid:           string(trigger.UID),
+		Reference: &contract.Reference{
+			Uuid:      string(trigger.GetUID()),
+			Namespace: trigger.GetNamespace(),
+			Name:      trigger.GetName(),
+		},
 	}
 
 	if trigger.Spec.Filter != nil && trigger.Spec.Filter.Attributes != nil {
@@ -285,11 +288,11 @@ func (r *Reconciler) reconcileTriggerEgress(ctx context.Context, broker *eventin
 		}
 	}
 
-	triggerEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, trigger, trigger.Spec.Delivery, r.Configs.DefaultBackoffDelayMs)
+	triggerEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, trigger, trigger.Spec.Delivery, r.Env.DefaultBackoffDelayMs)
 	if err != nil {
 		return nil, fmt.Errorf("[trigger] %w", err)
 	}
-	brokerEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, broker, broker.Spec.Delivery, r.Configs.DefaultBackoffDelayMs)
+	brokerEgressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, broker, broker.Spec.Delivery, r.Env.DefaultBackoffDelayMs)
 	if err != nil {
 		return nil, fmt.Errorf("[broker] %w", err)
 	}
@@ -326,11 +329,11 @@ func isKnativeKafkaBroker(broker *eventing.Broker) (bool, string) {
 
 func deliveryOrderFromString(val string) (contract.DeliveryOrder, error) {
 	switch strings.ToLower(val) {
-	case deliveryOrderOrdered:
+	case "ordered":
 		return contract.DeliveryOrder_ORDERED, nil
-	case deliveryOrderUnordered:
+	case "unordered":
 		return contract.DeliveryOrder_UNORDERED, nil
 	default:
-		return contract.DeliveryOrder_UNORDERED, fmt.Errorf("invalid annotation %s value: %s. Allowed values [ %q | %q ]", deliveryOrderAnnotation, val, deliveryOrderOrdered, deliveryOrderUnordered)
+		return contract.DeliveryOrder_UNORDERED, nil
 	}
 }

@@ -18,6 +18,7 @@ package channel
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -27,6 +28,7 @@ import (
 	messagingv1beta "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
 	kafkachannelinformer "knative.dev/eventing-kafka/pkg/client/injection/informers/messaging/v1beta1/kafkachannel"
 	kafkachannelreconciler "knative.dev/eventing-kafka/pkg/client/injection/reconciler/messaging/v1beta1/kafkachannel"
+	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
@@ -36,12 +38,15 @@ import (
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
+// TODO: no need for a configmap watcher?
 func NewController(ctx context.Context, watcher configmap.Watcher, configs *config.Env) *controller.Impl {
 
 	messagingv1beta.RegisterAlternateKafkaChannelConditionSet(base.IngressConditionSet)
@@ -60,10 +65,11 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			DispatcherLabel:             base.ChannelDispatcherLabel,
 			ReceiverLabel:               base.ChannelReceiverLabel,
 		},
-		NewKafkaClient:       sarama.NewClient,
-		NewKafkaClusterAdmin: sarama.NewClusterAdmin,
-		Configs:              configs,
-		ConfigMapLister:      configmapInformer.Lister(),
+		NewKafkaClient:             sarama.NewClient,
+		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
+		InitOffsetsFunc:            offset.InitOffsets,
+		Env:                        configs,
+		ConfigMapLister:            configmapInformer.Lister(),
 	}
 
 	logger := logging.FromContext(ctx)
@@ -77,12 +83,26 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	}
 
 	impl := kafkachannelreconciler.NewImpl(ctx, reconciler)
+	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, configs.IngressPodPort, reconciler.ReceiverSelector(), impl.EnqueueKey)
+	reconciler.IngressHost = network.GetServiceHostname(configs.IngressName, configs.SystemNamespace)
 
 	channelInformer := kafkachannelinformer.Get(ctx)
 
 	channelInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
+
+	globalResync := func(_ interface{}) {
+		impl.GlobalResync(channelInformer.Informer())
+	}
+
+	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),
+		Handler: cache.ResourceEventHandlerFuncs{
+			AddFunc:    globalResync,
+			DeleteFunc: globalResync,
+		},
+	})
 
 	reconciler.SecretTracker = impl.Tracker
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(reconciler.SecretTracker.OnChanged))

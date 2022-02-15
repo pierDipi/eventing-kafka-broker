@@ -142,7 +142,7 @@ func TestBrokerTrigger(t *testing.T) {
 			BootstrapServers:  testingpkg.BootstrapServersPlaintext,
 			ReplicationFactor: defaultReplicationFactor,
 			NumPartitions:     defaultNumPartitions,
-			Topic:             kafka.Topic(broker.TopicPrefix, br),
+			Topic:             kafka.BrokerTopic(broker.TopicPrefix, br),
 		}
 
 		err := kafkatest.VerifyNumPartitionAndReplicationFactor(
@@ -186,9 +186,9 @@ func TestBrokerWithConfig(t *testing.T) {
 		eventId := uuid.New().String()
 
 		cm := client.CreateConfigMapOrFail(configMapName, client.Namespace, map[string]string{
-			broker.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", numPartitions),
-			broker.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", replicationFactor),
-			broker.BootstrapServersConfigMapKey:              testingpkg.BootstrapServersPlaintext,
+			kafka.DefaultTopicNumPartitionConfigMapKey:      fmt.Sprintf("%d", numPartitions),
+			kafka.DefaultTopicReplicationFactorConfigMapKey: fmt.Sprintf("%d", replicationFactor),
+			kafka.BootstrapServersConfigMapKey:              testingpkg.BootstrapServersPlaintext,
 		})
 
 		br := client.CreateBrokerOrFail(
@@ -253,7 +253,7 @@ func TestBrokerWithConfig(t *testing.T) {
 			BootstrapServers:  testingpkg.BootstrapServersPlaintext,
 			ReplicationFactor: replicationFactor,
 			NumPartitions:     numPartitions,
-			Topic:             kafka.Topic(broker.TopicPrefix, br),
+			Topic:             kafka.BrokerTopic(broker.TopicPrefix, br),
 		}
 
 		err := kafkatest.VerifyNumPartitionAndReplicationFactor(

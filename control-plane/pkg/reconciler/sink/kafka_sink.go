@@ -19,9 +19,11 @@ package sink
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
 	"knative.dev/pkg/controller"
@@ -32,6 +34,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
@@ -45,14 +48,17 @@ const (
 
 type Reconciler struct {
 	*base.Reconciler
+	*config.Env
 
 	ConfigMapLister corelisters.ConfigMapLister
 
-	// NewKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClusterAdmin kafka.NewClusterAdminFunc
+	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
 
-	Configs *config.Env
+	Prober prober.Prober
+
+	IngressHost string
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *eventing.KafkaSink) reconciler.Event {
@@ -67,7 +73,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 	statusConditionManager := base.StatusConditionManager{
 		Object:     ks,
 		SetAddress: ks.Status.SetAddress,
-		Configs:    r.Configs,
+		Env:        r.Env,
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
@@ -105,11 +111,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
 	}
 
-	kafkaClusterAdmin, err := r.NewKafkaClusterAdmin(ks.Spec.BootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(ks.Spec.BootstrapServers, saramaConfig)
 	if err != nil {
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
-	defer kafkaClusterAdmin.Close()
+	defer kafkaClusterAdminClient.Close()
 
 	if ks.Spec.NumPartitions != nil && ks.Spec.ReplicationFactor != nil {
 
@@ -117,7 +123,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 		topicConfig := topicConfigFromSinkSpec(&ks.Spec)
 
-		topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdmin, logger, ks.Spec.Topic, topicConfig)
+		topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, ks.Spec.Topic, topicConfig)
 		if err != nil {
 			return statusConditionManager.FailedToCreateTopic(topic, err)
 		}
@@ -126,7 +132,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 		// If the topic is externally managed, we need to make sure that the topic exists and it's valid.
 		ks.GetStatus().Annotations[base.TopicOwnerAnnotation] = ExternalTopicOwner
 
-		isPresentAndValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdmin, ks.Spec.Topic)
+		isPresentAndValid, err := kafka.AreTopicsPresentAndValid(kafkaClusterAdminClient, ks.Spec.Topic)
 		if err != nil {
 			return statusConditionManager.TopicsNotPresentOrInvalidErr([]string{ks.Spec.Topic}, err)
 		}
@@ -170,6 +176,11 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 			IngressType: &contract.Ingress_Path{Path: receiver.PathFromObject(ks)},
 		},
 		BootstrapServers: kafka.BootstrapServersCommaSeparated(ks.Spec.BootstrapServers),
+		Reference: &contract.Reference{
+			Uuid:      string(ks.GetUID()),
+			Namespace: ks.GetNamespace(),
+			Name:      ks.GetName(),
+		},
 	}
 	if ks.Spec.HasAuthConfig() {
 		sinkConfig.Auth = &contract.Resource_AuthSecret{
@@ -217,7 +228,22 @@ func (r *Reconciler) reconcileKind(ctx context.Context, ks *eventing.KafkaSink) 
 
 	logger.Debug("Updated receiver pod annotation")
 
-	return statusConditionManager.Reconciled()
+	address := receiver.Address(r.IngressHost, ks)
+	proberAddressable := prober.Addressable{
+		Address: address,
+		ResourceKey: types.NamespacedName{
+			Namespace: ks.GetNamespace(),
+			Name:      ks.GetName(),
+		},
+	}
+
+	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusReady {
+		statusConditionManager.ProbesStatusNotReady(status)
+		return nil // Object will get re-queued once probe status changes.
+	}
+	statusConditionManager.Addressable(address)
+
+	return nil
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, ks *eventing.KafkaSink) reconciler.Event {
@@ -232,7 +258,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get contract config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
+		return fmt.Errorf("failed to get contract config map %s: %w", r.DataPlaneConfigMapAsString(), err)
 	}
 
 	logger.Debug("Got contract config map")
@@ -252,6 +278,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 		return err
 	}
 
+	ks.Status.Address.URL = nil
+
 	// We update receiver pods annotation regardless of our contract changed or not due to the fact  that in a previous
 	// reconciliation we might have failed to update one of our data plane pod annotation, so we want to anyway update
 	// remaining annotations with the contract generation that was saved in the CM.
@@ -262,12 +290,24 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 		return err
 	}
 
-	// TODO probe (as in #974) and check if status code is 404 otherwise requeue and return.
 	//  Rationale: after deleting a topic closing a producer ends up blocking and requesting metadata for max.block.ms
 	//  because topic metadata aren't available anymore.
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
+	address := receiver.Address(r.IngressHost, ks)
+	proberAddressable := prober.Addressable{
+		Address: address,
+		ResourceKey: types.NamespacedName{
+			Namespace: ks.GetNamespace(),
+			Name:      ks.GetName(),
+		},
+	}
+	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusNotReady {
+		// Return a requeueKeyError that doesn't generate an event and it re-queues the object
+		// for a new reconciliation.
+		return controller.NewRequeueAfter(5 * time.Second)
+	}
 
 	if ks.GetStatus().Annotations[base.TopicOwnerAnnotation] == ControllerTopicOwner {
 		secret, err := security.Secret(ctx, &SecretLocator{KafkaSink: ks}, r.SecretProviderFunc())
@@ -293,15 +333,15 @@ func (r *Reconciler) finalizeKind(ctx context.Context, ks *eventing.KafkaSink) e
 			return fmt.Errorf("error getting cluster admin sarama config: %w", err)
 		}
 
-		kafkaClusterAdmin, err := r.NewKafkaClusterAdmin(ks.Spec.BootstrapServers, saramaConfig)
+		kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(ks.Spec.BootstrapServers, saramaConfig)
 		if err != nil {
 			// even in error case, we return `normal`, since we are fine with leaving the
 			// topic undeleted e.g. when we lose connection
 			return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 		}
-		defer kafkaClusterAdmin.Close()
+		defer kafkaClusterAdminClient.Close()
 
-		topic, err := kafka.DeleteTopic(kafkaClusterAdmin, ks.Spec.Topic)
+		topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, ks.Spec.Topic)
 		if err != nil {
 			return err
 		}

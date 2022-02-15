@@ -20,16 +20,17 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"sync"
+	"time"
 
-	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/util/retry"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -37,6 +38,7 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
@@ -48,28 +50,23 @@ const (
 	TopicPrefix = "knative-broker-"
 )
 
-type Configs struct {
-	config.Env
-
-	BootstrapServers string
-}
-
 type Reconciler struct {
 	*base.Reconciler
+	*config.Env
 
 	Resolver *resolver.URIResolver
 
-	KafkaDefaultTopicDetails     sarama.TopicDetail
-	KafkaDefaultTopicDetailsLock sync.RWMutex
-	bootstrapServers             []string
-	bootstrapServersLock         sync.RWMutex
-	ConfigMapLister              corelisters.ConfigMapLister
+	ConfigMapLister corelisters.ConfigMapLister
 
-	// NewKafkaClusterAdmin creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
+	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
-	NewKafkaClusterAdmin kafka.NewClusterAdminFunc
+	NewKafkaClusterAdminClient kafka.NewClusterAdminClientFunc
 
-	Configs *Configs
+	BootstrapServers string
+
+	Prober prober.Prober
+
+	IngressHost string
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -84,7 +81,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	statusConditionManager := base.StatusConditionManager{
 		Object:     broker,
 		SetAddress: broker.Status.SetAddress,
-		Configs:    &r.Configs.Env,
+		Env:        r.Env,
 		Recorder:   controller.GetEventRecorder(ctx),
 	}
 
@@ -93,7 +90,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 	statusConditionManager.DataPlaneAvailable()
 
-	topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
+	topicConfig, brokerConfig, err := r.topicConfig(ctx, logger, broker)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -125,20 +122,20 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		return fmt.Errorf("failed to track secret: %w", err)
 	}
 
-	topicName := kafka.Topic(TopicPrefix, broker)
+	topicName := kafka.BrokerTopic(TopicPrefix, broker)
 
 	saramaConfig, err := kafka.GetSaramaConfig(securityOption)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("error getting cluster admin config: %w", err))
 	}
 
-	kafkaClusterAdmin, err := r.NewKafkaClusterAdmin(topicConfig.BootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(topicConfig.BootstrapServers, saramaConfig)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topicName, fmt.Errorf("cannot obtain Kafka cluster admin, %w", err))
 	}
-	defer kafkaClusterAdmin.Close()
+	defer kafkaClusterAdminClient.Close()
 
-	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdmin, logger, topicName, topicConfig)
+	topic, err := kafka.CreateTopicIfDoesntExist(kafkaClusterAdminClient, logger, topicName, topicConfig)
 	if err != nil {
 		return statusConditionManager.FailedToCreateTopic(topic, err)
 	}
@@ -165,12 +162,13 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	// Get resource configuration.
 	brokerResource, err := r.reconcilerBrokerResource(ctx, topic, broker, secret, topicConfig)
 	if err != nil {
-		return statusConditionManager.FailedToGetConfig(err)
+		return statusConditionManager.FailedToResolveConfig(err)
 	}
 	coreconfig.SetDeadLetterSinkURIFromEgressConfig(&broker.Status.DeliveryStatus, brokerResource.EgressConfig)
 
 	brokerIndex := coreconfig.FindResource(ct, broker.UID)
 	// Update contract data with the new contract configuration
+	coreconfig.SetResourceEgressesFromContract(ct, brokerResource, brokerIndex)
 	changed := coreconfig.AddOrUpdateResourceConfig(ct, brokerResource, brokerIndex, logger)
 
 	logger.Debug("Change detector", zap.Int("changed", changed))
@@ -225,7 +223,22 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 		logger.Debug("Updated dispatcher pod annotation")
 	}
 
-	return statusConditionManager.Reconciled()
+	address := receiver.Address(r.IngressHost, broker)
+	proberAddressable := prober.Addressable{
+		Address: address,
+		ResourceKey: types.NamespacedName{
+			Namespace: broker.GetNamespace(),
+			Name:      broker.GetName(),
+		},
+	}
+
+	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusReady {
+		statusConditionManager.ProbesStatusNotReady(status)
+		return nil // Object will get re-queued once probe status changes.
+	}
+	statusConditionManager.Addressable(address)
+
+	return nil
 }
 
 func (r *Reconciler) FinalizeKind(ctx context.Context, broker *eventing.Broker) reconciler.Event {
@@ -240,7 +253,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 	// Get contract config map.
 	contractConfigMap, err := r.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get contract config map %s: %w", r.Configs.DataPlaneConfigMapAsString(), err)
+		return fmt.Errorf("failed to get contract config map %s: %w", r.DataPlaneConfigMapAsString(), err)
 	}
 
 	logger.Debug("Got contract config map")
@@ -271,14 +284,28 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return err
 	}
 
-	// TODO probe (as in #974) and check if status code is 404 otherwise requeue and return.
+	broker.Status.Address.URL = nil
+
 	//  Rationale: after deleting a topic closing a producer ends up blocking and requesting metadata for max.block.ms
 	//  because topic metadata aren't available anymore.
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
+	address := receiver.Address(r.IngressHost, broker)
+	proberAddressable := prober.Addressable{
+		Address: address,
+		ResourceKey: types.NamespacedName{
+			Namespace: broker.GetNamespace(),
+			Name:      broker.GetName(),
+		},
+	}
+	if status := r.Prober.Probe(ctx, proberAddressable); status != prober.StatusNotReady {
+		// Return a requeueKeyError that doesn't generate an event and it re-queues the object
+		// for a new reconciliation.
+		return controller.NewRequeueAfter(5 * time.Second)
+	}
 
-	topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
+	topicConfig, brokerConfig, err := r.topicConfig(ctx, logger, broker)
 	if err != nil {
 		return fmt.Errorf("failed to resolve broker config: %w", err)
 	}
@@ -306,32 +333,31 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return fmt.Errorf("error getting cluster admin sarama config: %w", err)
 	}
 
-	kafkaClusterAdmin, err := r.NewKafkaClusterAdmin(topicConfig.BootstrapServers, saramaConfig)
+	kafkaClusterAdminClient, err := r.NewKafkaClusterAdminClient(topicConfig.BootstrapServers, saramaConfig)
 	if err != nil {
 		// even in error case, we return `normal`, since we are fine with leaving the
 		// topic undeleted e.g. when we lose connection
 		return fmt.Errorf("cannot obtain Kafka cluster admin, %w", err)
 	}
-	defer kafkaClusterAdmin.Close()
+	defer kafkaClusterAdminClient.Close()
 
-	topic, err := kafka.DeleteTopic(kafkaClusterAdmin, kafka.Topic(TopicPrefix, broker))
+	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, kafka.BrokerTopic(TopicPrefix, broker))
 	if err != nil {
 		return err
 	}
 
 	logger.Debug("Topic deleted", zap.String("topic", topic))
 
+	if err := r.removeFinalizerCM(ctx, finalizerCM(broker), brokerConfig); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*kafka.TopicConfig, *corev1.ConfigMap, error) {
+func (r *Reconciler) topicConfig(ctx context.Context, logger *zap.Logger, broker *eventing.Broker) (*kafka.TopicConfig, *corev1.ConfigMap, error) {
 
 	logger.Debug("broker config", zap.Any("broker.spec.config", broker.Spec.Config))
-
-	if broker.Spec.Config == nil {
-		tc, err := r.defaultConfig()
-		return tc, nil, err
-	}
 
 	if strings.ToLower(broker.Spec.Config.Kind) != "configmap" { // TODO: is there any constant?
 		return nil, nil, fmt.Errorf("supported config Kind: ConfigMap - got %s", broker.Spec.Config.Kind)
@@ -347,33 +373,16 @@ func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*
 		return nil, nil, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, err)
 	}
 
-	brokerConfig, err := configFromConfigMap(logger, cm)
-	if err != nil {
-		return nil, cm, err
+	if err := r.addFinalizerCM(ctx, finalizerCM(broker), cm); err != nil {
+		return nil, nil, err
 	}
 
-	return brokerConfig, cm, nil
-}
-
-func (r *Reconciler) defaultTopicDetail() sarama.TopicDetail {
-	r.KafkaDefaultTopicDetailsLock.RLock()
-	defer r.KafkaDefaultTopicDetailsLock.RUnlock()
-
-	// copy the default topic details
-	topicDetail := r.KafkaDefaultTopicDetails
-	return topicDetail
-}
-
-func (r *Reconciler) defaultConfig() (*kafka.TopicConfig, error) {
-	bootstrapServers, err := r.getDefaultBootstrapServersOrFail()
+	topicConfig, err := kafka.TopicConfigFromConfigMap(logger, cm)
 	if err != nil {
-		return nil, err
+		return nil, cm, fmt.Errorf("unable to build topic config from configmap: %w - ConfigMap data: %v", err, cm.Data)
 	}
 
-	return &kafka.TopicConfig{
-		TopicDetail:      r.defaultTopicDetail(),
-		BootstrapServers: bootstrapServers,
-	}, nil
+	return topicConfig, cm, nil
 }
 
 func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string, broker *eventing.Broker, secret *corev1.Secret, config *kafka.TopicConfig) (*contract.Resource, error) {
@@ -386,6 +395,11 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 			},
 		},
 		BootstrapServers: config.GetBootstrapServers(),
+		Reference: &contract.Reference{
+			Uuid:      string(broker.GetUID()),
+			Namespace: broker.GetNamespace(),
+			Name:      broker.GetName(),
+		},
 	}
 
 	if secret != nil {
@@ -399,7 +413,7 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 		}
 	}
 
-	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, broker, broker.Spec.Delivery, r.Configs.DefaultBackoffDelayMs)
+	egressConfig, err := coreconfig.EgressConfigFromDelivery(ctx, r.Resolver, broker, broker.Spec.Delivery, r.DefaultBackoffDelayMs)
 	if err != nil {
 		return nil, err
 	}
@@ -408,55 +422,48 @@ func (r *Reconciler) reconcilerBrokerResource(ctx context.Context, topic string,
 	return resource, nil
 }
 
-func (r *Reconciler) ConfigMapUpdated(ctx context.Context) func(configMap *corev1.ConfigMap) {
-
-	logger := logging.FromContext(ctx).Desugar()
-
-	return func(configMap *corev1.ConfigMap) {
-
-		topicConfig, err := configFromConfigMap(logger, configMap)
-		if err != nil {
-			return
+func (r *Reconciler) addFinalizerCM(ctx context.Context, finalizer string, cm *corev1.ConfigMap) error {
+	if !containsFinalizerCM(cm, finalizer) {
+		cm := cm.DeepCopy() // Do not modify informer copy.
+		cm.Finalizers = append(cm.Finalizers, finalizer)
+		_, err := r.KubeClient.CoreV1().ConfigMaps(cm.GetNamespace()).Update(ctx, cm, metav1.UpdateOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to add finalizer to ConfigMap %s/%s: %w", cm.GetNamespace(), cm.GetName(), err)
 		}
-
-		logger.Debug("new defaults",
-			zap.Any("topicDetail", topicConfig.TopicDetail),
-			zap.String("BootstrapServers", topicConfig.GetBootstrapServers()),
-		)
-
-		r.SetDefaultTopicDetails(topicConfig.TopicDetail)
-		r.SetBootstrapServers(topicConfig.GetBootstrapServers())
 	}
+	return nil
 }
 
-// SetBootstrapServers change kafka bootstrap brokers addresses.
-// servers: a comma separated list of brokers to connect to.
-func (r *Reconciler) SetBootstrapServers(servers string) {
-	if servers == "" {
-		return
+func containsFinalizerCM(cm *corev1.ConfigMap, finalizer string) bool {
+	if cm == nil {
+		return false
 	}
-
-	addrs := kafka.BootstrapServersArray(servers)
-
-	r.bootstrapServersLock.Lock()
-	r.bootstrapServers = addrs
-	r.bootstrapServersLock.Unlock()
+	for _, f := range cm.Finalizers {
+		if f == finalizer {
+			return true
+		}
+	}
+	return false
 }
 
-func (r *Reconciler) SetDefaultTopicDetails(topicDetail sarama.TopicDetail) {
-	r.KafkaDefaultTopicDetailsLock.Lock()
-	defer r.KafkaDefaultTopicDetailsLock.Unlock()
-
-	r.KafkaDefaultTopicDetails = topicDetail
+func (r *Reconciler) removeFinalizerCM(ctx context.Context, finalizer string, cm *corev1.ConfigMap) error {
+	newFinalizers := make([]string, 0, len(cm.Finalizers))
+	for _, f := range cm.Finalizers {
+		if f != finalizer {
+			newFinalizers = append(newFinalizers, f)
+		}
+	}
+	if len(newFinalizers) != len(cm.Finalizers) {
+		cm := cm.DeepCopy() // Do not modify informer copy.
+		cm.Finalizers = newFinalizers
+		_, err := r.KubeClient.CoreV1().ConfigMaps(cm.GetNamespace()).Update(ctx, cm, metav1.UpdateOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to remove finalizer %s to ConfigMap %s/%s: %w", finalizer, cm.GetNamespace(), cm.GetName(), err)
+		}
+	}
+	return nil
 }
 
-func (r *Reconciler) getDefaultBootstrapServersOrFail() ([]string, error) {
-	r.bootstrapServersLock.RLock()
-	defer r.bootstrapServersLock.RUnlock()
-
-	if len(r.bootstrapServers) == 0 {
-		return nil, fmt.Errorf("no %s provided", BootstrapServersConfigMapKey)
-	}
-
-	return r.bootstrapServers, nil
+func finalizerCM(object metav1.Object) string {
+	return fmt.Sprintf("%s/%s-%s", "kafka.brokers.eventing.knative.dev", object.GetNamespace(), object.GetName())
 }

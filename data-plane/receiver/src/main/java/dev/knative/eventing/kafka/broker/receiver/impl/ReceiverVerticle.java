@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.receiver.impl;
 import dev.knative.eventing.kafka.broker.core.reconciler.ResourcesReconciler;
 import dev.knative.eventing.kafka.broker.receiver.IngressProducer;
 import dev.knative.eventing.kafka.broker.receiver.IngressRequestHandler;
+import dev.knative.eventing.kafka.broker.receiver.RequestContext;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.MethodNotAllowedHandler;
 import dev.knative.eventing.kafka.broker.receiver.impl.handler.ProbeHandler;
 import dev.knative.eventing.kafka.broker.receiver.main.ReceiverEnv;
@@ -37,7 +38,10 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
+import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil.PROBE_HASH_HEADER_NAME;
+import static dev.knative.eventing.kafka.broker.receiver.impl.handler.ControlPlaneProbeRequestUtil.isControlPlaneProbeRequest;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
 /**
  * This verticle is responsible for implementing the logic of the receiver.
@@ -114,18 +118,24 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
   @Override
   public void handle(HttpServerRequest request) {
 
+    final var requestContext = new RequestContext(request);
+
     // Look up for the ingress producer
     IngressProducer producer = this.ingressProducerStore.resolve(request.path());
     if (producer == null) {
       request.response().setStatusCode(NOT_FOUND.code()).end();
+      logger.warn("Resource not found {}", keyValue("path", request.path()));
+      return;
+    }
 
-      logger.warn("Resource not found {}",
-        keyValue("path", request.path())
-      );
+    if (isControlPlaneProbeRequest(request)) {
+      request.response()
+        .putHeader(PROBE_HASH_HEADER_NAME, request.getHeader(PROBE_HASH_HEADER_NAME))
+        .setStatusCode(OK.code()).end();
       return;
     }
 
     // Invoke the ingress request handler
-    this.ingressRequestHandler.handle(request, producer);
+    this.ingressRequestHandler.handle(requestContext, producer);
   }
 }

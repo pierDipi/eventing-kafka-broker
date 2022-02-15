@@ -19,18 +19,18 @@ package broker
 import (
 	"context"
 	"errors"
-	"fmt"
+	"net/http"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
 	"knative.dev/pkg/resolver"
 
 	brokerinformer "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/broker"
@@ -40,20 +40,17 @@ import (
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 const (
-	DefaultTopicNumPartitionConfigMapKey      = "default.topic.partitions"
-	DefaultTopicReplicationFactorConfigMapKey = "default.topic.replication.factor"
-	BootstrapServersConfigMapKey              = "bootstrap.servers"
-
-	DefaultNumPartitions     = 10
-	DefaultReplicationFactor = 1
+	DefaultNumPartitions     = 20
+	DefaultReplicationFactor = 5
 )
 
-func NewController(ctx context.Context, watcher configmap.Watcher, configs *Configs) *controller.Impl {
+func NewController(ctx context.Context, watcher configmap.Watcher, env *config.Env) *controller.Impl {
 
 	eventing.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
 
@@ -64,20 +61,16 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			KubeClient:                  kubeclient.Get(ctx),
 			PodLister:                   podinformer.Get(ctx).Lister(),
 			SecretLister:                secretinformer.Get(ctx).Lister(),
-			DataPlaneConfigMapNamespace: configs.DataPlaneConfigMapNamespace,
-			DataPlaneConfigMapName:      configs.DataPlaneConfigMapName,
-			DataPlaneConfigFormat:       configs.DataPlaneConfigFormat,
-			SystemNamespace:             configs.SystemNamespace,
+			DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
+			DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
+			DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
+			SystemNamespace:             env.SystemNamespace,
 			DispatcherLabel:             base.BrokerDispatcherLabel,
 			ReceiverLabel:               base.BrokerReceiverLabel,
 		},
-		NewKafkaClusterAdmin: sarama.NewClusterAdmin,
-		KafkaDefaultTopicDetails: sarama.TopicDetail{
-			NumPartitions:     DefaultNumPartitions,
-			ReplicationFactor: DefaultReplicationFactor,
-		},
-		ConfigMapLister: configmapInformer.Lister(),
-		Configs:         configs,
+		NewKafkaClusterAdminClient: sarama.NewClusterAdmin,
+		ConfigMapLister:            configmapInformer.Lister(),
+		Env:                        env,
 	}
 
 	logger := logging.FromContext(ctx)
@@ -85,13 +78,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 	_, err := reconciler.GetOrCreateDataPlaneConfigMap(ctx)
 	if err != nil {
 		logger.Fatal("Failed to get or create data plane config map",
-			zap.String("configmap", configs.DataPlaneConfigMapAsString()),
+			zap.String("configmap", env.DataPlaneConfigMapAsString()),
 			zap.Error(err),
 		)
-	}
-
-	if configs.BootstrapServers != "" {
-		reconciler.SetBootstrapServers(configs.BootstrapServers)
 	}
 
 	impl := brokerreconciler.NewImpl(ctx, reconciler, kafka.BrokerClass, func(impl *controller.Impl) controller.Options {
@@ -99,6 +88,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 	})
 
 	reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
+	reconciler.Prober = prober.NewAsync(ctx, http.DefaultClient, env.IngressPodPort, reconciler.ReceiverSelector(), impl.EnqueueKey)
+	reconciler.IngressHost = network.GetServiceHostname(env.IngressName, env.SystemNamespace)
 
 	brokerInformer := brokerinformer.Get(ctx)
 
@@ -112,7 +103,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 	}
 
 	configmapInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: controller.FilterWithNameAndNamespace(configs.DataPlaneConfigMapNamespace, configs.DataPlaneConfigMapName),
+		FilterFunc: controller.FilterWithNameAndNamespace(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName),
 		Handler: cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
 				globalResync(obj)
@@ -143,15 +134,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *Conf
 			DeleteFunc: reconciler.OnDeleteObserver,
 		},
 	})
-
-	cm, err := reconciler.KubeClient.CoreV1().ConfigMaps(configs.SystemNamespace).Get(ctx, configs.GeneralConfigMapName, metav1.GetOptions{})
-	if err != nil {
-		panic(fmt.Errorf("failed to get config map %s/%s: %w", configs.SystemNamespace, configs.GeneralConfigMapName, err))
-	}
-
-	reconciler.ConfigMapUpdated(ctx)(cm)
-
-	watcher.Watch(configs.GeneralConfigMapName, reconciler.ConfigMapUpdated(ctx))
 
 	return impl
 }

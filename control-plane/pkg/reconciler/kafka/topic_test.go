@@ -18,12 +18,14 @@ package kafka
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/Shopify/sarama"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 
@@ -161,7 +163,7 @@ func TestTopic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Topic(tt.args.prefix, tt.args.obj); got != tt.want {
+			if got := BrokerTopic(tt.args.prefix, tt.args.obj); got != tt.want {
 				t.Errorf("Topic() = %v, want %v", got, tt.want)
 			}
 		})
@@ -293,7 +295,7 @@ func TestCreateTopicTopicAlreadyExists(t *testing.T) {
 			Namespace: "bnamespace",
 		},
 	}
-	topic := Topic("", b)
+	topic := BrokerTopic("", b)
 	errMsg := "topic already exists"
 
 	ca := &kafkatesting.MockKafkaClusterAdmin{
@@ -312,7 +314,7 @@ func TestCreateTopicTopicAlreadyExists(t *testing.T) {
 	assert.Nil(t, err, "expected nil error on topic already exists")
 }
 
-func TestNewClusterAdminFuncIsTopicPresent(t *testing.T) {
+func TestNewClusterAdminClientFuncIsTopicPresent(t *testing.T) {
 	tests := []struct {
 		name         string
 		clusterAdmin sarama.ClusterAdmin
@@ -415,4 +417,74 @@ func TestBootstrapServersArray(t *testing.T) {
 	require.Contains(t, bss, "bs:9000")
 	require.Contains(t, bss, "bs:9002")
 	require.Len(t, bss, 3)
+}
+
+func TestTopicConfigFromConfigMap(t *testing.T) {
+	tests := []struct {
+		name    string
+		data    map[string]string
+		want    TopicConfig
+		wantErr bool
+	}{
+		{
+			name: "All valid",
+			data: map[string]string{
+				"default.topic.partitions":         "5",
+				"default.topic.replication.factor": "8",
+				"bootstrap.servers":                "server1:9092, server2:9092",
+			},
+			want: TopicConfig{
+				TopicDetail: sarama.TopicDetail{
+					NumPartitions:     5,
+					ReplicationFactor: 8,
+				},
+				BootstrapServers: []string{"server1:9092", "server2:9092"},
+			},
+		},
+		{
+			name: "Missing keys 'default.topic.partitions' - not allowed",
+			data: map[string]string{
+				"default.topic.replication.factor": "8",
+				"bootstrap.servers":                "server1:9092, server2:9092",
+			},
+			wantErr: true,
+		},
+		{
+			name: "Missing keys 'default.topic.replication.factor' - not allowed",
+			data: map[string]string{
+				"default.topic.partitions": "5",
+				"bootstrap.servers":        "server1:9092, server2:9092",
+			},
+			wantErr: true,
+		},
+		{
+			name: "Missing keys 'bootstrap.servers' - not allowed",
+			data: map[string]string{
+				"default.topic.partitions":         "5",
+				"default.topic.replication.factor": "8",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+
+		logger := zap.NewNop()
+
+		cm := &corev1.ConfigMap{
+			Data: tt.data,
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := TopicConfigFromConfigMap(logger, cm)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TopicConfigFromConfigMap() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.wantErr && !reflect.DeepEqual(*got, tt.want) {
+				t.Errorf("TopicConfigFromConfigMap() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

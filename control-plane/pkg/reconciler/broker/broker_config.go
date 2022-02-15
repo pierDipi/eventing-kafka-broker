@@ -35,9 +35,9 @@ func configFromConfigMap(logger *zap.Logger, cm *corev1.ConfigMap) (*kafka.Topic
 	var bootstrapServers string
 
 	err := configmap.Parse(cm.Data,
-		configmap.AsInt32(DefaultTopicNumPartitionConfigMapKey, &topicDetail.NumPartitions),
-		configmap.AsInt32(DefaultTopicReplicationFactorConfigMapKey, &replicationFactor),
-		configmap.AsString(BootstrapServersConfigMapKey, &bootstrapServers),
+		configmap.AsInt32(kafka.DefaultTopicNumPartitionConfigMapKey, &topicDetail.NumPartitions),
+		configmap.AsInt32(kafka.DefaultTopicReplicationFactorConfigMapKey, &replicationFactor),
+		configmap.AsString(kafka.BootstrapServersConfigMapKey, &bootstrapServers),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse config map %s/%s: %w", cm.Namespace, cm.Name, err)

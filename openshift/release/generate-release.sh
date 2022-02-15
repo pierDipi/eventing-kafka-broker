@@ -32,7 +32,5 @@ resolve_resources control-plane/config/200-webhook $broker_cp_output_file "$imag
 
 # The DP folder for Broker:
 resolve_resources data-plane/config/broker $broker_dp_output_file "$image_prefix" "$tag"
-resolve_resources data-plane/config/broker/template $broker_dp_output_file "$image_prefix" "$tag"
 # The DP folder for Sink:
 resolve_resources data-plane/config/sink $broker_dp_output_file "$image_prefix" "$tag"
-resolve_resources data-plane/config/sink/template $broker_dp_output_file "$image_prefix" "$tag"

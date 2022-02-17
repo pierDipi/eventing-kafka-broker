@@ -20,11 +20,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/pointer"
 	"knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
 
@@ -107,6 +109,25 @@ func NewSourceSinkReference() duckv1.Destination {
 	}
 }
 
+func NewSourceSink2Reference() duckv1.Destination {
+	s := NewService2()
+	return duckv1.Destination{
+		Ref: &duckv1.KReference{
+			Kind:       s.Kind,
+			Namespace:  s.Namespace,
+			Name:       s.Name,
+			APIVersion: s.APIVersion,
+		},
+	}
+}
+
+func WithSourceSink(d duckv1.Destination) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		s := obj.(*sources.KafkaSource)
+		s.Spec.Sink = d
+	}
+}
+
 func SourceDispatcherPod(namespace string, annotations map[string]string) runtime.Object {
 	return &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{
@@ -135,8 +156,13 @@ func InitSourceConditions(obj duckv1.KRShaped) {
 func StatusSourceSinkResolved(uri string) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ks := obj.(*sources.KafkaSource)
-		ks.Status.SinkURI, _ = apis.ParseURL(uri)
-		ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(sources.KafkaConditionSinkProvided)
+		res, _ := apis.ParseURL(uri)
+		ks.Status.SinkURI = res
+		if !res.IsEmpty() {
+			ks.GetConditionSet().Manage(ks.GetStatus()).MarkTrue(sources.KafkaConditionSinkProvided)
+		} else {
+			ks.GetConditionSet().Manage(ks.GetStatus()).MarkUnknown(sources.KafkaConditionSinkProvided, "SinkEmpty", "Sink has resolved to empty.%s", "")
+		}
 	}
 }
 
@@ -149,5 +175,24 @@ func StatusSourceSinkNotResolved(err string) KRShapedOption {
 			"FailedToResolveSink",
 			err,
 		)
+	}
+}
+
+func SourceReference() *contract.Reference {
+	return &contract.Reference{
+		Namespace: SourceNamespace,
+		Name:      SourceName,
+		Uuid:      SourceUUID,
+	}
+}
+
+func SourceAsOwnerReference() metav1.OwnerReference {
+	return metav1.OwnerReference{
+		APIVersion:         sources.SchemeGroupVersion.String(),
+		Kind:               "KafkaSource",
+		Name:               SourceName,
+		UID:                SourceUUID,
+		Controller:         pointer.Bool(true),
+		BlockOwnerDeletion: pointer.Bool(true),
 	}
 }

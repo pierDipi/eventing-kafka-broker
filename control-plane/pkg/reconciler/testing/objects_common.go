@@ -28,18 +28,16 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	"k8s.io/utils/pointer"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-
-	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 )
 
 const (
@@ -49,10 +47,14 @@ const (
 	ServiceNamespace = "test-service-namespace"
 	ServiceName      = "test-service"
 
+	Service2Name = "test-service-2"
+
 	TriggerUUID = "e7185016-5d98-4b54-84e8-3b1cd4acc6b5"
 
 	SecretResourceVersion = "1234"
 	SecretUUID            = "a7185016-5d98-4b54-84e8-3b1cd4acc6b6"
+
+	SystemNamespace = "knative-eventing"
 )
 
 var (
@@ -69,6 +71,23 @@ func NewService(mutations ...func(*corev1.Service)) *corev1.Service {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ServiceName,
+			Namespace: ServiceNamespace,
+		},
+	}
+	for _, mut := range mutations {
+		mut(s)
+	}
+	return s
+}
+
+func NewService2(mutations ...func(*corev1.Service)) *corev1.Service {
+	s := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      Service2Name,
 			Namespace: ServiceNamespace,
 		},
 	}
@@ -301,20 +320,43 @@ func allocateStatusAnnotations(obj duckv1.KRShaped) {
 	}
 }
 
-func NewConsumerGroup() *internalscg.ConsumerGroup {
-	return &internalscg.ConsumerGroup{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: internalscg.ConsumerGroupGroupVersionKind.String(),
-		},
+type PodOption func(pod *corev1.Pod)
+
+func NewDispatcherPod(name string, options ...PodOption) *corev1.Pod {
+	p := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      TriggerUUID,
-			Namespace: ServiceNamespace,
+			Name:      name,
+			Namespace: SystemNamespace,
 		},
-		Spec: internalscg.ConsumerGroupSpec{
-			Template: internalscg.ConsumerTemplateSpec{
-				Spec: internalscg.ConsumerSpec{},
-			},
-			Replicas: pointer.Int32Ptr(1),
+		Spec: corev1.PodSpec{
+			Volumes: []corev1.Volume{{
+				Name: kafkainternals.DispatcherVolumeName,
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: name,
+						},
+					},
+				},
+			}},
 		},
+	}
+
+	for _, opt := range options {
+		opt(p)
+	}
+
+	return p
+}
+
+func PodRunning() PodOption {
+	return func(pod *corev1.Pod) {
+		pod.Status.Phase = corev1.PodRunning
+	}
+}
+
+func PodAnnotations(annotations map[string]string) PodOption {
+	return func(pod *corev1.Pod) {
+		pod.Annotations = annotations
 	}
 }

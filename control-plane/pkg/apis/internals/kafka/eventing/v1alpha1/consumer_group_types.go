@@ -17,8 +17,11 @@
 package v1alpha1
 
 import (
+	"strings"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
@@ -51,6 +54,24 @@ type ConsumerGroup struct {
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 	// +optional
 	Status ConsumerGroupStatus `json:"status,omitempty"`
+}
+
+// GetKey implements scheduler.VPod interface.
+func (cg *ConsumerGroup) GetKey() types.NamespacedName {
+	return types.NamespacedName{
+		Namespace: cg.GetNamespace(),
+		Name:      cg.GetName(),
+	}
+}
+
+// GetVReplicas implements scheduler.VPod interface.
+func (cg *ConsumerGroup) GetVReplicas() int32 {
+	return *cg.Spec.Replicas
+}
+
+// GetPlacements implements scheduler.VPod interface.
+func (cg *ConsumerGroup) GetPlacements() []eventingduckv1alpha1.Placement {
+	return cg.Status.Placements
 }
 
 type ConsumerGroupSpec struct {
@@ -93,6 +114,12 @@ type ConsumerGroupStatus struct {
 	// DeliveryStatus contains a resolved URL to the dead letter sink address, and any other
 	// resolved delivery options.
 	eventingduckv1.DeliveryStatus `json:",inline"`
+
+	// Replicas is the latest observed number of replicas of the given Template.
+	// These are replicas in the sense that they are instantiations of the
+	// same Template, but individual replicas also have a consistent identity.
+	// +optional
+	Replicas *int32 `json:"replicas,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -116,7 +143,7 @@ func (c *ConsumerGroup) GetUntypedSpec() interface{} {
 	return c.Spec
 }
 
-// GetStatus retrieves the status of the ConsumerGroupt. Implements the KRShaped interface.
+// GetStatus retrieves the status of the ConsumerGroup. Implements the KRShaped interface.
 func (c *ConsumerGroup) GetStatus() *duckv1.Status {
 	return &c.Status.Status
 }
@@ -136,4 +163,41 @@ func (cg *ConsumerGroup) ConsumerFromTemplate(options ...ConsumerOption) *Consum
 		opt(c)
 	}
 	return c
+}
+
+func (cg *ConsumerGroup) IsReady() bool {
+	return cg.Generation == cg.Status.ObservedGeneration &&
+		cg.GetConditionSet().Manage(cg.GetStatus()).IsHappy()
+}
+
+// GetUserFacingResourceRef gets the resource reference to the user-facing resources
+// that are backed by this ConsumerGroup using the OwnerReference list.
+func (cg *ConsumerGroup) GetUserFacingResourceRef() *metav1.OwnerReference {
+	for i, or := range cg.OwnerReferences {
+		// TODO hardcoded resource kinds.
+		if strings.EqualFold(or.Kind, "trigger") ||
+			strings.EqualFold(or.Kind, "kafkasource") ||
+			strings.EqualFold(or.Kind, "kafkachannel") {
+			return &cg.OwnerReferences[i]
+		}
+	}
+	return nil
+}
+
+func (cg *ConsumerGroup) IsNotScheduled() bool {
+	// We want to return true when:
+	// - the condition isn't present, or
+	// - the condition isn't ready (aka status=false)
+	cond := cg.Status.GetCondition(ConditionConsumerGroupConsumersScheduled)
+	return cond.IsFalse() || cond.IsUnknown()
+}
+
+func (cg *ConsumerGroup) HasDeadLetterSink() bool {
+	return hasDeadLetterSink(cg.Spec.Template.Spec.Delivery)
+}
+
+func hasDeadLetterSink(d *DeliverySpec) bool {
+	return d != nil && d.DeliverySpec != nil &&
+		d.DeliverySpec.DeadLetterSink != nil &&
+		(d.DeliverySpec.DeadLetterSink.Ref != nil || d.DeliverySpec.DeadLetterSink.URI != nil)
 }

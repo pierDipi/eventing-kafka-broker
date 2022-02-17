@@ -17,13 +17,21 @@
 package v1alpha1
 
 import (
+	"strings"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	bindings "knative.dev/eventing-kafka/pkg/apis/bindings/v1beta1"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
+	eventingv1alpha1 "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
+)
+
+const (
+	DispatcherVolumeName = "contract-resources"
 )
 
 // +genclient
@@ -51,6 +59,12 @@ type Consumer struct {
 	Status ConsumerStatus `json:"status,omitempty"`
 }
 
+// PodBind is a reference to a corev1.Pod.
+type PodBind struct {
+	PodName      string `json:"podName"`
+	PodNamespace string `json:"podNamespace"`
+}
+
 type ConsumerSpec struct {
 	// Topics is the list of topics to subscribe to.
 	Topics []string `json:"topics"`
@@ -59,11 +73,17 @@ type ConsumerSpec struct {
 	// More info: https://kafka.apache.org/documentation/#consumerconfigs
 	Configs ConsumerConfigs `json:"configs,omitempty"`
 
-	// TODO Add auth
+	// Auth is the auth configuration for the Consumer.
+	// +optional
+	Auth *Auth `json:"auth,omitempty"`
 
 	// DeliverySpec contains the delivery options for event senders.
 	// +optional
 	Delivery *DeliverySpec `json:"delivery,omitempty"`
+
+	// Reply is the strategy to handle event replies.
+	// +optional
+	Reply *ReplyStrategy `json:"reply,omitempty"`
 
 	// Filters is a set of filters.
 	// +optional
@@ -71,6 +91,41 @@ type ConsumerSpec struct {
 
 	// Subscriber is the addressable that receives events that pass the Filters.
 	Subscriber duckv1.Destination `json:"subscriber"`
+
+	// CloudEventOverrides defines overrides to control the output format and
+	// modifications of the event sent to the subscriber.
+	// +optional
+	CloudEventOverrides *duckv1.CloudEventOverrides `json:"ceOverrides,omitempty"`
+
+	// VReplicas is the number of virtual replicas for a consumer.
+	VReplicas *int32 `json:"vReplicas"`
+
+	// PodBind represents a reference to the pod in which the consumer should be placed.
+	PodBind *PodBind `json:"podBind"`
+}
+
+type ReplyStrategy struct {
+	TopicReply *TopicReply       `json:"topicReply,omitempty"`
+	URLReply   *DestinationReply `json:"URLReply,omitempty"`
+	NoReply    *NoReply          `json:"noReply,omitempty"`
+}
+
+type NoReply struct {
+	Enabled bool `json:"enabled"`
+}
+
+type TopicReply struct {
+	Enabled bool `json:"enabled"`
+}
+
+type DestinationReply struct {
+	Enabled     bool `json:"enabled"`
+	Destination duckv1.Destination
+}
+
+type Auth struct {
+	NetSpec  *bindings.KafkaNetSpec
+	AuthSpec *eventingv1alpha1.Auth
 }
 
 type DeliverySpec struct {
@@ -148,10 +203,38 @@ func (c *Consumer) GetStatus() *duckv1.Status {
 	return &c.Status.Status
 }
 
-// IsLessThan returns true if c is less than other.
-//
-// if c is less than other, other might be deleted before c.
-func (c *Consumer) IsLessThan(other *Consumer) bool {
+func (c *Consumer) IsReady() bool {
+	return c.Generation == c.Status.ObservedGeneration &&
+		c.GetConditionSet().Manage(c.GetStatus()).IsHappy()
+}
+
+// ConsumerOption is a functional option for Consumer.
+type ConsumerOption func(consumer *Consumer)
+
+// GetConsumerGroup gets the resource reference to the ConsumerGroup
+// using the OwnerReference list.
+func (c *Consumer) GetConsumerGroup() *metav1.OwnerReference {
+	for i, or := range c.OwnerReferences {
+		if strings.EqualFold(or.Kind, ConsumerGroupGroupVersionKind.Kind) {
+			return &c.OwnerReferences[i]
+		}
+	}
+	return nil
+}
+
+func (c Consumer) HasDeadLetterSink() bool {
+	return hasDeadLetterSink(c.Spec.Delivery)
+}
+
+type ByReadinessAndCreationTime []*Consumer
+
+func (consumers ByReadinessAndCreationTime) Len() int {
+	return len(consumers)
+}
+
+func (consumers ByReadinessAndCreationTime) Less(i, j int) bool {
+	c, other := consumers[i], consumers[j]
+
 	// Prefer ready instances.
 	if c.IsReady() {
 		return true
@@ -163,10 +246,8 @@ func (c *Consumer) IsLessThan(other *Consumer) bool {
 	return c.CreationTimestamp.Time.Before(other.CreationTimestamp.Time)
 }
 
-func (c *Consumer) IsReady() bool {
-	return c.Generation == c.Status.ObservedGeneration &&
-		c.GetConditionSet().Manage(c.GetStatus()).IsHappy()
+func (consumers ByReadinessAndCreationTime) Swap(i, j int) {
+	tmp := consumers[i]
+	consumers[i] = consumers[j]
+	consumers[j] = tmp
 }
-
-// ConsumerOption is a functional option for Consumer.
-type ConsumerOption func(consumer *Consumer)

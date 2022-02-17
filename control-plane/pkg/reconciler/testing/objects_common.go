@@ -31,7 +31,6 @@ import (
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
@@ -321,33 +320,6 @@ func allocateStatusAnnotations(obj duckv1.KRShaped) {
 }
 
 type PodOption func(pod *corev1.Pod)
-
-func NewDispatcherPod(name string, options ...PodOption) *corev1.Pod {
-	p := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: SystemNamespace,
-		},
-		Spec: corev1.PodSpec{
-			Volumes: []corev1.Volume{{
-				Name: kafkainternals.DispatcherVolumeName,
-				VolumeSource: corev1.VolumeSource{
-					ConfigMap: &corev1.ConfigMapVolumeSource{
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: name,
-						},
-					},
-				},
-			}},
-		},
-	}
-
-	for _, opt := range options {
-		opt(p)
-	}
-
-	return p
-}
 
 func PodRunning() PodOption {
 	return func(pod *corev1.Pod) {

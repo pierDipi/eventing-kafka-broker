@@ -34,8 +34,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 const (
@@ -53,10 +51,6 @@ const (
 	Subscription1ReplyURI = "sub-1-reply-uri"
 )
 
-func ChannelTopic() string {
-	c := NewChannel().(metav1.Object)
-	return kafka.ChannelTopic(TopicPrefix, c)
-}
 
 func NewChannel(options ...KRShapedOption) runtime.Object {
 	c := &messagingv1beta1.KafkaChannel{

@@ -36,12 +36,8 @@ import (
 	eventingkafkachannelslisters "knative.dev/eventing-kafka/pkg/client/listers/messaging/v1beta1"
 	eventingkafkasourceslisters "knative.dev/eventing-kafka/pkg/client/listers/sources/v1beta1"
 
-	eventingkafkabrokerconsumer "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
-
 	eventingkafkabroker "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/eventing/v1alpha1"
 	fakeeventingkafkabrokerclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/clientset/versioned/fake"
-	fakekafkainternalsclientset "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/clientset/versioned/fake"
-	consumerlisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/listers/eventing/v1alpha1"
 	eventingkafkabrokerlisters "knative.dev/eventing-kafka-broker/control-plane/pkg/client/listers/eventing/v1alpha1"
 )
 
@@ -51,7 +47,6 @@ var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakeapiextensionsclientset.AddToScheme,
 	fakeeventingkafkabrokerclientset.AddToScheme,
 	fakeeventingkafkaclientset.AddToScheme,
-	fakekafkainternalsclientset.AddToScheme,
 }
 
 type Listers struct {
@@ -102,10 +97,6 @@ func (l *Listers) GetEventingKafkaObjects() []runtime.Object {
 	return l.sorter.ObjectsForSchemeFunc(fakeeventingkafkaclientset.AddToScheme)
 }
 
-func (l *Listers) GetKafkaInternalsObjects() []runtime.Object {
-	return l.sorter.ObjectsForSchemeFunc(fakekafkainternalsclientset.AddToScheme)
-}
-
 func (l *Listers) GetBrokerLister() eventinglisters.BrokerLister {
 	return eventinglisters.NewBrokerLister(l.indexerFor(&eventing.Broker{}))
 }
@@ -140,14 +131,6 @@ func (l *Listers) GetKafkaSourceLister() eventingkafkasourceslisters.KafkaSource
 
 func (l *Listers) GetKafkaChannelLister() eventingkafkachannelslisters.KafkaChannelLister {
 	return eventingkafkachannelslisters.NewKafkaChannelLister(l.indexerFor(&eventingkafkachannels.KafkaChannel{}))
-}
-
-func (l *Listers) GetConsumerGroupLister() consumerlisters.ConsumerGroupLister {
-	return consumerlisters.NewConsumerGroupLister(l.indexerFor(&eventingkafkabrokerconsumer.ConsumerGroup{}))
-}
-
-func (l *Listers) GetConsumerLister() consumerlisters.ConsumerLister {
-	return consumerlisters.NewConsumerLister(l.indexerFor(&eventingkafkabrokerconsumer.Consumer{}))
 }
 
 func (l *Listers) indexerFor(obj runtime.Object) cache.Indexer {

@@ -74,10 +74,7 @@ func (c *Clientset) Tracker() testing.ObjectTracker {
 	return c.tracker
 }
 
-var (
-	_ clientset.Interface = &Clientset{}
-	_ testing.FakeClient  = &Clientset{}
-)
+var _ clientset.Interface = &Clientset{}
 
 // EventingV1alpha1 retrieves the EventingV1alpha1Client
 func (c *Clientset) EventingV1alpha1() eventingv1alpha1.EventingV1alpha1Interface {

@@ -35,7 +35,6 @@ import (
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
-	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
@@ -330,11 +329,11 @@ func isKnativeKafkaBroker(broker *eventing.Broker) (bool, string) {
 
 func deliveryOrderFromString(val string) (contract.DeliveryOrder, error) {
 	switch strings.ToLower(val) {
-	case string(internals.Ordered):
+	case "ordered":
 		return contract.DeliveryOrder_ORDERED, nil
-	case string(internals.Unordered):
+	case "unordered":
 		return contract.DeliveryOrder_UNORDERED, nil
 	default:
-		return contract.DeliveryOrder_UNORDERED, fmt.Errorf("invalid annotation %s value: %s. Allowed values [ %q | %q ]", deliveryOrderAnnotation, val, internals.Ordered, internals.Unordered)
+		return contract.DeliveryOrder_UNORDERED, fmt.Errorf("invalid annotation %s value: %s. Allowed values [ %q | %q ]", deliveryOrderAnnotation, val, "ordered", "unordered")
 	}
 }

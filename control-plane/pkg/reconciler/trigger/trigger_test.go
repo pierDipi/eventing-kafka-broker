@@ -28,7 +28,6 @@ import (
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/tracker"
 
-	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
@@ -302,7 +301,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 				NewBroker(
 					BrokerReady,
 				),
-				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Ordered))),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, "ordered")),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -355,7 +354,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_ORDERED),
-						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Ordered)),
+						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, "ordered"),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -367,7 +366,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 				NewBroker(
 					BrokerReady,
 				),
-				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Unordered))),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, "ordered")),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
@@ -420,7 +419,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Unordered)),
+						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, "unordered"),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},

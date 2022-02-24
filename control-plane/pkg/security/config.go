@@ -25,6 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	corelisters "k8s.io/client-go/listers/core/v1"
+
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
@@ -96,7 +97,7 @@ func DefaultSecretProviderFunc(lister corelisters.SecretLister, kc kubernetes.In
 
 // MTConfigMapSecretLocator is a SecretLocator that locates a secret using a reference in a ConfigMap.
 //
-// The name is take from the data field using the key: AuthSecretNameKey.
+// The name is taken from the data field using the key: AuthSecretNameKey.
 // The namespace is the same namespace of the ConfigMap.
 type MTConfigMapSecretLocator struct {
 	*corev1.ConfigMap

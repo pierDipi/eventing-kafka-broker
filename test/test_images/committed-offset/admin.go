@@ -23,7 +23,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/kelseyhightower/envconfig"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
 )
 

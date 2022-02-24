@@ -182,7 +182,7 @@ func (r Reconciler) reconcileAuth(ctx context.Context, c *kafkainternals.Consume
 		return nil
 	}
 	if c.Spec.Auth.AuthSpec != nil {
-		secret, err := security.Secret(ctx, &SecretLocator{Consumer: c}, r.SecretProviderFunc())
+		secret, err := security.Secret(ctx, &SecretLocator{ConsumerSpec: c.Spec, Namespace: c.GetNamespace()}, r.SecretProviderFunc())
 		if err != nil {
 			return fmt.Errorf("failed to get secret: %w", err)
 		}

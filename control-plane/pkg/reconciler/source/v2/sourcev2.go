@@ -125,7 +125,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 					Reply:      &internalscg.ReplyStrategy{NoReply: &internalscg.NoReply{Enabled: true}},
 				},
 			},
-			Replicas: ks.Spec.Consumers,
+			//Replicas: ks.Spec.Consumers,
 		},
 	}
 

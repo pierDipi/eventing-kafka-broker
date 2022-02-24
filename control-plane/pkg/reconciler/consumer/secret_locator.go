@@ -21,24 +21,25 @@ import (
 )
 
 type SecretLocator struct {
-	*kafkainternals.Consumer
+	kafkainternals.ConsumerSpec
+	Namespace string
 }
 
 func (s *SecretLocator) SecretName() (string, bool) {
 	if s.hasNoAuth() {
 		return "", false
 	}
-	return s.Consumer.Spec.Auth.AuthSpec.Secret.Ref.Name, true
+	return s.ConsumerSpec.Auth.AuthSpec.Secret.Ref.Name, true
 }
 
 func (s *SecretLocator) hasNoAuth() bool {
-	return s.Consumer.Spec.Auth == nil ||
-		s.Consumer.Spec.Auth.AuthSpec == nil ||
-		s.Consumer.Spec.Auth.AuthSpec.Secret == nil ||
-		s.Consumer.Spec.Auth.AuthSpec.Secret.Ref == nil ||
-		s.Consumer.Spec.Auth.AuthSpec.Secret.Ref.Name == ""
+	return s.ConsumerSpec.Auth == nil ||
+		s.ConsumerSpec.Auth.AuthSpec == nil ||
+		s.ConsumerSpec.Auth.AuthSpec.Secret == nil ||
+		s.ConsumerSpec.Auth.AuthSpec.Secret.Ref == nil ||
+		s.ConsumerSpec.Auth.AuthSpec.Secret.Ref.Name == ""
 }
 
 func (s *SecretLocator) SecretNamespace() (string, bool) {
-	return s.GetNamespace(), !s.hasNoAuth()
+	return s.Namespace, !s.hasNoAuth()
 }

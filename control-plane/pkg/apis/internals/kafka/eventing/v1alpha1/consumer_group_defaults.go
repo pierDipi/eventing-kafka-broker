@@ -42,6 +42,11 @@ func (cg *ConsumerGroup) SetDefaults(ctx context.Context) {
 		cg.Spec.Selector = cg.Spec.Template.Labels
 	}
 
+	if cg.Spec.LagThreshold == nil {
+		t := uint64(50)
+		cg.Spec.LagThreshold = &t
+	}
+
 	// Force template namespace to be set to ConsumerGroup's namespace.
 	cg.Spec.Template.Namespace = cg.Namespace
 	cg.Spec.Template.Spec.SetDefaults(ctx)

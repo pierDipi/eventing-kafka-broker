@@ -41,6 +41,6 @@ func TestLeaseAcquired(t *testing.T) {
 		environment.Managed(t),
 	)
 
-	env.Test(ctx, t, features.KafkaChannelLease())
+	// env.Test(ctx, t, features.KafkaChannelLease())
 	env.Test(ctx, t, features.KafkaSourceLease())
 }

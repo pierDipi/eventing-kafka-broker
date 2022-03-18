@@ -133,7 +133,7 @@ spec:
         runAsNonRoot: false
       containers:
         - name: kafka-broker-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.2.1:knative-eventing-kafka-broker-dispatcher
+          image: registry.ci.openshift.org/openshift/v1.2.1:knative-eventing-kafka-broker-dispatcher
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -275,7 +275,7 @@ spec:
               weight: 100
       containers:
         - name: kafka-broker-receiver
-          image: registry.ci.openshift.org/openshift/knative-v1.2.1:knative-eventing-kafka-broker-receiver
+          image: registry.ci.openshift.org/openshift/v1.2.1:knative-eventing-kafka-broker-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -516,7 +516,7 @@ spec:
               weight: 100
       containers:
         - name: kafka-sink-receiver
-          image: registry.ci.openshift.org/openshift/knative-v1.2.1:knative-eventing-kafka-broker-receiver
+          image: registry.ci.openshift.org/openshift/v1.2.1:knative-eventing-kafka-broker-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -778,7 +778,7 @@ spec:
         runAsNonRoot: false
       containers:
         - name: kafka-source-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.2.1:knative-eventing-kafka-broker-dispatcher
+          image: registry.ci.openshift.org/openshift/v1.2.1:knative-eventing-kafka-broker-dispatcher
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -1020,7 +1020,7 @@ spec:
         runAsNonRoot: false
       containers:
         - name: kafka-channel-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.2.1:knative-eventing-kafka-broker-dispatcher
+          image: registry.ci.openshift.org/openshift/v1.2.1:knative-eventing-kafka-broker-dispatcher
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -1162,7 +1162,7 @@ spec:
               weight: 100
       containers:
         - name: kafka-channel-receiver
-          image: registry.ci.openshift.org/openshift/knative-v1.2.1:knative-eventing-kafka-broker-receiver
+          image: registry.ci.openshift.org/openshift/v1.2.1:knative-eventing-kafka-broker-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config

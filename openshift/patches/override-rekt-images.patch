@@ -35,5 +35,6 @@ index 80f37d08..22603114 100644
 -      image: {{ .image }}
 +      image: registry.ci.openshift.org/openshift/knative-v1.1.0:knative-eventing-test-eventshub
        imagePullPolicy: "IfNotPresent"
-       env:
-         - name: "SYSTEM_NAMESPACE"
+       {{ if .withReadiness }}
+       readinessProbe:
+         httpGet:

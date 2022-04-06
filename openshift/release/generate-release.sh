@@ -30,6 +30,9 @@ resolve_resources control-plane/config/eventing-kafka-broker/100-source $broker_
 resolve_resources control-plane/config/eventing-kafka-broker/200-controller $broker_cp_output_file "$image_prefix" "$tag"
 resolve_resources control-plane/config/eventing-kafka-broker/200-webhook $broker_cp_output_file "$image_prefix" "$tag"
 
+# the Broker post-install parts
+resolve_resources control-plane/config/post-install $broker_cp_output_file "$image_prefix" "$tag"
+
 # the Broker Data Plane folders
 
 # The DP folder for Broker:

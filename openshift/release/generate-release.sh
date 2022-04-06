@@ -24,6 +24,7 @@ fi
 
 # the Broker Control Plane parts
 resolve_resources control-plane/config/eventing-kafka-broker/100-broker $broker_cp_output_file "$image_prefix" "$tag"
+resolve_resources control-plane/config/eventing-kafka-broker/100-channel $broker_cp_output_file "$image_prefix" "$tag"
 resolve_resources control-plane/config/eventing-kafka-broker/100-sink $broker_cp_output_file "$image_prefix" "$tag"
 resolve_resources control-plane/config/eventing-kafka-broker/100-source $broker_cp_output_file "$image_prefix" "$tag"
 resolve_resources control-plane/config/eventing-kafka-broker/200-controller $broker_cp_output_file "$image_prefix" "$tag"
@@ -37,3 +38,5 @@ resolve_resources data-plane/config/broker $broker_dp_output_file "$image_prefix
 resolve_resources data-plane/config/sink $broker_dp_output_file "$image_prefix" "$tag"
 # The DP folder for Source:
 resolve_resources data-plane/config/source $broker_dp_output_file "$image_prefix" "$tag"
+# The DP folder for Channel:
+resolve_resources data-plane/config/channel $broker_dp_output_file "$image_prefix" "$tag"

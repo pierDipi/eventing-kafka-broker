@@ -1,32 +1,18 @@
 ---
 ---
-# Copyright 2020 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: config-kafka-broker-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 data:
   config-kafka-broker-producer.properties: |
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
     value.serializer=io.cloudevents.kafka.CloudEventSerializer
     acks=all
     buffer.memory=33554432
-    # compression.type=snappy
     retries=2147483647
     batch.size=16384
     client.dns.lookup=use_all_dns_ips
@@ -41,15 +27,12 @@ data:
     enable.idempotence=false
     max.in.flight.requests.per.connection=5
     metadata.max.age.ms=300000
-    # metric.reporters=""
     metrics.num.samples=2
     metrics.recording.level=INFO
     metrics.sample.window.ms=30000
     reconnect.backoff.max.ms=1000
     reconnect.backoff.ms=50
     retry.backoff.ms=100
-    # transaction.timeout.ms=60000
-    # transactional.id=null
   config-kafka-broker-consumer.properties: |
     key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
     value.deserializer=io.cloudevents.kafka.CloudEventDeserializer
@@ -57,11 +40,6 @@ data:
     heartbeat.interval.ms=3000
     max.partition.fetch.bytes=1048576
     session.timeout.ms=10000
-    # ssl.key.password=
-    # ssl.keystore.location=
-    # ssl.keystore.password=
-    # ssl.truststore.location=
-    # ssl.truststore.password=
     allow.auto.create.topics=true
     auto.offset.reset=earliest
     client.dns.lookup=use_all_dns_ips
@@ -73,71 +51,28 @@ data:
     isolation.level=read_uncommitted
     max.poll.interval.ms=300000
     max.poll.records=500
-    # partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor
     receive.buffer.bytes=65536
     request.timeout.ms=30000
-    # sasl.client.callback.handler.class=
-    # sasl.jaas.config=
-    # sasl.kerberos.service.name=
-    # sasl.login.callback.handler.class
-    # sasl.login.class
-    # sasl.mechanism
     security.protocol=PLAINTEXT
     send.buffer.bytes=131072
-    # ssl.enabled.protocols=
-    # ssl.keystore.type=
-    # ssl.protocol=
-    # ssl.provider=
     auto.commit.interval.ms=5000
     check.crcs=true
-    # client.rack=
     fetch.max.wait.ms=500
-    # interceptor.classes=
     metadata.max.age.ms=600000
-    # metrics.reporters=
-    # metrics.num.samples=
-    # metrics.recording.level=INFO
-    # metrics.sample.window.ms=
     reconnect.backoff.max.ms=1000
     retry.backoff.ms=100
-    # sasl.kerberos.kinit.cmd=
-    # sasl.kerberos.min.time.before.relogin=
-    # sasl.kerberos.ticket.renew.jitter=
-    # sasl.login.refresh.buffer.seconds=
-    # sasl.login.refresh.min.period.seconds=
-    # sasl.login.refresh.window.factor
-    # sasl.login.refresh.window.jitter
-    # security.providers
-    # ssl.cipher.suites
-    # ssl.endpoint.identification.algorithm
-    # ssl.keymanager.algorithm
-    # ssl.secure.random.implementation
-    # ssl.trustmanager.algorithm
   config-kafka-broker-webclient.properties: |
     idleTimeout=10000
   config-kafka-broker-httpserver.properties: |
     idleTimeout=0
 ---
 ---
-# Copyright 2020 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: knative-kafka-broker-data-plane
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 rules:
   - apiGroups:
       - "*"
@@ -149,47 +84,21 @@ rules:
       - watch
 ---
 ---
-# Copyright 2020 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: knative-kafka-broker-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 ---
 ---
-# Copyright 2020 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-broker-data-plane
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-broker-data-plane
@@ -200,19 +109,6 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ---
 ---
-# Copyright 2020 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -220,7 +116,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-broker-dispatcher
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     matchLabels:
@@ -230,7 +126,7 @@ spec:
       name: kafka-broker-dispatcher
       labels:
         app: kafka-broker-dispatcher
-        kafka.eventing.knative.dev/release: devel
+        kafka.eventing.knative.dev/release: v1.3.2
     spec:
       serviceAccountName: knative-kafka-broker-data-plane
       securityContext:
@@ -289,10 +185,8 @@ spec:
               value: "false"
             - name: CONFIG_TRACING_PATH
               value: "/etc/tracing"
-            # https://github.com/fabric8io/kubernetes-client/issues/2212
             - name: HTTP2_DISABLE
               value: "true"
-            # This should be set according to initial delay seconds
             - name: WAIT_STARTUP_SECONDS
               value: "8"
           command:
@@ -301,7 +195,6 @@ spec:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -349,19 +242,6 @@ spec:
           - name: single-request-reopen
 ---
 ---
-# Copyright 2020 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -369,7 +249,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-broker-receiver
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     matchLabels:
@@ -379,12 +259,11 @@ spec:
       name: kafka-broker-receiver
       labels:
         app: kafka-broker-receiver
-        kafka.eventing.knative.dev/release: devel
+        kafka.eventing.knative.dev/release: v1.3.2
     spec:
       serviceAccountName: knative-kafka-broker-data-plane
       securityContext:
         runAsNonRoot: true
-      # To avoid node becoming SPOF, spread our replicas to different nodes.
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -449,10 +328,8 @@ spec:
               value: "false"
             - name: CONFIG_TRACING_PATH
               value: "/etc/tracing"
-            # https://github.com/fabric8io/kubernetes-client/issues/2212
             - name: HTTP2_DISABLE
               value: "true"
-            # This should be set according to initial delay seconds
             - name: WAIT_STARTUP_SECONDS
               value: "8"
           command:
@@ -461,7 +338,6 @@ spec:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -512,7 +388,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-broker-receiver
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     app: kafka-broker-receiver
@@ -528,33 +404,19 @@ spec:
 ---
 ---
 ---
-# Copyright 2020 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: config-kafka-sink-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 data:
   config-kafka-sink-producer.properties: |
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
     value.serializer=io.cloudevents.kafka.CloudEventSerializer
     acks=all
     buffer.memory=33554432
-    # compression.type=snappy
     retries=2147483647
     batch.size=16384
     client.dns.lookup=use_all_dns_ips
@@ -569,38 +431,22 @@ data:
     enable.idempotence=false
     max.in.flight.requests.per.connection=5
     metadata.max.age.ms=300000
-    # metric.reporters=""
     metrics.num.samples=2
     metrics.recording.level=INFO
     metrics.sample.window.ms=30000
     reconnect.backoff.max.ms=1000
     reconnect.backoff.ms=50
     retry.backoff.ms=100
-    # transaction.timeout.ms=60000
-    # transactional.id=null
   config-kafka-sink-httpserver.properties: |
     idleTimeout=0
 ---
 ---
-# Copyright 2020 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: knative-kafka-sink-data-plane
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 rules:
   - apiGroups:
       - "*"
@@ -612,47 +458,21 @@ rules:
       - watch
 ---
 ---
-# Copyright 2020 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: knative-kafka-sink-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 ---
 ---
-# Copyright 2020 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-sink-data-plane
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-sink-data-plane
@@ -663,19 +483,6 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ---
 ---
-# Copyright 2020 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -683,7 +490,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-sink-receiver
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     matchLabels:
@@ -693,12 +500,11 @@ spec:
       name: kafka-sink-receiver
       labels:
         app: kafka-sink-receiver
-        kafka.eventing.knative.dev/release: devel
+        kafka.eventing.knative.dev/release: v1.3.2
     spec:
       serviceAccountName: knative-kafka-sink-data-plane
       securityContext:
         runAsNonRoot: true
-      # To avoid node becoming SPOF, spread our replicas to different nodes.
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -763,10 +569,8 @@ spec:
               value: "false"
             - name: CONFIG_TRACING_PATH
               value: "/etc/tracing"
-            # https://github.com/fabric8io/kubernetes-client/issues/2212
             - name: HTTP2_DISABLE
               value: "true"
-            # This should be set according to initial delay seconds
             - name: WAIT_STARTUP_SECONDS
               value: "8"
           command:
@@ -775,7 +579,6 @@ spec:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -826,7 +629,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-sink-receiver
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     app: kafka-sink-receiver
@@ -842,33 +645,19 @@ spec:
 ---
 ---
 ---
-# Copyright 2021 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: config-kafka-source-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 data:
   config-kafka-source-producer.properties: |
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
     value.serializer=io.cloudevents.kafka.CloudEventSerializer
     acks=all
     buffer.memory=33554432
-    # compression.type=snappy
     retries=2147483647
     batch.size=16384
     client.dns.lookup=use_all_dns_ips
@@ -883,15 +672,12 @@ data:
     enable.idempotence=false
     max.in.flight.requests.per.connection=5
     metadata.max.age.ms=300000
-    # metric.reporters=""
     metrics.num.samples=2
     metrics.recording.level=INFO
     metrics.sample.window.ms=30000
     reconnect.backoff.max.ms=1000
     reconnect.backoff.ms=50
     retry.backoff.ms=100
-    # transaction.timeout.ms=60000
-    # transactional.id=null
   config-kafka-source-consumer.properties: |
     cloudevent.invalid.transformer.enabled=true
     cloudevent.invalid.kind.plural=kafkasources
@@ -901,11 +687,6 @@ data:
     heartbeat.interval.ms=3000
     max.partition.fetch.bytes=1048576
     session.timeout.ms=10000
-    # ssl.key.password=
-    # ssl.keystore.location=
-    # ssl.keystore.password=
-    # ssl.truststore.location=
-    # ssl.truststore.password=
     allow.auto.create.topics=true
     auto.offset.reset=earliest
     client.dns.lookup=use_all_dns_ips
@@ -917,69 +698,26 @@ data:
     isolation.level=read_uncommitted
     max.poll.interval.ms=300000
     max.poll.records=500
-    # partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor
     receive.buffer.bytes=65536
     request.timeout.ms=30000
-    # sasl.client.callback.handler.class=
-    # sasl.jaas.config=
-    # sasl.kerberos.service.name=
-    # sasl.login.callback.handler.class
-    # sasl.login.class
-    # sasl.mechanism
     security.protocol=PLAINTEXT
     send.buffer.bytes=131072
-    # ssl.enabled.protocols=
-    # ssl.keystore.type=
-    # ssl.protocol=
-    # ssl.provider=
     auto.commit.interval.ms=5000
     check.crcs=true
-    # client.rack=
     fetch.max.wait.ms=500
-    # interceptor.classes=
     metadata.max.age.ms=600000
-    # metrics.reporters=
-    # metrics.num.samples=
-    # metrics.recording.level=INFO
-    # metrics.sample.window.ms=
     reconnect.backoff.max.ms=1000
     retry.backoff.ms=100
-    # sasl.kerberos.kinit.cmd=
-    # sasl.kerberos.min.time.before.relogin=
-    # sasl.kerberos.ticket.renew.jitter=
-    # sasl.login.refresh.buffer.seconds=
-    # sasl.login.refresh.min.period.seconds=
-    # sasl.login.refresh.window.factor
-    # sasl.login.refresh.window.jitter
-    # security.providers
-    # ssl.cipher.suites
-    # ssl.endpoint.identification.algorithm
-    # ssl.keymanager.algorithm
-    # ssl.secure.random.implementation
-    # ssl.trustmanager.algorithm
   config-kafka-source-webclient.properties: |
     idleTimeout=10000
 ---
 ---
-# Copyright 2021 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: knative-kafka-source-data-plane
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 rules:
   - apiGroups:
       - "*"
@@ -991,47 +729,21 @@ rules:
       - watch
 ---
 ---
-# Copyright 2021 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: knative-kafka-source-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 ---
 ---
-# Copyright 2021 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-source-data-plane
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-source-data-plane
@@ -1042,19 +754,6 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ---
 ---
-# Copyright 2021 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1062,7 +761,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-source-dispatcher
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     matchLabels:
@@ -1072,7 +771,7 @@ spec:
       name: kafka-source-dispatcher
       labels:
         app: kafka-source-dispatcher
-        kafka.eventing.knative.dev/release: devel
+        kafka.eventing.knative.dev/release: v1.3.2
     spec:
       serviceAccountName: knative-kafka-source-data-plane
       securityContext:
@@ -1131,10 +830,8 @@ spec:
               value: "false"
             - name: CONFIG_TRACING_PATH
               value: "/etc/tracing"
-            # https://github.com/fabric8io/kubernetes-client/issues/2212
             - name: HTTP2_DISABLE
               value: "true"
-            # This should be set according to initial delay seconds
             - name: WAIT_STARTUP_SECONDS
               value: "8"
           command:
@@ -1143,7 +840,6 @@ spec:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -1191,33 +887,19 @@ spec:
           - name: single-request-reopen
 ---
 ---
-# Copyright 2021 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: config-kafka-channel-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 data:
   config-kafka-channel-producer.properties: |
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
     value.serializer=io.cloudevents.kafka.CloudEventSerializer
     acks=all
     buffer.memory=33554432
-    # compression.type=snappy
     retries=2147483647
     batch.size=16384
     client.dns.lookup=use_all_dns_ips
@@ -1232,15 +914,12 @@ data:
     enable.idempotence=false
     max.in.flight.requests.per.connection=5
     metadata.max.age.ms=300000
-    # metric.reporters=""
     metrics.num.samples=2
     metrics.recording.level=INFO
     metrics.sample.window.ms=30000
     reconnect.backoff.max.ms=1000
     reconnect.backoff.ms=50
     retry.backoff.ms=100
-    # transaction.timeout.ms=60000
-    # transactional.id=null
   config-kafka-channel-consumer.properties: |
     key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
     value.deserializer=io.cloudevents.kafka.CloudEventDeserializer
@@ -1248,11 +927,6 @@ data:
     heartbeat.interval.ms=3000
     max.partition.fetch.bytes=1048576
     session.timeout.ms=10000
-    # ssl.key.password=
-    # ssl.keystore.location=
-    # ssl.keystore.password=
-    # ssl.truststore.location=
-    # ssl.truststore.password=
     allow.auto.create.topics=true
     auto.offset.reset=earliest
     client.dns.lookup=use_all_dns_ips
@@ -1264,71 +938,28 @@ data:
     isolation.level=read_uncommitted
     max.poll.interval.ms=300000
     max.poll.records=500
-    # partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor
     receive.buffer.bytes=65536
     request.timeout.ms=30000
-    # sasl.client.callback.handler.class=
-    # sasl.jaas.config=
-    # sasl.kerberos.service.name=
-    # sasl.login.callback.handler.class
-    # sasl.login.class
-    # sasl.mechanism
     security.protocol=PLAINTEXT
     send.buffer.bytes=131072
-    # ssl.enabled.protocols=
-    # ssl.keystore.type=
-    # ssl.protocol=
-    # ssl.provider=
     auto.commit.interval.ms=5000
     check.crcs=true
-    # client.rack=
     fetch.max.wait.ms=500
-    # interceptor.classes=
     metadata.max.age.ms=600000
-    # metrics.reporters=
-    # metrics.num.samples=
-    # metrics.recording.level=INFO
-    # metrics.sample.window.ms=
     reconnect.backoff.max.ms=1000
     retry.backoff.ms=100
-    # sasl.kerberos.kinit.cmd=
-    # sasl.kerberos.min.time.before.relogin=
-    # sasl.kerberos.ticket.renew.jitter=
-    # sasl.login.refresh.buffer.seconds=
-    # sasl.login.refresh.min.period.seconds=
-    # sasl.login.refresh.window.factor
-    # sasl.login.refresh.window.jitter
-    # security.providers
-    # ssl.cipher.suites
-    # ssl.endpoint.identification.algorithm
-    # ssl.keymanager.algorithm
-    # ssl.secure.random.implementation
-    # ssl.trustmanager.algorithm
   config-kafka-channel-webclient.properties: |
     idleTimeout=10000
   config-kafka-channel-httpserver.properties: |
     idleTimeout=0
 ---
 ---
-# Copyright 2021 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: knative-kafka-channel-data-plane
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 rules:
   - apiGroups:
       - "*"
@@ -1340,47 +971,21 @@ rules:
       - watch
 ---
 ---
-# Copyright 2021 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: knative-kafka-channel-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 ---
 ---
-# Copyright 2021 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-channel-data-plane
   labels:
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-channel-data-plane
@@ -1391,19 +996,6 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ---
 ---
-# Copyright 2021 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1411,7 +1003,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-channel-dispatcher
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     matchLabels:
@@ -1421,7 +1013,7 @@ spec:
       name: kafka-channel-dispatcher
       labels:
         app: kafka-channel-dispatcher
-        kafka.eventing.knative.dev/release: devel
+        kafka.eventing.knative.dev/release: v1.3.2
     spec:
       serviceAccountName: knative-kafka-channel-data-plane
       securityContext:
@@ -1480,10 +1072,8 @@ spec:
               value: "false"
             - name: CONFIG_TRACING_PATH
               value: "/etc/tracing"
-            # https://github.com/fabric8io/kubernetes-client/issues/2212
             - name: HTTP2_DISABLE
               value: "true"
-            # This should be set according to initial delay seconds
             - name: WAIT_STARTUP_SECONDS
               value: "8"
           command:
@@ -1492,7 +1082,6 @@ spec:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -1540,19 +1129,6 @@ spec:
           - name: single-request-reopen
 ---
 ---
-# Copyright 2021 The Knative Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1560,7 +1136,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-channel-receiver
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     matchLabels:
@@ -1570,12 +1146,11 @@ spec:
       name: kafka-channel-receiver
       labels:
         app: kafka-channel-receiver
-        kafka.eventing.knative.dev/release: devel
+        kafka.eventing.knative.dev/release: v1.3.2
     spec:
       serviceAccountName: knative-kafka-channel-data-plane
       securityContext:
         runAsNonRoot: true
-      # To avoid node becoming SPOF, spread our replicas to different nodes.
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -1640,10 +1215,8 @@ spec:
               value: "false"
             - name: CONFIG_TRACING_PATH
               value: "/etc/tracing"
-            # https://github.com/fabric8io/kubernetes-client/issues/2212
             - name: HTTP2_DISABLE
               value: "true"
-            # This should be set according to initial delay seconds
             - name: WAIT_STARTUP_SECONDS
               value: "8"
           command:
@@ -1652,7 +1225,6 @@ spec:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -1703,7 +1275,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-channel-receiver
-    kafka.eventing.knative.dev/release: devel
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     app: kafka-channel-receiver

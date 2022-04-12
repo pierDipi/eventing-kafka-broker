@@ -31,8 +31,11 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
+import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
 
 /**
  * This class implements the offset strategy that makes sure that, even unordered, the offset commit is ordered.
@@ -46,6 +49,8 @@ public final class OffsetManager implements RecordDispatcherListener {
   private final Map<TopicPartition, OffsetTracker> offsetTrackers;
 
   private final Consumer<Integer> onCommit;
+  private final long timerId;
+  private final Vertx vertx;
 
   /**
    * All args constructor.
@@ -63,7 +68,17 @@ public final class OffsetManager implements RecordDispatcherListener {
     this.offsetTrackers = new HashMap<>();
     this.onCommit = onCommit;
 
-    vertx.setPeriodic(commitIntervalMs, l -> commitAll());
+    this.timerId = vertx.setPeriodic(commitIntervalMs, l -> commitAll());
+    this.vertx = vertx;
+
+    this.consumer.partitionsRevokedHandler(partitions -> {
+      logPartitions("revoked", partitions);
+      partitions.forEach(offsetTrackers::remove);
+    });
+
+    this.consumer.partitionsAssignedHandler(partitions ->
+      partitions.forEach(tp -> logPartitions("assigned", partitions))
+    );
   }
 
   /**
@@ -124,7 +139,9 @@ public final class OffsetManager implements RecordDispatcherListener {
       // Reset the state
       tracker.setCommitted(newOffset);
 
-      logger.debug("Committing offset for {} offset {}", topicPartition, newOffset);
+      logger.debug("Committing offset for {} offset {}",
+        keyValue("topicPartition", topicPartition),
+        keyValue("offset", newOffset));
 
       // Execute the actual commit
       return consumer.commit(Map.of(topicPartition, new OffsetAndMetadata(newOffset, "")))
@@ -133,7 +150,10 @@ public final class OffsetManager implements RecordDispatcherListener {
             onCommit.accept((int) newOffset);
           }
         })
-        .onFailure(cause -> logger.error("failed to commit topic partition {} offset {}", topicPartition, newOffset, cause))
+        .onFailure(cause -> logger.error("Failed to commit topic partition {} offset {}",
+          keyValue("topicPartition", topicPartition),
+          keyValue("offset", newOffset),
+          cause))
         .mapEmpty();
     }
     return null;
@@ -156,6 +176,7 @@ public final class OffsetManager implements RecordDispatcherListener {
 
   @Override
   public Future<Void> close() {
+    vertx.cancelTimer(timerId);
     return commitAll();
   }
 
@@ -251,5 +272,10 @@ public final class OffsetManager implements RecordDispatcherListener {
       this.committedOffsets = BitSet.valueOf(newCommittedOffsetsArr);
       this.initialOffset = committed;
     }
+  }
+
+  private static void logPartitions(final String context,
+                                    final Set<TopicPartition> tps) {
+    logger.info("Partitions " + context + " {}", keyValue("partitions", tps));
   }
 }

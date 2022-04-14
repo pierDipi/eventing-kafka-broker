@@ -27,7 +27,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
-
 	"knative.dev/pkg/hash"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"

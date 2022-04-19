@@ -14,6 +14,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/xdg-go/scram v1.0.2
 	go.uber.org/atomic v1.9.0
+	go.uber.org/multierr v1.6.0
 	go.uber.org/zap v1.19.1
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
@@ -30,4 +31,5 @@ require (
 	knative.dev/hack v0.0.0-20220118141833-9b2ed8471e30
 	knative.dev/pkg v0.0.0-20220222214439-083dd97300e1
 	knative.dev/reconciler-test v0.0.0-20220118183433-c8bfbe66bada
+	sigs.k8s.io/yaml v1.3.0
 )

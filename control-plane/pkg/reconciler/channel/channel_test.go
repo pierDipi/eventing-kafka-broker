@@ -27,7 +27,7 @@ import (
 	"knative.dev/pkg/network"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
-	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/testing"
+	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 
 	corev1 "k8s.io/api/core/v1"

@@ -113,22 +113,36 @@ EOF
 
   header "Installing Knative Kafka Control Plane"
 
-  CP_RELEASE_YAML="openshift/release/knative-eventing-kafka-broker-cp-ci.yaml"
+  artifacts_dir="openshift/release/artifacts/"
+  eventing_kafka_controller="${artifacts_dir}eventing-kafka-controller.yaml"
+  eventing_kafka_post_install="${artifacts_dir}eventing-kafka-post-install.yaml"
 
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-kafka-controller|${KNATIVE_EVENTING_KAFKA_BROKER_KAFKA_CONTROLLER}|g" ${CP_RELEASE_YAML}
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-webhook-kafka|${KNATIVE_EVENTING_KAFKA_BROKER_WEBHOOK_KAFKA}|g" ${CP_RELEASE_YAML}
+  eventing_kafka_source="${artifacts_dir}eventing-kafka-source.yaml"
+  eventing_kafka_broker="${artifacts_dir}eventing-kafka-broker.yaml"
+  eventing_kafka_channel="${artifacts_dir}eventing-kafka-channel.yaml"
+  eventing_kafka_sink="${artifacts_dir}eventing-kafka-sink.yaml"
 
-  oc apply -f ${CP_RELEASE_YAML}
+  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-kafka-controller|${KNATIVE_EVENTING_KAFKA_BROKER_KAFKA_CONTROLLER}|g" ${eventing_kafka_controller}
+  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-webhook-kafka|${KNATIVE_EVENTING_KAFKA_BROKER_WEBHOOK_KAFKA}|g" ${eventing_kafka_controller}
+  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-post-install|${KNATIVE_EVENTING_KAFKA_BROKER_POST_INSTALL}|g" ${eventing_kafka_post_install}
+
+  oc apply -f "${eventing_kafka_controller}"
+  oc apply -f "${eventing_kafka_post_install}"
   wait_until_pods_running $EVENTING_NAMESPACE || return 1
 
   header "Installing Knative Kafka Data Plane"
 
-  DP_RELEASE_YAML="openshift/release/knative-eventing-kafka-broker-dp-ci.yaml"
+  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-dispatcher|${KNATIVE_EVENTING_KAFKA_BROKER_DISPATCHER}|g" ${eventing_kafka_source}
+  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-receiver|${KNATIVE_EVENTING_KAFKA_BROKER_RECEIVER}|g" ${eventing_kafka_sink}
+  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-dispatcher|${KNATIVE_EVENTING_KAFKA_BROKER_DISPATCHER}|g" ${eventing_kafka_broker}
+  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-receiver|${KNATIVE_EVENTING_KAFKA_BROKER_RECEIVER}|g" ${eventing_kafka_broker}
+  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-dispatcher|${KNATIVE_EVENTING_KAFKA_BROKER_DISPATCHER}|g" ${eventing_kafka_channel}
+  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-receiver|${KNATIVE_EVENTING_KAFKA_BROKER_RECEIVER}|g" ${eventing_kafka_channel}
 
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-dispatcher|${KNATIVE_EVENTING_KAFKA_BROKER_DISPATCHER}|g" ${DP_RELEASE_YAML}
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-receiver|${KNATIVE_EVENTING_KAFKA_BROKER_RECEIVER}|g" ${DP_RELEASE_YAML}
-
-  oc apply -f ${DP_RELEASE_YAML}
+  oc apply -f ${eventing_kafka_source}
+  oc apply -f ${eventing_kafka_sink}
+  oc apply -f ${eventing_kafka_broker}
+  oc apply -f ${eventing_kafka_channel}
   wait_until_pods_running $EVENTING_NAMESPACE || return 1
 }
 

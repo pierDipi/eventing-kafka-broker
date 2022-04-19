@@ -1,4 +1,4 @@
-# Copyright 2022 The Knative Authors
+# Copyright 2020 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +15,10 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: kafka-controller-post-install
+  name: knative-kafka-storage-version-migrator
   namespace: knative-eventing
   labels:
-    app: kafka-controller-post-install
+    app: "knative-kafka-storage-version-migrator"
     kafka.eventing.knative.dev/release: devel
 spec:
   ttlSecondsAfterFinished: 600
@@ -26,20 +26,16 @@ spec:
   template:
     metadata:
       labels:
-        app: kafka-controller-post-install
+        app: "knative-kafka-storage-version-migrator"
         kafka.eventing.knative.dev/release: devel
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
-      serviceAccountName: knative-kafka-controller-post-install
+      serviceAccountName: knative-kafka-storage-version-migrator
       restartPolicy: OnFailure
       containers:
-        - name: post-install
-          image: ko://knative.dev/eventing-kafka-broker/control-plane/cmd/post-install
-          env:
-            - name: SYSTEM_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: CHANNEL_GENERAL_CONFIG_MAP_NAME
-              value: kafka-channel-config
+        - name: migrate
+          image: ko://knative.dev/pkg/apiextensions/storageversion/cmd/migrate
+          args:
+            - "kafkasources.sources.knative.dev"
+            - "kafkachannels.messaging.knative.dev"

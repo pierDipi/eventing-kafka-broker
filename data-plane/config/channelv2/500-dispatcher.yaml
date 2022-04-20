@@ -15,22 +15,25 @@
 # limitations under the License.
 
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: kafka-source-dispatcher
+  name: kafka-channel-dispatcher
   namespace: knative-eventing
   labels:
-    app: kafka-source-dispatcher
+    app: kafka-channel-dispatcher
     kafka.eventing.knative.dev/release: devel
 spec:
+  serviceName: kafka-channel-dispatcher
+  podManagementPolicy: "Parallel"
   selector:
     matchLabels:
-      app: kafka-source-dispatcher
+      app: kafka-channel-dispatcher
   template:
     metadata:
-      name: kafka-source-dispatcher
+      name: kafka-channel-dispatcher
       labels:
-        app: kafka-source-dispatcher
+        app: kafka-channel-dispatcher
+        app.kubernetes.io/component: kafka-dispatcher
         kafka.eventing.knative.dev/release: devel
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
@@ -40,34 +43,34 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: kafka-source-dispatcher
+              app: kafka-channel-dispatcher
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - podAffinityTerm:
                 labelSelector:
                   matchLabels:
-                    app: kafka-source-dispatcher
+                    app: kafka-channel-dispatcher
                 topologyKey: kubernetes.io/hostname
               weight: 100
-      serviceAccountName: knative-kafka-source-data-plane
+      serviceAccountName: knative-kafka-channel-data-plane
       securityContext:
         runAsNonRoot: true
       containers:
-        - name: kafka-source-dispatcher
+        - name: kafka-channel-dispatcher
           image: ${KNATIVE_KAFKA_DISPATCHER_IMAGE}
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
-              name: config-kafka-source-data-plane
+              name: config-kafka-channel-data-plane
               readOnly: true
-            - mountPath: /etc/sources
-              name: kafka-source-sources
+            - mountPath: /etc/contract-resources
+              name: contract-resources
               readOnly: true
             - mountPath: /tmp
               name: cache
             - mountPath: /etc/logging
-              name: kafka-config-logging
+              name: kafka-channel-config-logging
               readOnly: true
             - mountPath: /etc/tracing
               name: config-tracing
@@ -78,19 +81,19 @@ spec:
               protocol: TCP
           env:
             - name: SERVICE_NAME
-              value: "kafka-source-dispatcher"
+              value: "kafka-channel-dispatcher"
             - name: SERVICE_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: PRODUCER_CONFIG_FILE_PATH
-              value: /etc/config/config-kafka-source-producer.properties
+              value: /etc/config/config-kafka-channel-producer.properties
             - name: CONSUMER_CONFIG_FILE_PATH
-              value: /etc/config/config-kafka-source-consumer.properties
+              value: /etc/config/config-kafka-channel-consumer.properties
             - name: WEBCLIENT_CONFIG_FILE_PATH
-              value: /etc/config/config-kafka-source-webclient.properties
+              value: /etc/config/config-kafka-channel-webclient.properties
             - name: DATA_PLANE_CONFIG_FILE_PATH
-              value: /etc/sources/data
+              value: /etc/channels-subscriptions/data
             - name: EGRESSES_INITIAL_CAPACITY
               value: "20"
             - name: INSTANCE_ID
@@ -119,7 +122,16 @@ spec:
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
+
+          resources:
+            requests:
+              cpu: 1000m
+              # 600Mi for virtual replicas + 100Mi overhead
+              memory: 700Mi
+            limits:
+              cpu: 2000m
+              memory: 1000Mi
+
           livenessProbe:
             failureThreshold: 3
             tcpSocket:
@@ -143,15 +155,12 @@ spec:
             privileged: false
             readOnlyRootFilesystem: true
       volumes:
-        - name: config-kafka-source-data-plane
+        - name: config-kafka-channel-data-plane
           configMap:
-            name: config-kafka-source-data-plane
-        - name: kafka-source-sources
-          configMap:
-            name: kafka-source-sources
+            name: config-kafka-channel-data-plane
         - name: cache
           emptyDir: { }
-        - name: kafka-config-logging
+        - name: kafka-channel-config-logging
           configMap:
             name: kafka-config-logging
         - name: config-tracing

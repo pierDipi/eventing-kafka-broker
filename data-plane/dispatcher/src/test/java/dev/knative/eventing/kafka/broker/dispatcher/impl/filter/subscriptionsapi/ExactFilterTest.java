@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
+package dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi;
 
-import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.ExactFilter;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.v03.CloudEventV03;
@@ -32,7 +31,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AttributesFilterTest {
+public class ExactFilterTest {
 
   @ParameterizedTest
   @MethodSource(value = {"testCases"})

@@ -98,9 +98,13 @@ spec:
         app: kafka-sink-receiver
         kafka.eventing.knative.dev/release: v1.2.3
     spec:
-      serviceAccountName: knative-kafka-sink-data-plane
-      securityContext:
-        runAsNonRoot: false
+      topologySpreadConstraints:
+        - maxSkew: 2
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: kafka-sink-receiver
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -110,6 +114,9 @@ spec:
                     app: kafka-sink-receiver
                 topologyKey: kubernetes.io/hostname
               weight: 100
+      serviceAccountName: knative-kafka-sink-data-plane
+      securityContext:
+        runAsNonRoot: true
       containers:
         - name: kafka-sink-receiver
           image: registry.ci.openshift.org/openshift/knative-v1.2.3:knative-eventing-kafka-broker-receiver

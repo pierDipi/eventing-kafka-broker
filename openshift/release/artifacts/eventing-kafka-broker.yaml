@@ -128,9 +128,25 @@ spec:
         app: kafka-broker-dispatcher
         kafka.eventing.knative.dev/release: v1.2.3
     spec:
+      topologySpreadConstraints:
+        - maxSkew: 2
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: kafka-broker-dispatcher
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: kafka-broker-dispatcher
+                topologyKey: kubernetes.io/hostname
+              weight: 100
       serviceAccountName: knative-kafka-broker-data-plane
       securityContext:
-        runAsNonRoot: false
+        runAsNonRoot: true
       containers:
         - name: kafka-broker-dispatcher
           image: registry.ci.openshift.org/openshift/knative-v1.2.3:knative-eventing-kafka-broker-dispatcher
@@ -197,10 +213,8 @@ spec:
             - "/app/app.jar"
           livenessProbe:
             failureThreshold: 3
-            httpGet:
+            tcpSocket:
               port: 9090
-              path: /metrics
-              scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 3
             successThreshold: 1
@@ -261,9 +275,13 @@ spec:
         app: kafka-broker-receiver
         kafka.eventing.knative.dev/release: v1.2.3
     spec:
-      serviceAccountName: knative-kafka-broker-data-plane
-      securityContext:
-        runAsNonRoot: false
+      topologySpreadConstraints:
+        - maxSkew: 2
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: kafka-broker-receiver
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -273,6 +291,9 @@ spec:
                     app: kafka-broker-receiver
                 topologyKey: kubernetes.io/hostname
               weight: 100
+      serviceAccountName: knative-kafka-broker-data-plane
+      securityContext:
+        runAsNonRoot: true
       containers:
         - name: kafka-broker-receiver
           image: registry.ci.openshift.org/openshift/knative-v1.2.3:knative-eventing-kafka-broker-receiver

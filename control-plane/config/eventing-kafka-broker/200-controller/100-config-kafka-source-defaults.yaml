@@ -28,7 +28,7 @@ data:
     #    EXAMPLE CONFIGURATION     #
     #                              #
     ################################
-    
+
     # This block is not actually functional configuration,
     # but serves to illustrate the available configuration
     # options and document them in a way that is accessible
@@ -37,22 +37,22 @@ data:
     # These sample configuration options may be copied out of
     # this example block and unindented to be in the data block
     # to actually change the configuration.
-    
+
     # autoscalingClass is the autoscaler class name to use.
     # valid value: keda.autoscaling.knative.dev
     # autoscalingClass: ""
-    
+
     # minScale is the minimum number of replicas to scale down to.
     # minScale: "1"
-    
+
     # maxScale is the maximum number of replicas to scale up to.
     # maxScale: "1"
-    
+
     # pollingInterval is the interval in seconds KEDA uses to poll metrics.
     # pollingInterval: "30"
-    
+
     # cooldownPeriod is the period of time in seconds KEDA waits until it scales down.
     # cooldownPeriod: "300"
-    
+
     # kafkaLagThreshold is the lag (ie. number of messages in a partition) threshold for KEDA to scale up sources.
     # kafkaLagThreshold: "10"

@@ -143,7 +143,7 @@ func newCESQLFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 	return &DialectedFilter{
 		Filter: &DialectedFilter_Cesql{
 			Cesql: &CESQL{
-				Expression: f.CESQL,
+				Expression: f.SQL,
 			},
 		},
 	}
@@ -176,7 +176,7 @@ func FromSubscriptionFilter(f v1.SubscriptionsAPIFilter) *DialectedFilter {
 	if f.Suffix != nil {
 		filters = append(filters, newSuffixFilter(f))
 	}
-	if f.CESQL != "" {
+	if f.SQL != "" {
 		filters = append(filters, newCESQLFilter(f))
 	}
 	switch {

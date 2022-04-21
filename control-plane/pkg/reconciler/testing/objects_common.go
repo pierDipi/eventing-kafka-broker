@@ -28,11 +28,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
-	"k8s.io/utils/pointer"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 
-	kafkainternals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
@@ -63,7 +62,8 @@ const (
 var (
 	Formats = []string{base.Protobuf, base.Json}
 
-	ServiceURL = ServiceURLFrom(ServiceNamespace, ServiceName)
+	ServiceURL         = ServiceURLFrom(ServiceNamespace, ServiceName)
+	ServiceDestination = ServiceURLDestination(ServiceNamespace, ServiceName)
 )
 
 func NewService(mutations ...func(*corev1.Service)) *corev1.Service {
@@ -108,6 +108,11 @@ func WithServiceNamespace(ns string) func(s *corev1.Service) {
 
 func ServiceURLFrom(ns, name string) string {
 	return fmt.Sprintf("http://%s.%s.svc.cluster.local", name, ns)
+}
+
+func ServiceURLDestination(ns, name string) *duckv1.Destination {
+	uri, _ := apis.ParseURL(ServiceURL)
+	return &duckv1.Destination{URI: uri}
 }
 
 func NewConfigMapWithBinaryData(env *config.Env, data []byte, options ...reconcilertesting.ConfigMapOption) runtime.Object {
@@ -179,6 +184,29 @@ func NewSSLSecret(ns, name string) *corev1.Secret {
 			security.CaCertificateKey: ca,
 			security.UserKey:          userKey,
 			security.UserCertificate:  userCert,
+		},
+	}
+}
+
+func NewSASLSSLSecret(ns, name string) *corev1.Secret {
+
+	ca, userKey, userCert := loadCerts()
+
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:       ns,
+			Name:            name,
+			ResourceVersion: SecretResourceVersion,
+			UID:             SecretUUID,
+		},
+		Data: map[string][]byte{
+			security.ProtocolKey:      []byte(security.ProtocolSSL),
+			security.CaCertificateKey: ca,
+			security.UserKey:          userKey,
+			security.UserCertificate:  userCert,
+			security.SaslUserKey:      []byte("user"),
+			security.SaslPasswordKey:  []byte("password"),
+			"type":                    []byte("PLAIN"),
 		},
 	}
 }
@@ -324,52 +352,6 @@ func allocateStatusAnnotations(obj duckv1.KRShaped) {
 }
 
 type PodOption func(pod *corev1.Pod)
-
-func NewDispatcherPod(name string, options ...PodOption) *corev1.Pod {
-	p := &corev1.Pod{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Pod",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: SystemNamespace,
-			UID:       DispatcherPodUUID,
-		},
-		Spec: corev1.PodSpec{
-			Volumes: []corev1.Volume{{
-				Name: kafkainternals.DispatcherVolumeName,
-				VolumeSource: corev1.VolumeSource{
-					ConfigMap: &corev1.ConfigMapVolumeSource{
-						LocalObjectReference: corev1.LocalObjectReference{
-							Name: name,
-						},
-					},
-				},
-			}},
-		},
-	}
-
-	for _, opt := range options {
-		opt(p)
-	}
-
-	return p
-}
-
-func DispatcherPodAsOwnerReference(name string) reconcilertesting.ConfigMapOption {
-	d := NewDispatcherPod(name)
-	return func(configMap *corev1.ConfigMap) {
-		configMap.OwnerReferences = append(configMap.OwnerReferences, metav1.OwnerReference{
-			APIVersion:         d.APIVersion,
-			Kind:               d.Kind,
-			Name:               d.Name,
-			UID:                d.UID,
-			Controller:         pointer.Bool(true),
-			BlockOwnerDeletion: pointer.Bool(true),
-		})
-	}
-}
 
 func PodRunning() PodOption {
 	return func(pod *corev1.Pod) {

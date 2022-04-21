@@ -91,7 +91,7 @@ public final class OffsetManager implements RecordDispatcherListener {
     final var tp = new TopicPartition(record.topic(), record.partition());
     if (!offsetTrackers.containsKey(tp)) {
       // Initialize offset tracker for the given record's topic/partition.
-      offsetTrackers.put(tp, new OffsetTracker(record.offset()));
+      offsetTrackers.putIfAbsent(tp, new OffsetTracker(record.offset()));
     }
   }
 

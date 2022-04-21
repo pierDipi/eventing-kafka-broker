@@ -22,6 +22,10 @@ import (
 	"strconv"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/equality"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/Shopify/sarama"
 
 	"go.uber.org/multierr"
@@ -40,23 +44,25 @@ import (
 	v1 "knative.dev/eventing/pkg/apis/duck/v1"
 
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
+	"knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/controller/resources"
 	"knative.dev/eventing-kafka/pkg/common/constants"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	coreconfig "knative.dev/eventing-kafka-broker/control-plane/pkg/core/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
 	kafkalogging "knative.dev/eventing-kafka-broker/control-plane/pkg/logging"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/security"
 )
 
 const (
 	// TopicPrefix is the Kafka Channel topic prefix - (topic name: knative-messaging-kafka.<channel-namespace>.<channel-name>).
-	TopicPrefix          = "knative-messaging-kafka"
-	DefaultDeliveryOrder = contract.DeliveryOrder_ORDERED
+	TopicPrefix                  = "knative-messaging-kafka"
+	DefaultDeliveryOrder         = contract.DeliveryOrder_ORDERED
+	NewChannelIngressServiceName = "kafka-channel-dispatcher"
 )
 
 type Reconciler struct {
@@ -79,6 +85,7 @@ type Reconciler struct {
 	InitOffsetsFunc kafka.InitOffsetsFunc
 
 	ConfigMapLister corelisters.ConfigMapLister
+	ServiceLister   corelisters.ServiceLister
 
 	Prober prober.Prober
 
@@ -127,7 +134,7 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 	statusConditionManager.ConfigResolved()
 
 	// get the secret to access Kafka
-	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap}, r.SecretProviderFunc())
+	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap, UseNamespaceInConfigmap: true}, r.SecretProviderFunc())
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
@@ -275,11 +282,19 @@ func (r *Reconciler) reconcileKind(ctx context.Context, channel *messagingv1beta
 		},
 	}
 
+	logger.Debug("Going to probe address to check ingress readiness for the channel.", zap.Any("proberAddressable", proberAddressable))
 	if status := r.Prober.Probe(ctx, proberAddressable, prober.StatusReady); status != prober.StatusReady {
+		logger.Debug("Ingress is not ready for the channel. Going to requeue.", zap.Any("proberAddressable", proberAddressable))
 		statusConditionManager.ProbesStatusNotReady(status)
 		return nil // Object will get re-queued once probe status changes.
 	}
 	statusConditionManager.Addressable(address)
+
+	err = r.reconcileChannelService(ctx, channel)
+	if err != nil {
+		logger.Error("Error reconciling the backwards compatibility channel service.", zap.Error(err))
+		return err
+	}
 
 	return nil
 }
@@ -374,7 +389,7 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	logger.Debug("topic config resolved", zap.Any("config", topicConfig))
 
 	// get the secret to access Kafka
-	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap}, r.SecretProviderFunc())
+	secret, err := security.Secret(ctx, &security.MTConfigMapSecretLocator{ConfigMap: channelConfigMap, UseNamespaceInConfigmap: true}, r.SecretProviderFunc())
 	if err != nil {
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
@@ -514,8 +529,6 @@ func (r *Reconciler) getSubscriberConfig(ctx context.Context, channel *messaging
 }
 
 func (r *Reconciler) channelConfigMap() (*corev1.ConfigMap, error) {
-	// TODO: do we want to support namespaced channels? they're not supported at the moment.
-
 	namespace := system.Namespace()
 	cm, err := r.ConfigMapLister.ConfigMaps(namespace).Get(r.Env.GeneralConfigMapName)
 	if err != nil {
@@ -557,9 +570,7 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 		Uid:    string(channel.UID),
 		Topics: []string{topic},
 		Ingress: &contract.Ingress{
-			IngressType: &contract.Ingress_Path{
-				Path: receiver.PathFromObject(channel),
-			},
+			Path: receiver.PathFromObject(channel),
 		},
 		BootstrapServers: config.GetBootstrapServers(),
 		Reference: &contract.Reference{
@@ -587,6 +598,38 @@ func (r *Reconciler) getChannelContractResource(ctx context.Context, topic strin
 	resource.EgressConfig = egressConfig
 
 	return resource, nil
+}
+
+func (r *Reconciler) reconcileChannelService(ctx context.Context, channel *messagingv1beta1.KafkaChannel) error {
+	expected, err := resources.MakeK8sService(channel, resources.ExternalService(system.Namespace(), NewChannelIngressServiceName))
+	if err != nil {
+		return fmt.Errorf("failed to create the channel service object: %w", err)
+	}
+
+	svc, err := r.ServiceLister.Services(channel.Namespace).Get(resources.MakeChannelServiceName(channel.Name))
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Create(ctx, expected, metav1.CreateOptions{})
+			if err != nil {
+				return fmt.Errorf("failed to create the channel service object: %w", err)
+			}
+			return nil
+		}
+		return err
+	} else if !equality.Semantic.DeepEqual(svc.Spec, expected.Spec) {
+		svc = svc.DeepCopy()
+		svc.Spec = expected.Spec
+
+		_, err = r.KubeClient.CoreV1().Services(channel.Namespace).Update(ctx, svc, metav1.UpdateOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to update the channel service: %w", err)
+		}
+	}
+	// Check to make sure that the KafkaChannel owns this service and if not, complain.
+	if !metav1.IsControlledBy(svc, channel) {
+		return fmt.Errorf("kafkachannel: %s/%s does not own Service: %q", channel.Namespace, channel.Name, svc.Name)
+	}
+	return nil
 }
 
 // consumerGroup returns a consumerGroup name for the given channel and subscription

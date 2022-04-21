@@ -121,6 +121,10 @@ func (l *Listers) GetConfigMapLister() corelisters.ConfigMapLister {
 	return corelisters.NewConfigMapLister(l.indexerFor(&corev1.ConfigMap{}))
 }
 
+func (l *Listers) GetServiceLister() corelisters.ServiceLister {
+	return corelisters.NewServiceLister(l.indexerFor(&corev1.Service{}))
+}
+
 func (l *Listers) GetKafkaSinkLister() eventingkafkabrokerlisters.KafkaSinkLister {
 	return eventingkafkabrokerlisters.NewKafkaSinkLister(l.indexerFor(&eventingkafkabroker.KafkaSink{}))
 }

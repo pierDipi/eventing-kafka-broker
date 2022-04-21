@@ -35,6 +35,7 @@ import (
 	"knative.dev/pkg/tracker"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -45,7 +46,6 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
-	kafkatesting "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka/testing"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/testing"
 )
@@ -478,7 +478,7 @@ func TestReconcileKind(t *testing.T) {
 						StatusTopicReadyWithName(strings.Join(SourceTopics, ", ")),
 						StatusDataPlaneAvailable,
 						StatusInitialOffsetsCommitted,
-						StatusSourceSinkNotResolved("failed to resolve destination: failed to get object test-service-namespace/test-service: services \"test-service\" not found"),
+						StatusSourceSinkNotResolved("failed to resolve destination: services \"test-service\" not found"),
 					),
 				},
 			},
@@ -487,7 +487,7 @@ func TestReconcileKind(t *testing.T) {
 			},
 			WantEvents: []string{
 				finalizerUpdatedEvent,
-				"Warning InternalError failed to resolve sink: failed to resolve destination: failed to get object test-service-namespace/test-service: services \"test-service\" not found",
+				"Warning InternalError failed to resolve sink: failed to resolve destination: services \"test-service\" not found",
 			},
 			WantErr: true,
 		},

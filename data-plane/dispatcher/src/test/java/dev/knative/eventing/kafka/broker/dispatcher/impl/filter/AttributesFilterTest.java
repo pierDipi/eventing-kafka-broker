@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.filter;
 
+import dev.knative.eventing.kafka.broker.dispatcher.impl.filter.subscriptionsapi.ExactFilter;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.v03.CloudEventV03;
@@ -40,7 +41,7 @@ public class AttributesFilterTest {
     final CloudEvent event,
     final boolean shouldMatch) {
 
-    final var filter = new AttributesFilter(attributes);
+    final var filter = new ExactFilter(attributes);
 
     final var match = filter.test(event);
 
@@ -62,7 +63,7 @@ public class AttributesFilterTest {
       "type", ""
     );
 
-    final var filter = new AttributesFilter(attributes);
+    final var filter = new ExactFilter(attributes);
 
     final boolean match = filter.test(event);
 
@@ -87,7 +88,7 @@ public class AttributesFilterTest {
       "extension2", "valueExtension2"
     );
 
-    final var filter = new AttributesFilter(attributes);
+    final var filter = new ExactFilter(attributes);
 
     final boolean match = filter.test(event);
 
@@ -109,7 +110,7 @@ public class AttributesFilterTest {
       "extension2", "valueExtension"
     );
 
-    final var filter = new AttributesFilter(attributes);
+    final var filter = new ExactFilter(attributes);
 
     final boolean match = filter.test(event);
 
@@ -133,7 +134,7 @@ public class AttributesFilterTest {
       "type", ""
     );
 
-    final var filter = new AttributesFilter(attributes);
+    final var filter = new ExactFilter(attributes);
 
     final boolean match = filter.test(event);
 

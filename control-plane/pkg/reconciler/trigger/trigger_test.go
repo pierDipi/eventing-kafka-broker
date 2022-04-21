@@ -22,31 +22,31 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/protobuf/testing/protocmp"
-	"k8s.io/utils/pointer"
-	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
-	"knative.dev/pkg/tracker"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-
 	"github.com/google/go-cmp/cmp"
+	"google.golang.org/protobuf/testing/protocmp"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientgotesting "k8s.io/client-go/testing"
-	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
-	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
-	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
-	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+	"k8s.io/utils/pointer"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	kubeclient "knative.dev/pkg/client/injection/kube/client/fake"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	. "knative.dev/pkg/reconciler/testing"
 	"knative.dev/pkg/resolver"
+	"knative.dev/pkg/tracker"
+
+	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
+	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/eventing/pkg/apis/feature"
+	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
+	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
+	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -79,17 +79,40 @@ var (
 	exponential = eventingduck.BackoffPolicyExponential
 )
 
+type EgressBuilder struct {
+	*contract.Egress
+}
+
+func (b EgressBuilder) build(useDialectedFilters bool) *contract.Egress {
+	if useDialectedFilters {
+		b.Filter = nil
+	} else {
+		b.DialectedFilter = nil
+	}
+	return b.Egress
+}
+
 func TestTriggerReconciler(t *testing.T) {
 	eventing.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
 
 	t.Parallel()
 
 	for _, f := range Formats {
-		triggerReconciliation(t, f, *DefaultEnv)
+		triggerReconciliation(t, f, *DefaultEnv, false)
 	}
 }
 
-func triggerReconciliation(t *testing.T, format string, env config.Env) {
+func TestTriggerWithNewFiltersReconciler(t *testing.T) {
+	eventing.RegisterAlternateBrokerConditionSet(base.IngressConditionSet)
+
+	t.Parallel()
+
+	for _, f := range Formats {
+		triggerReconciliation(t, f, *DefaultEnv, true)
+	}
+}
+
+func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFilters bool) {
 
 	testKey := fmt.Sprintf("%s/%s", TriggerNamespace, TriggerName)
 
@@ -109,7 +132,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -128,7 +151,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -173,7 +196,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -192,7 +215,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -237,7 +260,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -256,7 +279,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -301,14 +324,14 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 				NewBroker(
 					BrokerReady,
 				),
-				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, "ordered")),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string("ordered"))),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -327,7 +350,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -354,7 +377,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_ORDERED),
-						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, "ordered"),
+						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string("ordered")),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -366,14 +389,14 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 				NewBroker(
 					BrokerReady,
 				),
-				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, "ordered")),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string("unordered"))),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -392,7 +415,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -419,7 +442,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, "unordered"),
+						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string("unordered")),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -438,7 +461,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -457,7 +480,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -510,7 +533,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "z",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -523,25 +546,47 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
-								{
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source_value",
-									}},
-									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID + "a",
-									Uid:           TriggerUUID + "a",
-								},
-								{
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source_value",
-									}},
-									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
-									Uid:           TriggerUUID,
-									Reference:     TriggerReference(),
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source_value",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source_value",
+													},
+												},
+											}},
+										},
+										Destination:   ServiceURL,
+										ConsumerGroup: TriggerUUID + "a",
+										Uid:           TriggerUUID + "a",
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source_value",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source_value",
+													},
+												},
+											}},
+										},
+										Destination:   ServiceURL,
+										ConsumerGroup: TriggerUUID,
+										Uid:           TriggerUUID,
+										Reference:     TriggerReference(),
+									},
+								}.build(useNewFilters),
 							},
 						},
 					},
@@ -562,7 +607,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "z",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -575,16 +620,27 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
-								{
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source_value",
-									}},
-									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID + "a",
-									Uid:           TriggerUUID + "a",
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source_value",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source_value",
+													},
+												},
+											}},
+										},
+										Destination:   ServiceURL,
+										ConsumerGroup: TriggerUUID + "a",
+										Uid:           TriggerUUID + "a",
+									},
+								}.build(useNewFilters),
 								{
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
@@ -862,9 +918,17 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 					BrokerReady,
 				),
 				newTrigger(
-					withAttributes(map[string]string{
-						"type": "type1",
-					}),
+					withFilters(
+						map[string]string{"type": "type1"},
+						[]eventing.SubscriptionsAPIFilter{
+							{
+								Exact: map[string]string{
+									"type": "type1",
+								},
+							},
+						},
+						useNewFilters,
+					),
 				),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
@@ -872,17 +936,28 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
-								{
-									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
-									Uid:           TriggerUUID,
-									Reference:     TriggerReference(),
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"type": "type1",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"type": "type1",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"type": "type1",
+													},
+												},
+											}},
+										},
+										Destination:   ServiceURL,
+										ConsumerGroup: TriggerUUID,
+										Uid:           TriggerUUID,
+										Reference:     TriggerReference(),
+									},
+								}.build(useNewFilters),
 							},
 						},
 					},
@@ -900,9 +975,17 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: newTrigger(
-						withAttributes(map[string]string{
-							"type": "type1",
-						}),
+						withFilters(
+							map[string]string{"type": "type1"},
+							[]eventing.SubscriptionsAPIFilter{
+								{
+									Exact: map[string]string{
+										"type": "type1",
+									},
+								},
+							},
+							useNewFilters,
+						),
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
@@ -921,9 +1004,17 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 					BrokerReady,
 				),
 				newTrigger(
-					withAttributes(map[string]string{
-						"type": "type1",
-					}),
+					withFilters(
+						map[string]string{"type": "type1"},
+						[]eventing.SubscriptionsAPIFilter{
+							{
+								Exact: map[string]string{
+									"type": "type1",
+								},
+							},
+						},
+						useNewFilters,
+					),
 				),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
@@ -931,7 +1022,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -944,28 +1035,50 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									ConsumerGroup: "1",
 									Uid:           "1",
 								},
-								{
-									Destination:   "http://example.com/2",
-									ConsumerGroup: "2",
-									Uid:           "2",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
-								{
-									Destination:   "http://example.com/3",
-									ConsumerGroup: "3",
-									Uid:           "3",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source3",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/2",
+										ConsumerGroup: "2",
+										Uid:           "2",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/3",
+										ConsumerGroup: "3",
+										Uid:           "3",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source3",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source3",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 							},
 						},
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -977,22 +1090,44 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									ConsumerGroup: "1",
 									Uid:           "1",
 								},
-								{
-									Destination:   "http://example.com/2",
-									ConsumerGroup: "2",
-									Uid:           "2",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
-								{
-									Destination:   "http://example.com/3",
-									ConsumerGroup: "3",
-									Uid:           "3",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source3",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/2",
+										ConsumerGroup: "2",
+										Uid:           "2",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/3",
+										ConsumerGroup: "3",
+										Uid:           "3",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source3",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source3",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 							},
 						},
 					},
@@ -1012,44 +1147,77 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
-								{
-									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
-									Uid:           TriggerUUID,
-									Reference:     TriggerReference(),
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"type": "type1",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   ServiceURL,
+										ConsumerGroup: TriggerUUID,
+										Uid:           TriggerUUID,
+										Reference:     TriggerReference(),
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"type": "type1",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"type": "type1",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 								{
 									Destination:   "http://example.com/1",
 									ConsumerGroup: "1",
 									Uid:           "1",
 								},
-								{
-									Destination:   "http://example.com/2",
-									ConsumerGroup: "2",
-									Uid:           "2",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
-								{
-									Destination:   "http://example.com/3",
-									ConsumerGroup: "3",
-									Uid:           "3",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source3",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/2",
+										ConsumerGroup: "2",
+										Uid:           "2",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/3",
+										ConsumerGroup: "3",
+										Uid:           "3",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source3",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source3",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 							},
 						},
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1061,22 +1229,44 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									ConsumerGroup: "1",
 									Uid:           "1",
 								},
-								{
-									Destination:   "http://example.com/2",
-									ConsumerGroup: "2",
-									Uid:           "2",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
-								{
-									Destination:   "http://example.com/3",
-									ConsumerGroup: "3",
-									Uid:           "3",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source3",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/2",
+										ConsumerGroup: "2",
+										Uid:           "2",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/3",
+										ConsumerGroup: "3",
+										Uid:           "3",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source3",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source3",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 							},
 						},
 					},
@@ -1089,9 +1279,17 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: newTrigger(
-						withAttributes(map[string]string{
-							"type": "type1",
-						}),
+						withFilters(
+							map[string]string{"type": "type1"},
+							[]eventing.SubscriptionsAPIFilter{
+								{
+									Exact: map[string]string{
+										"type": "type1",
+									},
+								},
+							},
+							useNewFilters,
+						),
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
@@ -1110,9 +1308,17 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 					BrokerReady,
 				),
 				newTrigger(
-					withAttributes(map[string]string{
-						"ext": "extval",
-					}),
+					withFilters(
+						map[string]string{"ext": "extval"},
+						[]eventing.SubscriptionsAPIFilter{
+							{
+								Exact: map[string]string{
+									"ext": "extval",
+								},
+							},
+						},
+						useNewFilters,
+					),
 				),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
@@ -1120,7 +1326,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1132,50 +1338,94 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									ConsumerGroup: "1",
 									Uid:           "1",
 								},
-								{
-									Destination:   "http://example.com/2",
-									ConsumerGroup: "2",
-									Uid:           "2",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
-								{
-									Destination:   "http://example.com/3",
-									ConsumerGroup: "3",
-									Uid:           "3",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source3",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/2",
+										ConsumerGroup: "2",
+										Uid:           "2",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/3",
+										ConsumerGroup: "3",
+										Uid:           "3",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source3",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source3",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 							},
 						},
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
 									ConsumerGroup: "1",
 									Uid:           "1",
 								},
-								{
-									Destination:   "http://example.com/2",
-									ConsumerGroup: "2",
-									Uid:           "2",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
-								{
-									Destination:   "http://example.com/3",
-									ConsumerGroup: "3",
-									Uid:           "3",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source3",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/2",
+										ConsumerGroup: "2",
+										Uid:           "2",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/3",
+										ConsumerGroup: "3",
+										Uid:           "3",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source3",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source3",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 							},
 						},
 					},
@@ -1195,7 +1445,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1207,59 +1457,114 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									ConsumerGroup: "1",
 									Uid:           "1",
 								},
-								{
-									Destination:   "http://example.com/2",
-									ConsumerGroup: "2",
-									Uid:           "2",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
-								{
-									Destination:   "http://example.com/3",
-									ConsumerGroup: "3",
-									Uid:           "3",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source3",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/2",
+										ConsumerGroup: "2",
+										Uid:           "2",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/3",
+										ConsumerGroup: "3",
+										Uid:           "3",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source3",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source3",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 							},
 						},
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
 									ConsumerGroup: "1",
 									Uid:           "1",
 								},
-								{
-									Destination:   "http://example.com/2",
-									ConsumerGroup: "2",
-									Uid:           "2",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
-								{
-									Destination:   "http://example.com/3",
-									ConsumerGroup: "3",
-									Uid:           "3",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source3",
-									}},
-								},
-								{
-									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
-									Uid:           TriggerUUID,
-									Reference:     TriggerReference(),
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"ext": "extval",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/2",
+										ConsumerGroup: "2",
+										Uid:           "2",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/3",
+										ConsumerGroup: "3",
+										Uid:           "3",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source3",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source3",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   ServiceURL,
+										ConsumerGroup: TriggerUUID,
+										Uid:           TriggerUUID,
+										Reference:     TriggerReference(),
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"ext": "extval",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"ext": "extval",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 							},
 						},
 					},
@@ -1272,9 +1577,17 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 			WantStatusUpdates: []clientgotesting.UpdateActionImpl{
 				{
 					Object: newTrigger(
-						withAttributes(map[string]string{
-							"ext": "extval",
-						}),
+						withFilters(
+							map[string]string{"ext": "extval"},
+							[]eventing.SubscriptionsAPIFilter{
+								{
+									Exact: map[string]string{
+										"ext": "extval",
+									},
+								},
+							},
+							useNewFilters,
+						),
 						reconcilertesting.WithInitTriggerConditions,
 						reconcilertesting.WithTriggerSubscribed(),
 						withSubscriberURI,
@@ -1299,7 +1612,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1311,64 +1624,119 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									ConsumerGroup: "1",
 									Uid:           "1",
 								},
-								{
-									Destination:   "http://example.com/2",
-									ConsumerGroup: "2",
-									Uid:           "2",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
-								{
-									Destination:   "http://example.com/3",
-									ConsumerGroup: "3",
-									Uid:           "3",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source3",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/2",
+										ConsumerGroup: "2",
+										Uid:           "2",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/3",
+										ConsumerGroup: "3",
+										Uid:           "3",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source3",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source3",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 							},
 						},
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
 									ConsumerGroup: "1",
 									Uid:           "1",
 								},
-								{
-									Destination:   "http://example.com/2",
-									ConsumerGroup: "2",
-									Uid:           "2",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
-								{
-									Destination:   ServiceURL,
-									ConsumerGroup: TriggerUUID,
-									Uid:           TriggerUUID,
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
-								{
-									Destination:   "http://example.com/3",
-									ConsumerGroup: "3",
-									Uid:           "3",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source3",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/2",
+										ConsumerGroup: "2",
+										Uid:           "2",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   ServiceURL,
+										ConsumerGroup: TriggerUUID,
+										Uid:           TriggerUUID,
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/3",
+										ConsumerGroup: "3",
+										Uid:           "3",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source3",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source3",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 							},
 						},
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1380,22 +1748,44 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									ConsumerGroup: "1",
 									Uid:           "1",
 								},
-								{
-									Destination:   "http://example.com/2",
-									ConsumerGroup: "2",
-									Uid:           "2",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
-								{
-									Destination:   "http://example.com/3",
-									ConsumerGroup: "3",
-									Uid:           "3",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source3",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/2",
+										ConsumerGroup: "2",
+										Uid:           "2",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/3",
+										ConsumerGroup: "3",
+										Uid:           "3",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source3",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source3",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 							},
 						},
 					},
@@ -1415,7 +1805,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1427,62 +1817,106 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									ConsumerGroup: "1",
 									Uid:           "1",
 								},
-								{
-									Destination:   "http://example.com/2",
-									ConsumerGroup: "2",
-									Uid:           "2",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
-								{
-									Destination:   "http://example.com/3",
-									ConsumerGroup: "3",
-									Uid:           "3",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source3",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/2",
+										ConsumerGroup: "2",
+										Uid:           "2",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/3",
+										ConsumerGroup: "3",
+										Uid:           "3",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source3",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source3",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 							},
 						},
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
 									ConsumerGroup: "1",
 									Uid:           "1",
 								},
-								{
-									Destination:   "http://example.com/2",
-									ConsumerGroup: "2",
-									Uid:           "2",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/2",
+										ConsumerGroup: "2",
+										Uid:           "2",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 								{
 									Destination:   ServiceURL,
 									ConsumerGroup: TriggerUUID,
 									Uid:           TriggerUUID,
 									Reference:     TriggerReference(),
 								},
-								{
-									Destination:   "http://example.com/3",
-									ConsumerGroup: "3",
-									Uid:           "3",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source3",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/3",
+										ConsumerGroup: "3",
+										Uid:           "3",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source3",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source3",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 							},
 						},
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1494,22 +1928,44 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 									ConsumerGroup: "1",
 									Uid:           "1",
 								},
-								{
-									Destination:   "http://example.com/2",
-									ConsumerGroup: "2",
-									Uid:           "2",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source2",
-									}},
-								},
-								{
-									Destination:   "http://example.com/3",
-									ConsumerGroup: "3",
-									Uid:           "3",
-									Filter: &contract.Filter{Attributes: map[string]string{
-										"source": "source3",
-									}},
-								},
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/2",
+										ConsumerGroup: "2",
+										Uid:           "2",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source2",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source2",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
+								EgressBuilder{
+									&contract.Egress{
+										Destination:   "http://example.com/3",
+										ConsumerGroup: "3",
+										Uid:           "3",
+										Filter: &contract.Filter{Attributes: map[string]string{
+											"source": "source3",
+										}},
+										DialectedFilter: []*contract.DialectedFilter{
+											{Filter: &contract.DialectedFilter_Exact{
+												Exact: &contract.Exact{
+													Attributes: map[string]string{
+														"source": "source3",
+													},
+												},
+											}},
+										},
+									},
+								}.build(useNewFilters),
 							},
 						},
 					},
@@ -1564,7 +2020,11 @@ func triggerReconciliation(t *testing.T, format string, env config.Env) {
 		table[i].Name = table[i].Name + " - " + format
 	}
 
-	useTable(t, table, &env)
+	if useNewFilters {
+		useTableWithFlags(t, table, &env, map[string]feature.Flag{feature.NewTriggerFilters: feature.Enabled})
+	} else {
+		useTable(t, table, &env)
+	}
 }
 
 func withDelivery(trigger *eventing.Trigger) {
@@ -1725,7 +2185,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1758,7 +2218,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1805,7 +2265,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/3",
@@ -1833,7 +2293,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1891,7 +2351,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1924,7 +2384,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -1971,7 +2431,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2004,7 +2464,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -2057,7 +2517,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2090,7 +2550,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -2123,7 +2583,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2170,7 +2630,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2203,7 +2663,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -2231,7 +2691,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2282,6 +2742,10 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 }
 
 func useTable(t *testing.T, table TableTest, env *config.Env) {
+	useTableWithFlags(t, table, env, nil)
+}
+
+func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags feature.Flags) {
 
 	table.Test(t, NewFactory(env, func(ctx context.Context, listers *Listers, env *config.Env, row *TableRow) controller.Reconciler {
 
@@ -2303,6 +2767,7 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 			EventingClient: eventingclient.Get(ctx),
 			Resolver:       nil,
 			Env:            env,
+			Flags:          flags,
 		}
 
 		reconciler.Resolver = resolver.NewURIResolverFromTracker(ctx, tracker.New(func(name types.NamespacedName) {}, 0))
@@ -2338,10 +2803,14 @@ func newTrigger(options ...reconcilertesting.TriggerOption) runtime.Object {
 	)
 }
 
-func withAttributes(attributes eventing.TriggerFilterAttributes) func(*eventing.Trigger) {
+func withFilters(attributes eventing.TriggerFilterAttributes, newFilters []eventing.SubscriptionsAPIFilter, withNewFilters bool) func(*eventing.Trigger) {
 	return func(e *eventing.Trigger) {
-		e.Spec.Filter = &eventing.TriggerFilter{
-			Attributes: attributes,
+		if withNewFilters {
+			e.Spec.Filters = newFilters
+		} else {
+			e.Spec.Filter = &eventing.TriggerFilter{
+				Attributes: attributes,
+			}
 		}
 	}
 }

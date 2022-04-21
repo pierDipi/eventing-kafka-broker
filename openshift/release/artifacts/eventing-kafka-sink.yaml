@@ -6,7 +6,7 @@ metadata:
   name: config-kafka-sink-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 data:
   config-kafka-sink-producer.properties: |
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
@@ -42,7 +42,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-sink-data-plane
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 rules:
   - apiGroups:
       - "*"
@@ -60,7 +60,7 @@ metadata:
   name: knative-kafka-sink-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 ---
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -68,7 +68,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-sink-data-plane
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-sink-data-plane
@@ -86,7 +86,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-sink-receiver
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     matchLabels:
@@ -96,7 +96,7 @@ spec:
       name: kafka-sink-receiver
       labels:
         app: kafka-sink-receiver
-        kafka.eventing.knative.dev/release: v1.2.3
+        kafka.eventing.knative.dev/release: v1.3.2
     spec:
       topologySpreadConstraints:
         - maxSkew: 2
@@ -119,7 +119,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-sink-receiver
-          image: registry.ci.openshift.org/openshift/knative-v1.2.3:knative-eventing-kafka-broker-receiver
+          image: registry.ci.openshift.org/openshift/knative-v1.3.2:knative-eventing-kafka-broker-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -232,7 +232,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-sink-receiver
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     app: kafka-sink-receiver

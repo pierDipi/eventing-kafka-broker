@@ -6,7 +6,7 @@ metadata:
   name: kafka-broker-config
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 data:
   default.topic.partitions: "10"
   default.topic.replication.factor: "3"
@@ -19,7 +19,7 @@ metadata:
   labels:
     duck.knative.dev/addressable: "true"
     knative.dev/crd-install: "true"
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   group: eventing.knative.dev
   names:
@@ -177,7 +177,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    kafka.eventing.knative.dev/release: "v20211214-f1bb19a50"
+    kafka.eventing.knative.dev/release: "v20220302-f4dfb1493"
     eventing.knative.dev/source: "true"
     duck.knative.dev/source: "true"
     knative.dev/crd-install: "true"
@@ -243,7 +243,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: eventing-kafka-source-observer
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
     duck.knative.dev/source: "true"
 rules:
   - apiGroups:
@@ -262,7 +262,7 @@ metadata:
   name: kafka-channel-config
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 data:
   bootstrap.servers: "my-cluster-kafka-bootstrap.kafka:9092"
 ---
@@ -271,7 +271,7 @@ kind: CustomResourceDefinition
 metadata:
   name: kafkachannels.messaging.knative.dev
   labels:
-    kafka.eventing.knative.dev/release: "v20211214-f1bb19a50"
+    kafka.eventing.knative.dev/release: "v20220302-f4dfb1493"
     knative.dev/crd-install: "true"
     messaging.knative.dev/subscribable: "true"
     duck.knative.dev/addressable: "true"
@@ -458,6 +458,9 @@ spec:
                     namespace:
                       description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/ This is optional field, it gets defaulted to the object holding it if left out.'
                       type: string
+                deadLetterSinkUri:
+                  description: DeadLetterSinkURI is the resolved URI of the dead letter ref if one is specified in the Spec.Delivery.
+                  type: string
                 observedGeneration:
                   description: ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.
                   type: integer
@@ -519,8 +522,29 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: config-kafka-descheduler
+  namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
+data:
+  _example: |
+                    []
+                  [
+                    {"Name": "RemoveWithEvenPodSpreadPriority",
+                    "Weight": 10,
+                    "Args": "{\"MaxSkew\": 2}"},
+                    {"Name": "RemoveWithAvailabilityZonePriority",
+                    "Weight": 10,
+                    "Args":  "{\"MaxSkew\": 2}"},
+                    {"Name": "RemoveWithHighestOrdinalPriority",
+                    "Weight": 2}
+                  ]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    kafka.eventing.knative.dev/release: v1.3.2
   name: config-kafka-leader-election
   namespace: knative-eventing
   annotations:
@@ -537,6 +561,30 @@ data:
   map-lease-prefix.kafka-broker-controller.knative.dev.eventing-kafka-broker.control-plane.pkg.reconciler.source.Reconciler: kafka-controller.knative.dev.eventing-kafka.pkg.source.reconciler.source.reconciler
   map-lease-prefix.kafka-broker-controller.knative.dev.eventing-kafka-broker.control-plane.pkg.reconciler.channel.Reconciler: kafkachannel-controller.knative.dev.eventing-kafka.pkg.channel.consolidated.reconciler.controller.reconciler
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-kafka-scheduler
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: v1.3.2
+data:
+  _example: |
+                  [
+                    {"Name": "PodFitsResources"},
+                    {"Name": "NoMaxResourceCount",
+                    "Args": "{\"NumPartitions\": 100}"},
+                    {"Name": "EvenPodSpread",
+                    "Args": "{\"MaxSkew\": 2}"}
+                  ]
+                  [
+                    {"Name": "AvailabilityZonePriority",
+                    "Weight": 10,
+                    "Args":  "{\"MaxSkew\": 2}"},
+                    {"Name": "LowestOrdinalPriority",
+                    "Weight": 2}
+                  ]
+---
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -544,7 +592,7 @@ metadata:
   name: kafka-config-logging
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 data:
   config.xml: |
     <configuration>
@@ -556,12 +604,31 @@ data:
       </root>
     </configuration>
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-tracing
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: v1.3.2
+    knative.dev/config-propagation: original
+    knative.dev/config-category: eventing
+  annotations:
+    knative.dev/example-checksum: "4002b4c2"
+data:
+  _example: |
+    backend: "none"
+    zipkin-endpoint: "http://zipkin.istio-system.svc.cluster.local:9411/api/v2/spans"
+    stackdriver-project-id: "my-project"
+    debug: "false"
+    sample-rate: "0.1"
+---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: knative-kafka-addressable-resolver
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
     duck.knative.dev/addressable: "true"
 rules:
   - apiGroups:
@@ -588,7 +655,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-channelable-manipulator
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
     duck.knative.dev/channelable: "true"
 rules:
   - apiGroups:
@@ -611,7 +678,7 @@ kind: ClusterRole
 metadata:
   name: kafka-controller
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 rules:
   - apiGroups:
       - "*"
@@ -773,7 +840,7 @@ metadata:
   name: kafka-controller
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 ---
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -781,7 +848,7 @@ kind: ClusterRoleBinding
 metadata:
   name: kafka-controller
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 subjects:
   - kind: ServiceAccount
     name: kafka-controller
@@ -796,7 +863,7 @@ kind: ClusterRoleBinding
 metadata:
   name: kafka-controller-addressable-resolver
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 subjects:
   - kind: ServiceAccount
     name: kafka-controller
@@ -814,7 +881,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-controller
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     matchLabels:
@@ -824,7 +891,7 @@ spec:
       name: kafka-controller
       labels:
         app: kafka-controller
-        kafka.eventing.knative.dev/release: v1.2.3
+        kafka.eventing.knative.dev/release: v1.3.2
     spec:
       securityContext:
         runAsNonRoot: false
@@ -840,7 +907,7 @@ spec:
               weight: 100
       containers:
         - name: controller
-          image: registry.ci.openshift.org/openshift/knative-v1.2.3:knative-eventing-kafka-broker-kafka-controller
+          image: registry.ci.openshift.org/openshift/knative-v1.3.2:knative-eventing-kafka-broker-kafka-controller
           imagePullPolicy: IfNotPresent
           env:
             - name: BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE
@@ -940,7 +1007,7 @@ kind: ClusterRole
 metadata:
   name: kafka-webhook-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 rules:
   - apiGroups:
       - ""
@@ -1021,7 +1088,7 @@ metadata:
   name: kafka-webhook-eventing
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 ---
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1029,7 +1096,7 @@ kind: ClusterRoleBinding
 metadata:
   name: kafka-webhook-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 subjects:
   - kind: ServiceAccount
     name: kafka-webhook-eventing
@@ -1044,7 +1111,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: defaulting.webhook.kafka.eventing.knative.dev
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 webhooks:
   - admissionReviewVersions: [ "v1", "v1beta1" ]
     clientConfig:
@@ -1056,20 +1123,46 @@ webhooks:
     name: defaulting.webhook.kafka.eventing.knative.dev
     timeoutSeconds: 2
 ---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: pods.defaulting.webhook.kafka.eventing.knative.dev
+  labels:
+    kafka.eventing.knative.dev/release: v1.3.2
+webhooks:
+  - admissionReviewVersions: [ "v1", "v1beta1" ]
+    clientConfig:
+      service:
+        name: kafka-webhook-eventing
+        namespace: knative-eventing
+    sideEffects: None
+    failurePolicy: Fail
+    name: pods.defaulting.webhook.kafka.eventing.knative.dev
+    timeoutSeconds: 2
+    reinvocationPolicy: IfNeeded
+    matchPolicy: Equivalent
+    namespaceSelector:
+      matchExpressions: [ ]
+      matchLabels:
+        app.kubernetes.io/name: knative-eventing
+    objectSelector:
+      matchLabels:
+        app.kubernetes.io/component: kafka-dispatcher
+---
 apiVersion: v1
 kind: Secret
 metadata:
   name: kafka-webhook-eventing-certs
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: validation.webhook.kafka.eventing.knative.dev
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 webhooks:
   - admissionReviewVersions: ["v1", "v1beta1"]
     clientConfig:
@@ -1088,7 +1181,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-webhook-eventing
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     matchLabels:
@@ -1097,7 +1190,7 @@ spec:
     metadata:
       labels:
         app: kafka-webhook-eventing
-        kafka.eventing.knative.dev/release: v1.2.3
+        kafka.eventing.knative.dev/release: v1.3.2
     spec:
       affinity:
         podAntiAffinity:
@@ -1114,7 +1207,7 @@ spec:
       containers:
         - name: kafka-webhook-eventing
           terminationMessagePolicy: FallbackToLogsOnError
-          image: registry.ci.openshift.org/openshift/knative-v1.2.3:knative-eventing-kafka-broker-webhook-kafka
+          image: registry.ci.openshift.org/openshift/knative-v1.3.2:knative-eventing-kafka-broker-webhook-kafka
           resources:
             requests:
               cpu: 20m
@@ -1170,7 +1263,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-webhook-eventing
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   ports:
     - name: https-webhook

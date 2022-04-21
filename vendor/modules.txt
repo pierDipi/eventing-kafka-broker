@@ -1124,7 +1124,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/eventing v0.30.0
+# knative.dev/eventing v0.30.3-0.20220420143529-0764365a1b4d
 ## explicit
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/duck
@@ -1193,20 +1193,6 @@ knative.dev/eventing/pkg/reconciler/sugar
 knative.dev/eventing/pkg/reconciler/testing
 knative.dev/eventing/pkg/reconciler/testing/scheme
 knative.dev/eventing/pkg/reconciler/testing/v1
-knative.dev/eventing/pkg/scheduler
-knative.dev/eventing/pkg/scheduler/factory
-knative.dev/eventing/pkg/scheduler/plugins/core/availabilitynodepriority
-knative.dev/eventing/pkg/scheduler/plugins/core/availabilityzonepriority
-knative.dev/eventing/pkg/scheduler/plugins/core/evenpodspread
-knative.dev/eventing/pkg/scheduler/plugins/core/lowestordinalpriority
-knative.dev/eventing/pkg/scheduler/plugins/core/podfitsresources
-knative.dev/eventing/pkg/scheduler/plugins/core/removewithavailabilitynodepriority
-knative.dev/eventing/pkg/scheduler/plugins/core/removewithavailabilityzonepriority
-knative.dev/eventing/pkg/scheduler/plugins/core/removewithevenpodspreadpriority
-knative.dev/eventing/pkg/scheduler/plugins/core/removewithhighestordinalpriority
-knative.dev/eventing/pkg/scheduler/plugins/kafka/nomaxresourcecount
-knative.dev/eventing/pkg/scheduler/state
-knative.dev/eventing/pkg/scheduler/statefulset
 knative.dev/eventing/pkg/utils
 knative.dev/eventing/test
 knative.dev/eventing/test/conformance/helpers
@@ -1253,7 +1239,6 @@ knative.dev/eventing/test/rekt/resources/trigger
 knative.dev/eventing/test/test_images
 knative.dev/eventing/test/test_images/event-flaker
 knative.dev/eventing/test/test_images/event-library
-knative.dev/eventing/test/test_images/event-library/kodata/events
 knative.dev/eventing/test/test_images/event-sender
 knative.dev/eventing/test/test_images/heartbeats
 knative.dev/eventing/test/test_images/performance
@@ -1284,6 +1269,7 @@ knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1
 knative.dev/eventing-kafka/pkg/apis/sources/config
 knative.dev/eventing-kafka/pkg/apis/sources/v1beta1
 knative.dev/eventing-kafka/pkg/channel/consolidated/apis/messaging
+knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/controller/resources
 knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/testing
 knative.dev/eventing-kafka/pkg/channel/distributed/common/kafka/constants
 knative.dev/eventing-kafka/pkg/client/clientset/versioned
@@ -1338,10 +1324,8 @@ knative.dev/eventing-kafka/test/upgrade/continual
 ## explicit
 knative.dev/hack
 knative.dev/hack/shell
-# knative.dev/pkg v0.0.0-20220310195447-38af013b30ff
+# knative.dev/pkg v0.0.0-20220314165618-a637a96a1bd9
 ## explicit
-knative.dev/pkg/apiextensions/storageversion
-knative.dev/pkg/apiextensions/storageversion/cmd/migrate
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
 knative.dev/pkg/apis/duck/ducktypes
@@ -1358,16 +1342,14 @@ knative.dev/pkg/client/injection/kube/client
 knative.dev/pkg/client/injection/kube/client/fake
 knative.dev/pkg/client/injection/kube/informers/admissionregistration/v1/mutatingwebhookconfiguration
 knative.dev/pkg/client/injection/kube/informers/admissionregistration/v1/validatingwebhookconfiguration
-knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset
-knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset/fake
 knative.dev/pkg/client/injection/kube/informers/core/v1/configmap
 knative.dev/pkg/client/injection/kube/informers/core/v1/configmap/fake
-knative.dev/pkg/client/injection/kube/informers/core/v1/node
-knative.dev/pkg/client/injection/kube/informers/core/v1/node/fake
 knative.dev/pkg/client/injection/kube/informers/core/v1/pod
 knative.dev/pkg/client/injection/kube/informers/core/v1/pod/fake
 knative.dev/pkg/client/injection/kube/informers/core/v1/secret
 knative.dev/pkg/client/injection/kube/informers/core/v1/secret/fake
+knative.dev/pkg/client/injection/kube/informers/core/v1/service
+knative.dev/pkg/client/injection/kube/informers/core/v1/service/fake
 knative.dev/pkg/client/injection/kube/informers/factory
 knative.dev/pkg/client/injection/kube/informers/factory/fake
 knative.dev/pkg/codegen/cmd/injection-gen
@@ -1467,4 +1449,5 @@ sigs.k8s.io/structured-merge-diff/v4/schema
 sigs.k8s.io/structured-merge-diff/v4/typed
 sigs.k8s.io/structured-merge-diff/v4/value
 # sigs.k8s.io/yaml v1.3.0
+## explicit
 sigs.k8s.io/yaml

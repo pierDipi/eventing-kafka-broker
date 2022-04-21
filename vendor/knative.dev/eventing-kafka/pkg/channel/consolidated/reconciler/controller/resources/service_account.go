@@ -14,22 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package resources
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type ChannelTemplateSpec struct {
-	metav1.TypeMeta `json:",inline"`
-
-	// Spec defines the Spec to use for each channel created. Passed
-	// in verbatim to the Channel CRD as Spec section.
-	// +optional
-	Spec *runtime.RawExtension `json:"spec,omitempty"`
+// MakeServiceAccount creates a ServiceAccount object for the Namespace 'ns'.
+func MakeServiceAccount(namespace, name string) *corev1.ServiceAccount {
+	return &corev1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
 }
-
-// ChannelTemplateSpecOption is an optional function for ChannelTemplateSpec.
-type ChannelTemplateSpecOption func(*ChannelTemplateSpec) error

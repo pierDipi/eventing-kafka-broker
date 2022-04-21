@@ -6,7 +6,7 @@ metadata:
   name: config-kafka-channel-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 data:
   config-kafka-channel-producer.properties: |
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
@@ -71,7 +71,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-channel-data-plane
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 rules:
   - apiGroups:
       - "*"
@@ -89,7 +89,7 @@ metadata:
   name: knative-kafka-channel-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 ---
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -97,7 +97,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-channel-data-plane
   labels:
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-channel-data-plane
@@ -115,7 +115,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-channel-dispatcher
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     matchLabels:
@@ -125,7 +125,7 @@ spec:
       name: kafka-channel-dispatcher
       labels:
         app: kafka-channel-dispatcher
-        kafka.eventing.knative.dev/release: v1.2.3
+        kafka.eventing.knative.dev/release: v1.3.2
     spec:
       topologySpreadConstraints:
         - maxSkew: 2
@@ -148,7 +148,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-channel-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.2.3:knative-eventing-kafka-broker-dispatcher
+          image: registry.ci.openshift.org/openshift/knative-v1.3.2:knative-eventing-kafka-broker-dispatcher
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -262,7 +262,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-channel-receiver
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     matchLabels:
@@ -272,7 +272,7 @@ spec:
       name: kafka-channel-receiver
       labels:
         app: kafka-channel-receiver
-        kafka.eventing.knative.dev/release: v1.2.3
+        kafka.eventing.knative.dev/release: v1.3.2
     spec:
       topologySpreadConstraints:
         - maxSkew: 2
@@ -295,7 +295,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-channel-receiver
-          image: registry.ci.openshift.org/openshift/knative-v1.2.3:knative-eventing-kafka-broker-receiver
+          image: registry.ci.openshift.org/openshift/knative-v1.3.2:knative-eventing-kafka-broker-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -408,7 +408,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-channel-receiver
-    kafka.eventing.knative.dev/release: v1.2.3
+    kafka.eventing.knative.dev/release: v1.3.2
 spec:
   selector:
     app: kafka-channel-receiver

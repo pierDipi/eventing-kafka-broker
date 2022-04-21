@@ -38,15 +38,15 @@ import (
 	"knative.dev/pkg/resolver"
 	"knative.dev/pkg/tracker"
 
-	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 	eventingduck "knative.dev/eventing/pkg/apis/duck/v1"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
 	"knative.dev/eventing/pkg/apis/feature"
 	eventingclient "knative.dev/eventing/pkg/client/injection/client/fake"
 	triggerreconciler "knative.dev/eventing/pkg/client/injection/reconciler/eventing/v1/trigger"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/receiver"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
@@ -80,7 +80,7 @@ var (
 )
 
 type EgressBuilder struct {
-	contract.Egress
+	*contract.Egress
 }
 
 func (b EgressBuilder) build(useDialectedFilters bool) *contract.Egress {
@@ -89,7 +89,7 @@ func (b EgressBuilder) build(useDialectedFilters bool) *contract.Egress {
 	} else {
 		b.DialectedFilter = nil
 	}
-	return &b.Egress
+	return b.Egress
 }
 
 func TestTriggerReconciler(t *testing.T) {
@@ -132,7 +132,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -151,7 +151,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -196,7 +196,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -215,7 +215,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -260,7 +260,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -279,7 +279,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -324,14 +324,14 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				NewBroker(
 					BrokerReady,
 				),
-				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Ordered))),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string("ordered"))),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -350,7 +350,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -377,7 +377,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_ORDERED),
-						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Ordered)),
+						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string("ordered")),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -389,14 +389,14 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 				NewBroker(
 					BrokerReady,
 				),
-				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Unordered))),
+				newTrigger(reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string("unordered"))),
 				NewService(),
 				NewConfigMapFromContract(&contract.Contract{
 					Resources: []*contract.Resource{
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -415,7 +415,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -442,7 +442,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						reconcilertesting.WithTriggerDependencyReady(),
 						reconcilertesting.WithTriggerBrokerReady(),
 						withTriggerSubscriberResolvedSucceeded(contract.DeliveryOrder_UNORDERED),
-						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string(internals.Unordered)),
+						reconcilertesting.WithAnnotation(deliveryOrderAnnotation, string("unordered")),
 						reconcilertesting.WithTriggerDeadLetterSinkNotConfigured(),
 					),
 				},
@@ -461,7 +461,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 						},
 					},
 				}, &env),
@@ -480,7 +480,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -533,7 +533,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID + "z",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -546,10 +546,10 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Filter: &contract.Filter{Attributes: map[string]string{
 											"source": "source_value",
 										}},
@@ -568,7 +568,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Filter: &contract.Filter{Attributes: map[string]string{
 											"source": "source_value",
 										}},
@@ -607,7 +607,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID + "z",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -620,10 +620,10 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Filter: &contract.Filter{Attributes: map[string]string{
 											"source": "source_value",
 										}},
@@ -936,10 +936,10 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Filter: &contract.Filter{Attributes: map[string]string{
 											"type": "type1",
 										}},
@@ -1022,7 +1022,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1036,7 +1036,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1055,7 +1055,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1078,7 +1078,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1091,7 +1091,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1110,7 +1110,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1147,10 +1147,10 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   ServiceURL,
 										ConsumerGroup: TriggerUUID,
 										Uid:           TriggerUUID,
@@ -1175,7 +1175,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1194,7 +1194,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1217,7 +1217,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1230,7 +1230,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1249,7 +1249,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1326,7 +1326,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1339,7 +1339,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1358,7 +1358,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1381,7 +1381,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -1389,7 +1389,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1408,7 +1408,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1445,7 +1445,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1458,7 +1458,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1477,7 +1477,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1500,7 +1500,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -1508,7 +1508,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1527,7 +1527,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1546,7 +1546,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   ServiceURL,
 										ConsumerGroup: TriggerUUID,
 										Uid:           TriggerUUID,
@@ -1612,7 +1612,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1625,7 +1625,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1644,7 +1644,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1667,7 +1667,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -1675,7 +1675,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1694,7 +1694,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   ServiceURL,
 										ConsumerGroup: TriggerUUID,
 										Uid:           TriggerUUID,
@@ -1713,7 +1713,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1736,7 +1736,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1749,7 +1749,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1768,7 +1768,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1805,7 +1805,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1818,7 +1818,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1837,7 +1837,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1860,7 +1860,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -1868,7 +1868,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1893,7 +1893,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Reference:     TriggerReference(),
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -1916,7 +1916,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -1929,7 +1929,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									Uid:           "1",
 								},
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/2",
 										ConsumerGroup: "2",
 										Uid:           "2",
@@ -1948,7 +1948,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 									},
 								}.build(useNewFilters),
 								EgressBuilder{
-									contract.Egress{
+									&contract.Egress{
 										Destination:   "http://example.com/3",
 										ConsumerGroup: "3",
 										Uid:           "3",
@@ -2185,7 +2185,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2218,7 +2218,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2265,7 +2265,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/3",
@@ -2293,7 +2293,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2351,7 +2351,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2384,7 +2384,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -2431,7 +2431,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2464,7 +2464,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -2517,7 +2517,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2550,7 +2550,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -2583,7 +2583,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2630,7 +2630,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,
@@ -2663,7 +2663,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID,
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   "http://example.com/1",
@@ -2691,7 +2691,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 						{
 							Uid:     BrokerUUID + "a",
 							Topics:  []string{BrokerTopic()},
-							Ingress: &contract.Ingress{IngressType: &contract.Ingress_Path{Path: receiver.Path(BrokerNamespace, BrokerName)}},
+							Ingress: &contract.Ingress{Path: receiver.Path(BrokerNamespace, BrokerName)},
 							Egresses: []*contract.Egress{
 								{
 									Destination:   ServiceURL,

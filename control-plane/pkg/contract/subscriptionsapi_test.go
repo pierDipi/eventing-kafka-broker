@@ -55,7 +55,7 @@ func TestFromSubscriptionFilter(t *testing.T) {
 						},
 					},
 					{
-						CESQL: "subject = 'source'",
+						SQL: "subject = 'source'",
 					},
 				},
 			},

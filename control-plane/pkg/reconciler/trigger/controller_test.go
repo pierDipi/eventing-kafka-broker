@@ -36,7 +36,7 @@ import (
 	_ "knative.dev/eventing/pkg/client/injection/informers/eventing/v1/trigger/fake"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 func TestNewController(t *testing.T) {

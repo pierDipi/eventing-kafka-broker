@@ -23,8 +23,7 @@ import (
 	"strconv"
 
 	"github.com/Shopify/sarama"
-
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 )
 
 const (

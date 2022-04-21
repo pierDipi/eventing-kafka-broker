@@ -10,7 +10,7 @@ export TEST_IMAGE_TEMPLATE="${EVENTING_KAFKA_BROKER_TEST_IMAGE_TEMPLATE}"
 
 env
 
-scale_up_workers || exit 1
+#scale_up_workers || exit 1
 
 failed=0
 

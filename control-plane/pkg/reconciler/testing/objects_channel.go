@@ -25,7 +25,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
+	"k8s.io/utils/pointer"
 	messagingv1beta1 "knative.dev/eventing-kafka/pkg/apis/messaging/v1beta1"
+	"knative.dev/eventing-kafka/pkg/channel/consolidated/reconciler/controller/resources"
 	eventingduckv1 "knative.dev/eventing/pkg/apis/duck/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -33,7 +35,7 @@ import (
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/config"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka"
+	kafka "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/kafka"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 	. "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/channel"
 )
@@ -43,6 +45,7 @@ const (
 	ChannelNamespace        = "test-nc"
 	ChannelUUID             = "c1234567-8901-2345-6789-123456789101"
 	ChannelBootstrapServers = "kafka-1:9092,kafka-2:9093"
+	ChannelServiceName      = "kc-kn-channel"
 
 	Subscription1Name     = "sub-1"
 	Subscription2Name     = "sub-2"
@@ -73,6 +76,15 @@ func NewChannel(options ...KRShapedOption) *messagingv1beta1.KafkaChannel {
 	return c
 }
 
+func NewDeletedChannel(options ...KRShapedOption) runtime.Object {
+	return NewChannel(
+		append(
+			options,
+			WithDeletedTimeStamp,
+		)...,
+	)
+}
+
 func WithNumPartitions(np int32) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ch := obj.(*messagingv1beta1.KafkaChannel)
@@ -91,6 +103,20 @@ func WithRetentionDuration(rd string) KRShapedOption {
 	return func(obj duckv1.KRShaped) {
 		ch := obj.(*messagingv1beta1.KafkaChannel)
 		ch.Spec.RetentionDuration = rd
+	}
+}
+
+func WithChannelDelivery(d *eventingduckv1.DeliverySpec) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*messagingv1beta1.KafkaChannel)
+		ch.Spec.Delivery = d
+	}
+}
+
+func WithChannelDeadLetterSinkURI(uri string) KRShapedOption {
+	return func(obj duckv1.KRShaped) {
+		ch := obj.(*messagingv1beta1.KafkaChannel)
+		ch.Status.DeliveryStatus.DeadLetterSinkURI, _ = apis.ParseURL(uri)
 	}
 }
 
@@ -287,4 +313,40 @@ func WithUnreadySubscriber(sub *SubscriberInfo) {
 func WithUnknownSubscriber(sub *SubscriberInfo) {
 	sub.status.Ready = "Unknown"
 	sub.status.Message = fmt.Sprintf("Subscriber %v not ready: %v", sub.spec.UID, "consumer group status unknown")
+}
+
+func NewPerChannelService(env *config.Env) *corev1.Service {
+	s := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ChannelServiceName,
+			Namespace: ChannelNamespace,
+			Labels: map[string]string{
+				resources.MessagingRoleLabel: resources.MessagingRole,
+			},
+			OwnerReferences: []metav1.OwnerReference{
+				ChannelAsOwnerReference(),
+			},
+		},
+		Spec: corev1.ServiceSpec{
+			Type:         corev1.ServiceTypeExternalName,
+			ExternalName: network.GetServiceHostname(env.IngressName, env.SystemNamespace),
+		},
+	}
+
+	return s
+}
+
+func ChannelAsOwnerReference() metav1.OwnerReference {
+	return metav1.OwnerReference{
+		APIVersion:         messagingv1beta1.SchemeGroupVersion.String(),
+		Kind:               "KafkaChannel",
+		Name:               ChannelName,
+		UID:                ChannelUUID,
+		Controller:         pointer.Bool(true),
+		BlockOwnerDeletion: pointer.Bool(true),
+	}
 }

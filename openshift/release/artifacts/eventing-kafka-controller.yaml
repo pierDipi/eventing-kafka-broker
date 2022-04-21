@@ -282,7 +282,7 @@ spec:
       served: true
       storage: true
       subresources:
-        status: {}
+        status: { }
       schema:
         openAPIV3Schema:
           description: 'KafkaChannel is a resource representing a Channel that is backed by a topic of an Apache Kafka cluster.'
@@ -458,6 +458,9 @@ spec:
                     namespace:
                       description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/ This is optional field, it gets defaulted to the object holding it if left out.'
                       type: string
+                deadLetterSinkUri:
+                  description: DeadLetterSinkURI is the resolved URI of the dead letter sink that will be used as a fallback when not specified by Subscriptions.
+                  type: string
                 observedGeneration:
                   description: ObservedGeneration is the 'Generation' of the Service that was last processed by the controller.
                   type: integer
@@ -509,7 +512,7 @@ spec:
   conversion:
     strategy: Webhook
     webhook:
-      conversionReviewVersions: ["v1", "v1beta1"]
+      conversionReviewVersions: [ "v1", "v1beta1" ]
       clientConfig:
         service:
           name: kafka-webhook

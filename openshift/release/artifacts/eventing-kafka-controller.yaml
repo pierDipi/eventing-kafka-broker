@@ -1,5 +1,20 @@
 ---
 ---
+
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -12,6 +27,20 @@ data:
   default.topic.replication.factor: "3"
   bootstrap.servers: "my-cluster-kafka-bootstrap.kafka:9092"
 ---
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -91,6 +120,7 @@ spec:
                       type: object
                       properties:
                         ref:
+                          # TODO add format in description (?)
                           description: |
                             Secret reference.
                           type: object
@@ -172,7 +202,29 @@ spec:
         - name: Reason
           type: string
           jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+#  conversion:
+#    strategy: Webhook
+#    webhook:
+#      conversionReviewVersions: [ "v1alpha1" ]
+#      clientConfig:
+#        service:
+#          name: eventing-kafka-webhook
+#          namespace: knative-eventing
 ---
+# Copyright 2019 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -196,12 +248,19 @@ spec:
       schema:
         openAPIV3Schema:
           type: object
+          # this is a work around so we don't need to flush out the
+          # schema for each version at this time
+          #
+          # see issue: https://github.com/knative/serving/issues/912
           x-kubernetes-preserve-unknown-fields: true
       subresources:
         status: {}
         scale:
+          # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
           specReplicasPath: .spec.consumers
+          # statusReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Replicas.
           statusReplicasPath: .status.consumers
+          # labelSelectorPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Selector
           labelSelectorPath: .status.selector
       additionalPrinterColumns:
         - name: Topics
@@ -236,8 +295,24 @@ spec:
         service:
           name: kafka-source-webhook
           namespace: knative-eventing
+
 ---
 ---
+# Copyright 2019 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# The role is needed for the aggregated role source-observer in knative-eventing to provide readonly access to "Sources".
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -256,6 +331,21 @@ rules:
       - watch
 ---
 ---
+
+# Copyright 2021 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -266,6 +356,20 @@ metadata:
 data:
   bootstrap.servers: "my-cluster-kafka-bootstrap.kafka:9092"
 ---
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -517,6 +621,7 @@ spec:
         service:
           name: kafka-webhook
           namespace: knative-eventing
+
 ---
 ---
 apiVersion: v1
@@ -530,9 +635,38 @@ metadata:
     knative.dev/example-checksum: "96896b00"
 data:
   _example: |
+    ################################
+    #                              #
+    #    EXAMPLE CONFIGURATION     #
+    #                              #
+    ################################
+
+    # This block is not actually functional configuration,
+    # but serves to illustrate the available configuration
+    # options and document them in a way that is accessible
+    # to users that `kubectl edit` this config map.
+    #
+    # These sample configuration options may be copied out of
+    # this example block and unindented to be in the data block
+    # to actually change the configuration.
+
+    # leaseDuration is how long non-leaders will wait to try to acquire the
+    # lock; 15 seconds is the value used by core kubernetes controllers.
     leaseDuration: "15s"
+
+    # renewDeadline is how long a leader will try to renew the lease before
+    # giving up; 10 seconds is the value used by core kubernetes controllers.
     renewDeadline: "10s"
+
+    # retryPeriod is how long the leader election client waits between tries of
+    # actions; 2 seconds is the value used by core kubernetes controllers.
     retryPeriod: "2s"
+
+    # buckets is the number of buckets used to partition key space of each
+    # Reconciler. If this number is M and the replica number of the controller
+    # is N, the N replicas will compete for the M buckets. The owner of a
+    # bucket will take care of the reconciling for the keys partitioned into
+    # that bucket.
     buckets: "1"
   leaseDuration: "15s"
   renewDeadline: "10s"
@@ -540,7 +674,81 @@ data:
   map-lease-prefix.kafka-broker-controller.knative.dev.eventing-kafka-broker.control-plane.pkg.reconciler.source.Reconciler: kafka-controller.knative.dev.eventing-kafka.pkg.source.reconciler.source.reconciler
   map-lease-prefix.kafka-broker-controller.knative.dev.eventing-kafka-broker.control-plane.pkg.reconciler.channel.Reconciler: kafkachannel-controller.knative.dev.eventing-kafka.pkg.channel.consolidated.reconciler.controller.reconciler
 ---
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-kafka-source-defaults
+  namespace: knative-eventing
+  labels:
+    kafka.eventing.knative.dev/release: v1.2.3
+  annotations:
+    knative.dev/example-checksum: "b6ed351d"
+data:
+  _example: |
+    ################################
+    #                              #
+    #    EXAMPLE CONFIGURATION     #
+    #                              #
+    ################################
+
+    # This block is not actually functional configuration,
+    # but serves to illustrate the available configuration
+    # options and document them in a way that is accessible
+    # to users that `kubectl edit` this config map.
+    #
+    # These sample configuration options may be copied out of
+    # this example block and unindented to be in the data block
+    # to actually change the configuration.
+
+    # autoscalingClass is the autoscaler class name to use.
+    # valid value: keda.autoscaling.knative.dev
+    # autoscalingClass: ""
+
+    # minScale is the minimum number of replicas to scale down to.
+    # minScale: "1"
+
+    # maxScale is the maximum number of replicas to scale up to.
+    # maxScale: "1"
+
+    # pollingInterval is the interval in seconds KEDA uses to poll metrics.
+    # pollingInterval: "30"
+
+    # cooldownPeriod is the period of time in seconds KEDA waits until it scales down.
+    # cooldownPeriod: "300"
+
+    # kafkaLagThreshold is the lag (ie. number of messages in a partition) threshold for KEDA to scale up sources.
+    # kafkaLagThreshold: "10"
 ---
+---
+
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -559,6 +767,20 @@ data:
       </root>
     </configuration>
 ---
+# Copyright 2021 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -566,6 +788,7 @@ metadata:
   labels:
     kafka.eventing.knative.dev/release: v1.2.3
     duck.knative.dev/addressable: "true"
+# Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
   - apiGroups:
       - eventing.knative.dev
@@ -576,6 +799,7 @@ rules:
       - get
       - list
       - watch
+
   - apiGroups:
       - messaging.knative.dev
     resources:
@@ -586,6 +810,20 @@ rules:
       - list
       - watch
 ---
+# Copyright 2021 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -593,6 +831,7 @@ metadata:
   labels:
     kafka.eventing.knative.dev/release: v1.2.3
     duck.knative.dev/channelable: "true"
+# Do not use this role directly. These rules will be added to the "channelable-manipulator" role.
 rules:
   - apiGroups:
       - messaging.knative.dev
@@ -607,8 +846,24 @@ rules:
       - update
       - patch
       - delete
+
 ---
 ---
+
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -654,6 +909,7 @@ rules:
       - delete
       - patch
       - watch
+
   - apiGroups:
       - "*"
     resources:
@@ -662,6 +918,8 @@ rules:
       - list
       - get
       - watch
+
+  # Scheduler permissions
   - apiGroups:
       - "*"
     resources:
@@ -681,6 +939,8 @@ rules:
       - watch
       - update
       - patch
+
+  # Internal APIs
   - apiGroups:
       - "internal.kafka.eventing.knative.dev"
     resources:
@@ -702,6 +962,8 @@ rules:
       - "consumergroups/finalizers"
     verbs:
       - update
+
+  # Eventing resources and statuses we care about
   - apiGroups:
       - "eventing.knative.dev"
     resources:
@@ -717,6 +979,8 @@ rules:
       - watch
       - patch
       - update
+
+  # eventing.knative.dev resources and finalizers we care about.
   - apiGroups:
       - "eventing.knative.dev"
     resources:
@@ -725,6 +989,8 @@ rules:
       - "kafkasinks/finalizers"
     verbs:
       - update
+
+  # messaging.knative.dev resources and finalizers we care about.
   - apiGroups:
       - messaging.knative.dev
     resources:
@@ -751,6 +1017,8 @@ rules:
       - kafkachannels/finalizers
     verbs:
       - update
+
+  # sources.knative.dev resources and finalizers we care about.
   - apiGroups:
       - sources.knative.dev
     resources:
@@ -770,6 +1038,21 @@ rules:
       - update
 ---
 ---
+
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -779,6 +1062,21 @@ metadata:
     kafka.eventing.knative.dev/release: v1.2.3
 ---
 ---
+
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -793,6 +1091,7 @@ roleRef:
   kind: ClusterRole
   name: kafka-controller
   apiGroup: rbac.authorization.k8s.io
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -810,6 +1109,21 @@ roleRef:
   name: addressable-resolver
 ---
 ---
+
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -832,6 +1146,8 @@ spec:
       securityContext:
         runAsNonRoot: false
       serviceAccountName: kafka-controller
+
+      # To avoid node becoming SPOF, spread our replicas to different nodes.
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -841,6 +1157,7 @@ spec:
                     app: kafka-controller
                 topologyKey: kubernetes.io/hostname
               weight: 100
+
       containers:
         - name: controller
           image: registry.ci.openshift.org/openshift/knative-v1.2.3:knative-eventing-kafka-broker-kafka-controller
@@ -854,6 +1171,7 @@ spec:
               value: knative-eventing
             - name: SOURCE_DATA_PLANE_CONFIG_MAP_NAMESPACE
               value: knative-eventing
+
             - name: BROKER_DATA_PLANE_CONFIG_MAP_NAME
               value: kafka-broker-brokers-triggers
             - name: CHANNEL_DATA_PLANE_CONFIG_MAP_NAME
@@ -862,6 +1180,7 @@ spec:
               value: kafka-sink-sinks
             - name: SOURCE_DATA_PLANE_CONFIG_MAP_NAME
               value: kafka-source-sources
+
             - name: BROKER_DATA_PLANE_CONFIG_FORMAT
               value: json
             - name: CHANNEL_DATA_PLANE_CONFIG_FORMAT
@@ -870,6 +1189,7 @@ spec:
               value: json
             - name: SOURCE_DATA_PLANE_CONFIG_FORMAT
               value: json
+
             - name: BROKER_INGRESS_NAME
               value: kafka-broker-ingress
             - name: CHANNEL_INGRESS_NAME
@@ -878,6 +1198,7 @@ spec:
               value: kafka-sink-ingress
             - name: SOURCE_INGRESS_NAME
               value: kafka-source-ingress
+
             - name: BROKER_GENERAL_CONFIG_MAP_NAME
               value: kafka-broker-config
             - name: CHANNEL_GENERAL_CONFIG_MAP_NAME
@@ -886,12 +1207,14 @@ spec:
               value: kafka-broker-config
             - name: SOURCE_GENERAL_CONFIG_MAP_NAME
               value: kafka-broker-config
+
             - name: BROKER_INGRESS_POD_PORT
               value: "8080"
             - name: CHANNEL_INGRESS_POD_PORT
               value: "8080"
             - name: SINK_INGRESS_POD_PORT
               value: "8080"
+
             - name: BROKER_SYSTEM_NAMESPACE
               valueFrom:
                 fieldRef:
@@ -908,12 +1231,14 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+
             - name: BROKER_DEFAULT_BACKOFF_DELAY_MS
               value: "1000" # 1 second
             - name: SYSTEM_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+
             - name: CONFIG_LEADERELECTION_NAME
               value: config-kafka-leader-election
             - name: CONFIG_LOGGING_NAME
@@ -938,6 +1263,21 @@ spec:
       restartPolicy: Always
 ---
 ---
+
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -945,6 +1285,7 @@ metadata:
   labels:
     kafka.eventing.knative.dev/release: v1.2.3
 rules:
+  # For watching logging configuration and getting certs.
   - apiGroups:
       - ""
     resources:
@@ -953,6 +1294,8 @@ rules:
       - "get"
       - "list"
       - "watch"
+
+  # For manipulating certs into secrets.
   - apiGroups:
       - ""
     resources:
@@ -965,18 +1308,23 @@ rules:
       - "list"
       - "watch"
       - "patch"
+
+  # For getting our Deployment so we can decorate with ownerref.
   - apiGroups:
       - "apps"
     resources:
       - "deployments"
     verbs:
       - "get"
+
   - apiGroups:
       - "apps"
     resources:
       - "deployments/finalizers"
     verbs:
       - update
+
+  # For actually registering our webhook.
   - apiGroups:
       - "admissionregistration.k8s.io"
     resources:
@@ -990,17 +1338,23 @@ rules:
       - "delete"
       - "patch"
       - "watch"
+
+  # For leader election
   - apiGroups:
       - "coordination.k8s.io"
     resources:
       - "leases"
     verbs: *everything
+
+  # finalizers are needed for the owner reference of the webhook
   - apiGroups:
       - ""
     resources:
       - "namespaces/finalizers"
     verbs:
       - "update"
+
+  # Eventing resources care about
   - apiGroups:
       - "eventing.knative.dev"
     resources:
@@ -1009,6 +1363,8 @@ rules:
       - list
       - get
       - watch
+
+  # messaging.knative.dev resources and finalizers we care about.
   - apiGroups:
       - messaging.knative.dev
     resources:
@@ -1018,6 +1374,21 @@ rules:
       - list
 ---
 ---
+
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -1027,6 +1398,21 @@ metadata:
     kafka.eventing.knative.dev/release: v1.2.3
 ---
 ---
+
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -1041,7 +1427,22 @@ roleRef:
   kind: ClusterRole
   name: kafka-webhook-eventing
   apiGroup: rbac.authorization.k8s.io
+
 ---
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
@@ -1059,6 +1460,20 @@ webhooks:
     name: defaulting.webhook.kafka.eventing.knative.dev
     timeoutSeconds: 2
 ---
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: v1
 kind: Secret
 metadata:
@@ -1066,7 +1481,22 @@ metadata:
   namespace: knative-eventing
   labels:
     kafka.eventing.knative.dev/release: v1.2.3
+# The data is populated at install time.
 ---
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
@@ -1084,6 +1514,20 @@ webhooks:
     name: validation.webhook.kafka.eventing.knative.dev
     timeoutSeconds: 2
 ---
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1102,6 +1546,7 @@ spec:
         app: kafka-webhook-eventing
         kafka.eventing.knative.dev/release: v1.2.3
     spec:
+      # To avoid node becoming SPOF, spread our replicas to different nodes.
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -1111,13 +1556,17 @@ spec:
                     app: kafka-webhook-eventing
                 topologyKey: kubernetes.io/hostname
               weight: 100
+
       serviceAccountName: kafka-webhook-eventing
       securityContext:
         runAsNonRoot: false
+
       containers:
         - name: kafka-webhook-eventing
           terminationMessagePolicy: FallbackToLogsOnError
+
           image: registry.ci.openshift.org/openshift/knative-v1.2.3:knative-eventing-kafka-broker-webhook-kafka
+
           resources:
             requests:
               cpu: 20m
@@ -1125,6 +1574,7 @@ spec:
             limits:
               cpu: 200m
               memory: 200Mi
+
           env:
             - name: SYSTEM_NAMESPACE
               valueFrom:
@@ -1144,8 +1594,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+
           securityContext:
             allowPrivilegeEscalation: false
+
           ports:
             - name: https-webhook
               containerPort: 8443
@@ -1153,6 +1605,7 @@ spec:
               containerPort: 9090
             - name: profiling
               containerPort: 8008
+
           readinessProbe: &probe
             periodSeconds: 1
             httpGet:
@@ -1164,7 +1617,11 @@ spec:
           livenessProbe:
             <<: *probe
             initialDelaySeconds: 20
+
+      # Our webhook should gracefully terminate by lame ducking first, set this to a sufficiently
+      # high value that we respect whatever value it has configured for the lame duck grace period.
       terminationGracePeriodSeconds: 300
+
 ---
 apiVersion: v1
 kind: Service

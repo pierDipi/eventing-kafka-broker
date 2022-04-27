@@ -15,6 +15,7 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
+import dev.knative.eventing.kafka.broker.contract.DataPlaneContract;
 import dev.knative.eventing.kafka.broker.dispatcher.impl.RecordDispatcherImpl;
 import io.cloudevents.CloudEvent;
 import io.vertx.core.Future;
@@ -162,7 +163,7 @@ public class OrderedConsumerVerticleTest extends AbstractConsumerVerticleTest {
   @Override
   BaseConsumerVerticle createConsumerVerticle(
     BaseConsumerVerticle.Initializer initializer, Set<String> topics) {
-    return new OrderedConsumerVerticle(initializer, topics);
+    return new OrderedConsumerVerticle(DataPlaneContract.Egress.newBuilder().build(), initializer, topics, 100);
   }
 
   protected static ConsumerRecord<Object, CloudEvent> record(String topic, int partition, long offset) {

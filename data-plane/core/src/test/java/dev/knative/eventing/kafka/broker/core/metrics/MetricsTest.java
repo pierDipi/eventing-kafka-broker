@@ -18,6 +18,7 @@ package dev.knative.eventing.kafka.broker.core.metrics;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
+import io.micrometer.prometheus.PrometheusConfig;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -32,8 +33,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(VertxExtension.class)
 public class MetricsTest {
 
+  public static void setupBackend() {
+    BackendRegistries.setupBackend(new MicrometerMetricsOptions()
+      .setRegistryName(Metrics.METRICS_REGISTRY_NAME)
+      .setMicrometerRegistry(new CompositePrometheusMeterRegistry(PrometheusConfig.DEFAULT))
+    );
+  }
+
   static {
-    BackendRegistries.setupBackend(new MicrometerMetricsOptions().setRegistryName(Metrics.METRICS_REGISTRY_NAME));
+    setupBackend();
   }
 
   @Test

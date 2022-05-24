@@ -19,11 +19,9 @@ import dev.knative.eventing.kafka.broker.core.AsyncCloseable;
 import dev.knative.eventing.kafka.broker.core.utils.BaseEnv;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
-import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.BaseUnits;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 import io.micrometer.prometheus.PrometheusConfig;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerOptions;
@@ -40,7 +38,6 @@ import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -142,8 +139,8 @@ public class Metrics {
    * @param metricsConfigs Metrics configurations.
    * @return Metrics options.
    */
-  public static MetricsOptions getOptions(final BaseEnv metricsConfigs) {
-    final var registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+  public static MicrometerMetricsOptions getOptions(final BaseEnv metricsConfigs) {
+    final var registry = new CompositePrometheusMeterRegistry(PrometheusConfig.DEFAULT);
     return new MicrometerMetricsOptions()
       .setEnabled(true)
       .addDisabledMetricsCategory(MetricsDomain.HTTP_CLIENT)
@@ -178,8 +175,8 @@ public class Metrics {
   /**
    * @return Global registry.
    */
-  public static MeterRegistry getRegistry() {
-    return BackendRegistries.getNow(METRICS_REGISTRY_NAME);
+  public static CompositePrometheusMeterRegistry getRegistry() {
+    return (CompositePrometheusMeterRegistry) BackendRegistries.getNow(METRICS_REGISTRY_NAME);
   }
 
   /**

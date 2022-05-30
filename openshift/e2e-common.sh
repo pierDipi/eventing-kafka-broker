@@ -83,6 +83,7 @@ function install_serverless() {
 
   local operator_dir=/tmp/serverless-operator
   git clone --branch replace-eventing-images https://github.com/pierDipi/serverless-operator.git $operator_dir
+  export GOPATH=/tmp/go
   local failed=0
   pushd $operator_dir || return $?
   OPENSHIFT_CI="true" make generated-files install-all || failed=$?

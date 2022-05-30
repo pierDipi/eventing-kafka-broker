@@ -16,12 +16,6 @@ failed=0
 
 (( !failed )) && install_serverless || failed=1
 
-(( !failed )) && kafka_setup || failed=1
-
-(( !failed )) && install_knative_kafka || failed=1
-
-# (( !failed )) && install_tracing || failed=1
-
 (( !failed )) && run_e2e_new_tests || failed=1
 
 (( failed )) && dump_cluster_state

@@ -77,75 +77,23 @@ function kafka_setup() {
 
 function install_serverless() {
   header "Installing Serverless Operator"
+
+  KNATIVE_EVENTING_KAFKA_BROKER_MANIFESTS_DIR="$(pwd)/openshift/release/artifacts"
+  export KNATIVE_EVENTING_KAFKA_BROKER_MANIFESTS_DIR
+
   local operator_dir=/tmp/serverless-operator
+  git clone --branch replace-eventing-images https://github.com/pierDipi/serverless-operator.git $operator_dir
   local failed=0
-  git clone --branch main https://github.com/openshift-knative/serverless-operator.git $operator_dir || return 1
-  # unset OPENSHIFT_BUILD_NAMESPACE (old CI) and OPENSHIFT_CI (new CI) as its used in serverless-operator's CI
-  # environment as a switch to use CI built images, we want pre-built images of k-s-o and k-o-i
-  unset OPENSHIFT_BUILD_NAMESPACE
-  unset OPENSHIFT_CI
-  pushd $operator_dir
+  pushd $operator_dir || return $?
+  OPENSHIFT_CI="true" make generated-files install-all || failed=$?
 
-  # We want just eventing
-  INSTALL_SERVING="false" ENABLE_TRACING="true" ./hack/install.sh && header "Serverless Operator installed successfully" || failed=1
-  popd
+  git status
+  echo "Print CSV"
+  cat "${operator_dir}/olm-catalog/serverless-operator/manifests/serverless-operator.clusterserviceversion.yaml"
+
+  popd || return $?
+
   return $failed
-}
-
-function install_knative_kafka() {
-  header "Set Kafka as default Broker"
-  cat <<-EOF | oc apply -f -
-apiVersion: operator.knative.dev/v1alpha1
-kind: KnativeEventing
-metadata:
-  name: knative-eventing
-  namespace: knative-eventing
-spec:
-  defaultBrokerClass: Kafka
-  config:
-    config-br-defaults:
-      default-br-config: |
-        clusterDefault:
-          apiVersion: v1
-          kind: ConfigMap
-          name: kafka-broker-config
-          namespace: knative-eventing
----
-EOF
-
-  header "Installing Knative Kafka Control Plane"
-
-  artifacts_dir="openshift/release/artifacts/"
-  eventing_kafka_controller="${artifacts_dir}eventing-kafka-controller.yaml"
-  eventing_kafka_post_install="${artifacts_dir}eventing-kafka-post-install.yaml"
-
-  eventing_kafka_source="${artifacts_dir}eventing-kafka-source.yaml"
-  eventing_kafka_broker="${artifacts_dir}eventing-kafka-broker.yaml"
-  eventing_kafka_channel="${artifacts_dir}eventing-kafka-channel.yaml"
-  eventing_kafka_sink="${artifacts_dir}eventing-kafka-sink.yaml"
-
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-kafka-controller|${KNATIVE_EVENTING_KAFKA_BROKER_KAFKA_CONTROLLER}|g" ${eventing_kafka_controller}
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-webhook-kafka|${KNATIVE_EVENTING_KAFKA_BROKER_WEBHOOK_KAFKA}|g" ${eventing_kafka_controller}
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-post-install|${KNATIVE_EVENTING_KAFKA_BROKER_POST_INSTALL}|g" ${eventing_kafka_post_install}
-
-  oc apply -f "${eventing_kafka_controller}"
-  oc apply -f "${eventing_kafka_post_install}"
-  wait_until_pods_running $EVENTING_NAMESPACE || return 1
-
-  header "Installing Knative Kafka Data Plane"
-
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-dispatcher|${KNATIVE_EVENTING_KAFKA_BROKER_DISPATCHER}|g" ${eventing_kafka_source}
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-receiver|${KNATIVE_EVENTING_KAFKA_BROKER_RECEIVER}|g" ${eventing_kafka_sink}
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-dispatcher|${KNATIVE_EVENTING_KAFKA_BROKER_DISPATCHER}|g" ${eventing_kafka_broker}
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-receiver|${KNATIVE_EVENTING_KAFKA_BROKER_RECEIVER}|g" ${eventing_kafka_broker}
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-dispatcher|${KNATIVE_EVENTING_KAFKA_BROKER_DISPATCHER}|g" ${eventing_kafka_channel}
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-receiver|${KNATIVE_EVENTING_KAFKA_BROKER_RECEIVER}|g" ${eventing_kafka_channel}
-
-  oc apply -f ${eventing_kafka_source}
-  oc apply -f ${eventing_kafka_sink}
-  oc apply -f ${eventing_kafka_broker}
-  oc apply -f ${eventing_kafka_channel}
-  wait_until_pods_running $EVENTING_NAMESPACE || return 1
 }
 
 function run_e2e_tests() {

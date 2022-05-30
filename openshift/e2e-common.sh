@@ -78,6 +78,15 @@ function kafka_setup() {
 function install_serverless() {
   header "Installing Serverless Operator"
 
+  cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: knative-eventing
+EOF
+
+  ./test/kafka/kafka_setup.sh || return $?
+
   KNATIVE_EVENTING_KAFKA_BROKER_MANIFESTS_DIR="$(pwd)/openshift/release/artifacts"
   export KNATIVE_EVENTING_KAFKA_BROKER_MANIFESTS_DIR
 
@@ -86,13 +95,13 @@ function install_serverless() {
   export GOPATH=/tmp/go
   local failed=0
   pushd $operator_dir || return $?
-  OPENSHIFT_CI="true" make generated-files install-all || failed=$?
-
-  git status
-  echo "Print CSV"
-  cat "${operator_dir}/olm-catalog/serverless-operator/manifests/serverless-operator.clusterserviceversion.yaml"
-
+  OPENSHIFT_CI="true" make generated-files install-kafka || failed=$?
   popd || return $?
+
+  oc apply -f openshift/knative-eventing.yaml
+
+  oc wait --for=condition=Ready knativekafkas.operator.serverless.openshift.io knative-kafka -n knative-eventing --timeout=900s
+  oc wait --for=condition=Ready knativeeventing.operator.knative.dev knative-eventing -n knative-eventing --timeout=900s
 
   return $failed
 }

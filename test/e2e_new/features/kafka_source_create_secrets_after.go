@@ -27,7 +27,7 @@ import (
 	"knative.dev/eventing-kafka/test/rekt/resources/kafkatopic"
 
 	"knative.dev/eventing-kafka-broker/test/e2e_new/features/featuressteps"
-	testingpkg "knative.dev/eventing-kafka-broker/test/pkg/testing"
+	testingpkg "knative.dev/eventing-kafka-broker/test/pkg"
 )
 
 func CreateSecretsAfterKafkaSource() *feature.Feature {

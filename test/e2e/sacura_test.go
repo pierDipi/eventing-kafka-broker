@@ -34,6 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	testlib "knative.dev/eventing/test/lib"
 
+	"knative.dev/eventing-kafka-broker/test/pkg"
 	kafkatest "knative.dev/eventing-kafka-broker/test/pkg/kafka"
 	pkgtesting "knative.dev/eventing-kafka-broker/test/pkg/testing"
 )
@@ -85,7 +86,7 @@ func TestSacuraJob(t *testing.T) {
 				Name:      sacuraVerifyCommittedOffsetJob,
 			},
 			&kafkatest.AdminConfig{
-				BootstrapServers: pkgtesting.BootstrapServersPlaintext,
+				BootstrapServers: pkg.BootstrapServersPlaintext,
 				Topic:            sacuraTopic,
 				Group:            string(trigger.UID),
 			},

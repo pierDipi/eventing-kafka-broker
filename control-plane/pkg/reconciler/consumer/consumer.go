@@ -185,6 +185,11 @@ func (r Reconciler) reconcileAuth(ctx context.Context, c *kafkainternals.Consume
 			return fmt.Errorf("failed to resolve auth context: %w", err)
 		}
 		resource.Auth = &contract.Resource_MultiAuthSecret{MultiAuthSecret: authContext.MultiSecretReference}
+
+		if err := security.TrackNetSpecSecrets(r.Tracker, *c.Spec.Auth.NetSpec, c); err != nil {
+			return fmt.Errorf("failed to track secrets: %w", err)
+		}
+
 		return nil
 	}
 	if c.Spec.Auth.AuthSpec != nil {

@@ -353,11 +353,16 @@ func (r Reconciler) propagateStatus(cg *kafkainternals.ConsumerGroup) error {
 			if c.Status.DeliveryStatus.DeadLetterSinkURI != nil {
 				cg.Status.DeliveryStatus.DeadLetterSinkURI = c.Status.DeadLetterSinkURI
 			}
+		} else {
+			tlc := c.GetConditionSet().Manage(c.GetStatus()).GetTopLevelCondition()
+			if tlc != nil {
+				err = fmt.Errorf("consumer %s is not ready: %s %s %s", c.GetName(), tlc.Type, tlc.GetReason(), tlc.GetMessage())
+			}
 		}
 	}
 	cg.Status.Replicas = pointer.Int32(count)
 
-	return nil
+	return err
 }
 
 func (r Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {

@@ -271,6 +271,19 @@ function apply_sacura() {
   ko apply ${KO_FLAGS} -f ./test/config/sacura || return $?
 }
 
+function apply_sacura_kafkachannel() {
+  ko apply ${KO_FLAGS} -f ./test/config/sacura-kafkachannel/0-namespace.yaml || return $?
+  ko apply ${KO_FLAGS} -f ./test/config/sacura-kafkachannel/101-channel.yaml || return $?
+
+  kubectl wait --for=condition=ready --timeout=3m -n sacura-kafkachannel kafkachannel/channel || {
+    local ret=$?
+    kubectl get -n sacura-kafkachannel kafkachannel/channel -oyaml
+    return ${ret}
+  }
+
+  ko apply ${KO_FLAGS} -f ./test/config/sacura-kafkachannel || return $?
+}
+
 function delete_sacura() {
   kubectl delete --ignore-not-found -f ./test/config/sacura/101-broker.yaml || return $?
   kubectl delete --ignore-not-found -f ./test/config/sacura/100-broker-config.yaml || return $?

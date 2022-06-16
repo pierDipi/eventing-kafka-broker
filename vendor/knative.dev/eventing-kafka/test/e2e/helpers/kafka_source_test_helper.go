@@ -121,6 +121,8 @@ func testKafkaSourceUpdate(t *testing.T, name string, test updateTest) {
 	contribtestlib.UpdateKafkaSourceV1Beta1OrFail(client, ksObj)
 	waitForKafkaSourceReconcilerToReconcileSource(t, client, kafkaSourceName)
 	client.WaitForAllTestResourcesReadyOrFail(context.Background())
+	
+	time.Sleep(30*time.Second) // data plane eventually takes into accound the new sink, etc
 
 	t.Logf("Send update event to kafkatopic")
 	MustPublishKafkaMessage(client, KafkaBootstrapUrlPlain,

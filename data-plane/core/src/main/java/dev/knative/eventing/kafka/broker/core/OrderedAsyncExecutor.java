@@ -17,8 +17,9 @@ package dev.knative.eventing.kafka.broker.core;
 
 import io.vertx.core.Future;
 
-import java.util.ArrayDeque;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 /**
@@ -30,13 +31,13 @@ public class OrderedAsyncExecutor {
 
   private final Queue<Supplier<Future<?>>> queue;
 
-  private boolean isStopped;
-  private boolean inFlight;
+  private final AtomicBoolean isStopped;
+  private final AtomicBoolean inFlight;
 
   public OrderedAsyncExecutor() {
-    this.queue = new ArrayDeque<>();
-    this.isStopped = false;
-    this.inFlight = false;
+    this.queue = new ConcurrentLinkedDeque<>();
+    this.isStopped = new AtomicBoolean(false);
+    this.inFlight = new AtomicBoolean(false);
   }
 
   /**
@@ -45,7 +46,7 @@ public class OrderedAsyncExecutor {
    * @param task the task to offer
    */
   public void offer(Supplier<Future<?>> task) {
-    if (this.isStopped) {
+    if (this.isStopped.get()) {
       // Executor is stopped, return without adding the task to the queue.
       return;
     }
@@ -57,17 +58,18 @@ public class OrderedAsyncExecutor {
   }
 
   private void consume() {
-    if (queue.isEmpty() || this.inFlight || this.isStopped) {
+    if (queue.isEmpty() || this.inFlight.get() || this.isStopped.get()) {
       return;
     }
-    this.inFlight = true;
-    this.queue
-      .remove()
-      .get()
-      .onComplete(ar -> {
-        this.inFlight = false;
-        consume();
-      });
+    if (this.inFlight.compareAndSet(false, true)) {
+      this.queue
+        .remove()
+        .get()
+        .onComplete(ar -> {
+          this.inFlight.set(false);
+          consume();
+        });
+    }
   }
 
   public boolean isWaitingForTasks() {
@@ -80,7 +82,7 @@ public class OrderedAsyncExecutor {
    * Stop the executor. This won't stop the actual in-flight task, but it will prevent queued tasks to be executed.
    */
   public void stop() {
-    this.isStopped = true;
+    this.isStopped.set(true);
     this.queue.clear();
   }
 }

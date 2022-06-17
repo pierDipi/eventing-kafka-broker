@@ -6,3 +6,4 @@ target
 config
 build
 *.md
+docker/Dockerfile

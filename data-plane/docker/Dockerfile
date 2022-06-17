@@ -50,5 +50,7 @@ FROM ${BASE_IMAGE} as running
 
 COPY --from=builder /app /app
 
+RUN yum install rsync
+
 # Configure PATH
 ENV PATH="/app/jdk/bin:${PATH}"

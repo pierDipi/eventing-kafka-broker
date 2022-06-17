@@ -154,7 +154,8 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
       .onComplete(ar -> {
         if (ar.succeeded()) {
           if (logger.isDebugEnabled()) {
-            logger.debug("Record produced {} {} {} {} {}",
+            logger.debug("Record produced {} {} {} {} {} {}",
+              keyValue("reference", ingress.getReference()),
               keyValue("topic", record.topic()),
               keyValue("partition", ar.result().getPartition()),
               keyValue("offset", ar.result().getOffset()),
@@ -165,6 +166,7 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
         } else {
           logger.error("Failed to send record {} {}",
             keyValue("topic", record.topic()),
+            keyValue("reference", ingress.getReference()),
             ar.cause()
           );
         }

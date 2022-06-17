@@ -16,7 +16,6 @@
 package dev.knative.eventing.kafka.broker.dispatcher.impl.consumer;
 
 import dev.knative.eventing.kafka.broker.dispatcher.RecordDispatcherListener;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.common.TopicPartition;
@@ -26,14 +25,17 @@ import io.vertx.kafka.client.consumer.OffsetAndMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static dev.knative.eventing.kafka.broker.core.utils.Logging.keyValue;
@@ -49,7 +51,7 @@ public final class OffsetManager implements RecordDispatcherListener {
 
   private final Map<TopicPartition, OffsetTracker> offsetTrackers;
 
-  private final Consumer<Integer> onCommit;
+  private final AtomicBoolean isCommitInFlight = new AtomicBoolean(false);
   private final long timerId;
   private final Vertx vertx;
   private final PartitionRevokedHandler partitionRevokedHandler;
@@ -68,7 +70,6 @@ public final class OffsetManager implements RecordDispatcherListener {
 
     this.consumer = consumer;
     this.offsetTrackers = new ConcurrentHashMap<>();
-    this.onCommit = onCommit;
 
     this.timerId = vertx.setPeriodic(commitIntervalMs, l -> commitAll());
     this.vertx = vertx;
@@ -152,30 +153,31 @@ public final class OffsetManager implements RecordDispatcherListener {
     }
   }
 
-  private synchronized Future<Void> commit(final TopicPartition topicPartition, final OffsetTracker tracker) {
-    long newOffset = tracker.offsetToCommit();
-    if (newOffset > tracker.getCommitted()) {
-      // Reset the state
-      tracker.setCommitted(newOffset);
+  private synchronized Future<Void> commit(final List<Map.Entry<TopicPartition, OffsetTracker>> topicPartition) {
 
-      logger.debug("Committing offset for {} offset {}",
-        keyValue("topicPartition", topicPartition),
-        keyValue("offset", newOffset));
+    final var topicPartitionsOffsets = topicPartition.stream()
+      .filter(kv -> kv.getValue().offsetToCommit() > kv.getValue().getCommitted())
+      .map(kv -> {
+        final long newOffset = kv.getValue().offsetToCommit();
+        // Reset the state
+        kv.getValue().setCommitted(newOffset);
+        return new AbstractMap.SimpleImmutableEntry<>(kv.getKey(), new OffsetAndMetadata(newOffset, ""));
+      })
+      .collect(Collectors.toMap(AbstractMap.SimpleImmutableEntry::getKey, AbstractMap.SimpleImmutableEntry::getValue));
 
+//    logger.debug("Committing offsets {}", keyValue("offset", topicPartitionsOffsets));
+
+    if (!topicPartitionsOffsets.isEmpty()) {
       // Execute the actual commit
-      return consumer.commit(Map.of(topicPartition, new OffsetAndMetadata(newOffset, "")))
-        .onSuccess(ignored -> {
-          if (onCommit != null) {
-            onCommit.accept((int) newOffset);
-          }
-        })
-        .onFailure(cause -> logger.error("Failed to commit topic partition {} offset {}",
-          keyValue("topicPartition", topicPartition),
-          keyValue("offset", newOffset),
-          cause))
+      return consumer.commit(topicPartitionsOffsets)
+        .onFailure(cause -> logger.error("Failed to commit offsets {}",
+          keyValue("offset", topicPartitionsOffsets),
+          cause
+        ))
         .mapEmpty();
     }
-    return null;
+
+    return Future.succeededFuture();
   }
 
   /**
@@ -184,13 +186,24 @@ public final class OffsetManager implements RecordDispatcherListener {
    * @return succeeded or failed future.
    */
   private Future<Void> commitAll() {
-    return CompositeFuture.all(
-      this.offsetTrackers.entrySet()
-        .stream()
-        .map(e -> commit(e.getKey(), e.getValue()))
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList())
-    ).mapEmpty();
+    return commitAll(v -> true);
+  }
+
+  /**
+   * Commit all tracked offsets by colling commit on every offsetTracker entry.
+   *
+   * @return succeeded or failed future.
+   */
+  private Future<Void> commitAll(final Function<TopicPartition, Boolean> filter) {
+    if (this.isCommitInFlight.compareAndSet(false, true)) {
+      return commit(
+        this.offsetTrackers.entrySet()
+          .stream()
+          .filter(kv -> filter.apply(kv.getKey()))
+          .collect(Collectors.toList())
+      ).onComplete(v -> this.isCommitInFlight.set(false));
+    }
+    return Future.succeededFuture();
   }
 
   /**
@@ -199,14 +212,7 @@ public final class OffsetManager implements RecordDispatcherListener {
    * @return succeeded or failed future.
    */
   private Future<Void> commit(final Set<TopicPartition> partitions) {
-    return CompositeFuture.all(
-      this.offsetTrackers.entrySet()
-        .stream()
-        .filter(kv -> partitions.contains(kv.getKey()))
-        .map(e -> commit(e.getKey(), e.getValue()))
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList())
-    ).mapEmpty();
+    return commitAll(partitions::contains);
   }
 
   @Override
@@ -257,7 +263,7 @@ public final class OffsetManager implements RecordDispatcherListener {
     private long committed;
 
     OffsetTracker(final long initialOffset) {
-      committedOffsets = new BitSet();
+      committedOffsets = new BitSet(RESET_TRACKER_THRESHOLD + 1);
       committed = Math.max(initialOffset, 0);
       this.initialOffset = committed;
     }

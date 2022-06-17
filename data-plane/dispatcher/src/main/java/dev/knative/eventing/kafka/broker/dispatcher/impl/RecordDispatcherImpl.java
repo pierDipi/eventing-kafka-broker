@@ -115,7 +115,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
     this.recordDispatcherListener = recordDispatcherListener;
     this.closeable = AsyncCloseable.compose(subscriberSender, deadLetterSinkSender, recordDispatcherListener, responseHandler);
     this.consumerTracer = consumerTracer;
-    this.meterRegistry = meterRegistry;
+    this.meterRegistry = null; // TODO add registry
 
     this.noResponseResourceTags = resourceContext.getTags().and(NO_RESPONSE_CODE_CLASS_TAG);
   }
@@ -399,15 +399,15 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   private static void logDebug(
     final String msg,
     final KafkaConsumerRecord<Object, CloudEvent> record) {
-
-    logger.debug(msg + " {} {} {} {} {} {}",
-      keyValue("topic", record.topic()),
-      keyValue("partition", record.partition()),
-      keyValue("headers", record.headers()),
-      keyValue("offset", record.offset()),
-      keyValue("key", record.key()),
-      keyValue("event", record.value())
-    );
+//
+//    logger.debug(msg + " {} {} {} {} {} {}",
+//      keyValue("topic", record.topic()),
+//      keyValue("partition", record.partition()),
+//      keyValue("headers", record.headers()),
+//      keyValue("offset", record.offset()),
+//      keyValue("key", record.key()),
+//      keyValue("event", record.value())
+//    );
   }
 
   private ConsumerTracer.StartedSpan getStartedSpan(ConsumerRecordContext recordContext, Context context) {

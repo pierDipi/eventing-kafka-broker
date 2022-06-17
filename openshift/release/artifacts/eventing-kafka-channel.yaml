@@ -29,13 +29,13 @@ data:
     acks=all
     buffer.memory=33554432
     # compression.type=snappy
-    retries=2147483647
+    retries=20
     batch.size=16384
     client.dns.lookup=use_all_dns_ips
     connections.max.idle.ms=600000
     delivery.timeout.ms=120000
     linger.ms=0
-    max.block.ms=60000
+    max.block.ms=2000
     max.request.size=1048576
     partitioner.class=org.apache.kafka.clients.producer.internals.DefaultPartitioner
     receive.buffer.bytes=-1
@@ -49,7 +49,7 @@ data:
     metrics.sample.window.ms=30000
     reconnect.backoff.max.ms=1000
     reconnect.backoff.ms=50
-    retry.backoff.ms=100
+    retry.backoff.ms=1000
     # transaction.timeout.ms=60000
     # transactional.id=null
   config-kafka-channel-consumer.properties: |
@@ -57,7 +57,7 @@ data:
     value.deserializer=io.cloudevents.kafka.CloudEventDeserializer
     fetch.min.bytes=1
     heartbeat.interval.ms=3000
-    max.partition.fetch.bytes=1048576
+    max.partition.fetch.bytes=66560
     session.timeout.ms=10000
     # ssl.key.password=
     # ssl.keystore.location=
@@ -65,17 +65,18 @@ data:
     # ssl.truststore.location=
     # ssl.truststore.password=
     allow.auto.create.topics=true
+    auto.offset.reset=earliest
     client.dns.lookup=use_all_dns_ips
     connections.max.idle.ms=540000
     default.api.timeout.ms=2000
     enable.auto.commit=false
     exclude.internal.topics=true
-    fetch.max.bytes=52428800
+    fetch.max.bytes=1048576
     isolation.level=read_uncommitted
     max.poll.interval.ms=300000
-    max.poll.records=500
+    max.poll.records=20
     # partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor
-    receive.buffer.bytes=65536
+    receive.buffer.bytes=1573000
     request.timeout.ms=2000
     # sasl.client.callback.handler.class=
     # sasl.jaas.config=
@@ -100,7 +101,7 @@ data:
     # metrics.recording.level=INFO
     # metrics.sample.window.ms=
     reconnect.backoff.max.ms=1000
-    retry.backoff.ms=100
+    retry.backoff.ms=1000
     # sasl.kerberos.kinit.cmd=
     # sasl.kerberos.min.time.before.relogin=
     # sasl.kerberos.ticket.renew.jitter=
@@ -262,13 +263,24 @@ spec:
       securityContext:
         runAsNonRoot: true
       containers:
+#        - name: dump-logger
+#          image: quay.io/prometheus/busybox
+#          args:
+#            - "while true; do [ -f /tmp/hs_err_pid1.log ] && cat /tmp/hs_err_pid1.log; sleep 1; done"
+#          volumeMounts:
+#            - mountPath: /tmp
+#              name: tmp
+#              readOnly: false
         - name: kafka-channel-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.2.3:knative-eventing-kafka-broker-dispatcher
+          image: quay.io/pierdipi/knative-eventing-kafka-broker-dispatcher:v11
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
               name: config-kafka-channel-data-plane
               readOnly: true
+            - mountPath: /heap-dump
+              name: heap-dump
+              readOnly: false
             - mountPath: /etc/channels-subscriptions
               name: kafka-channel-channels-subscriptions
               readOnly: true
@@ -285,6 +297,13 @@ spec:
               name: http-metrics
               protocol: TCP
           env:
+            - name: JAVA_TOOL_OPTIONS
+              value: -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.port=3000
+                -Dcom.sun.management.jmxremote.rmi.port=3001 -Djava.rmi.server.hostname=127.0.0.1
+                -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
+                -XX:+FlightRecorder
+            - name: DISABLE_KAFKA_CLIENTS_METRICS
+              value: "true"
             - name: SERVICE_NAME
               value: "kafka-channel-dispatcher"
             - name: SERVICE_NAMESPACE
@@ -325,11 +344,24 @@ spec:
             - "java"
           args:
             - "-XX:+CrashOnOutOfMemoryError"
+            - "-XX:+PrintFlagsFinal"
+            - "-XshowSettings:vm"
+            - "-XX:MinRAMPercentage=65.0"
+            - "-XX:InitialRAMPercentage=65.0"
+            - "-XX:MaxRAMPercentage=65.0"
+            - "-XX:+HeapDumpOnOutOfMemoryError"
+            - "-XX:HeapDumpPath=/heap-dump/heap_dump.log"
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-Dcom.redhat.fips=false"
             - "-jar"
             - "/app/app.jar"
           # TODO set resources (limits and requests)
+          resources:
+            requests:
+              memory: "2G"
+              cpu: "1"
+            limits:
+              memory: "5G"
           livenessProbe:
             failureThreshold: 3
             tcpSocket:
@@ -340,10 +372,8 @@ spec:
             timeoutSeconds: 1
           readinessProbe:
             failureThreshold: 3
-            httpGet:
+            tcpSocket:
               port: 9090
-              path: /metrics
-              scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 3
             successThreshold: 1
@@ -362,6 +392,8 @@ spec:
           configMap:
             name: kafka-channel-channels-subscriptions
         - name: cache
+          emptyDir: { }
+        - name: heap-dump
           emptyDir: { }
         - name: kafka-channel-config-logging
           configMap:
@@ -456,6 +488,8 @@ spec:
               name: http
               protocol: TCP
           env:
+            - name: DISABLE_KAFKA_CLIENTS_METRICS
+              value: "true"
             - name: SERVICE_NAME
               value: "kafka-channel-receiver"
             - name: SERVICE_NAMESPACE
@@ -494,11 +528,22 @@ spec:
             - "java"
           args:
             - "-XX:+CrashOnOutOfMemoryError"
+            - "-XX:+PrintFlagsFinal"
+            - "-XshowSettings:vm"
+            - "-XX:MinRAMPercentage=85.0"
+            - "-XX:InitialRAMPercentage=85.0"
+            - "-XX:MaxRAMPercentage=85.0"
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
             - "-Dcom.redhat.fips=false"
             - "-jar"
             - "/app/app.jar"
           # TODO set resources (limits and requests)
+          resources:
+            requests:
+              memory: "1G"
+              cpu: "1"
+            limits:
+              memory: "1G"
           livenessProbe:
             failureThreshold: 3
             httpGet:

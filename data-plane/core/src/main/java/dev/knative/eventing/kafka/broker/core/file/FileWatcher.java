@@ -127,7 +127,6 @@ public class FileWatcher implements AutoCloseable {
       WatchKey key;
       try {
         key = watcher.take();
-        logger.debug("Contract updates");
       } catch (InterruptedException e) {
         break; // Looks good, this means Thread.interrupt was invoked
       }
@@ -172,10 +171,8 @@ public class FileWatcher implements AutoCloseable {
     if (Thread.interrupted()) {
       return;
     }
-    try (
-      final var fileReader = new FileReader(toWatch);
-      final var bufferedReader = new BufferedReader(fileReader)) {
-      final var contract = parseFromJson(bufferedReader);
+    try (final var fileReader = new FileReader(toWatch)) {
+      final var contract = parseFromJson(fileReader);
       if (contract == null) {
         return;
       }
@@ -184,10 +181,6 @@ public class FileWatcher implements AutoCloseable {
       final var previousLastContract = this.lastContract;
       this.lastContract = contract.getGeneration();
       if (contract.getGeneration() == previousLastContract) {
-        logger.debug("Contract unchanged {} {}",
-          keyValue("generation", contract.getGeneration()),
-          keyValue("lastGeneration", previousLastContract)
-        );
         return;
       }
       contractConsumer.accept(contract);

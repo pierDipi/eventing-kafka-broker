@@ -366,7 +366,8 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	// 	See (under discussions KIPs, unlikely to be accepted as they are):
 	// 	- https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=181306446
 	// 	- https://cwiki.apache.org/confluence/display/KAFKA/KIP-286%3A+producer.send%28%29+should+not+block+on+metadata+update
-	address := receiver.Address(r.IngressHost, channel)
+	channelService, _ := resources.MakeK8sService(channel, resources.ExternalService(r.Reconciler.SystemNamespace, NewChannelIngressServiceName))
+	address, _ := url.Parse(fmt.Sprintf("http://%s.%s.svc.%s", channelService.Name, channelService.Namespace, network.GetClusterDomainName()))
 	proberAddressable := prober.Addressable{
 		Address: address,
 		ResourceKey: types.NamespacedName{

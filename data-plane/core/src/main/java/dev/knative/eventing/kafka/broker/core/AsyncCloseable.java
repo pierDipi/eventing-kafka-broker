@@ -73,15 +73,21 @@ public interface AsyncCloseable extends Closeable {
       return Future.succeededFuture();
     }
 
-    return closeableIterator.
-      next().
-      close().
-      compose(
-        v -> compose(closeableIterator),
-        cause -> {
-          LoggerFactory.getLogger(AsyncCloseable.class).warn("Failed to close closeable", cause);
-          return compose(closeableIterator);
-        }
-      );
+    try {
+      return closeableIterator.
+        next().
+        close()
+        .compose(
+          v -> compose(closeableIterator),
+          cause -> {
+            LoggerFactory.getLogger(AsyncCloseable.class).warn("Failed to close closeable", cause);
+            return compose(closeableIterator);
+          }
+        );
+    } catch (final Exception ex) {
+      LoggerFactory.getLogger(AsyncCloseable.class).warn("Failed to close closeable", ex);
+      return compose(closeableIterator);
+    }
+
   }
 }

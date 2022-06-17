@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -91,15 +92,10 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     // Only poll new records when at-least one internal per-partition queue
     // needs more records.
     if (!isWaitingForTasks()) {
-      logger.debug("all executors are busy {}", keyValue("topics", topics));
       return;
     }
 
     if (this.isPollInFlight.compareAndSet(false, true)) {
-      logger.debug("Polling for records {}",
-        keyValue("topics", topics)
-      );
-
       this.consumer.poll(POLLING_TIMEOUT)
         .onSuccess(this::recordsHandler)
         .onFailure(t -> {
@@ -164,11 +160,25 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   }
 
   private boolean isWaitingForTasks() {
-    for (OrderedAsyncExecutor value : this.recordDispatcherExecutors.values()) {
-      if (value.isWaitingForTasks()) {
-        return true;
+    final var pause = new HashSet<TopicPartition>();
+    final var resume = new HashSet<TopicPartition>();
+    boolean ret = false;
+    for (Map.Entry<TopicPartition, OrderedAsyncExecutor> e: this.recordDispatcherExecutors.entrySet()) {
+      if (e.getValue().isWaitingForTasks()) {
+        resume.add(e.getKey());
+        ret = true;
+      } else {
+        pause.add(e.getKey());
       }
     }
-    return this.recordDispatcherExecutors.isEmpty();
+
+    if (!pause.isEmpty()) {
+      this.consumer.pause(pause);
+    }
+    if (!resume.isEmpty()) {
+      this.consumer.resume(resume);
+    }
+
+    return ret || this.recordDispatcherExecutors.isEmpty();
   }
 }

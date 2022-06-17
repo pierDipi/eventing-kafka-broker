@@ -57,6 +57,14 @@ spec:
       securityContext:
         runAsNonRoot: true
       containers:
+        - name: dump-logger
+          image: "busybox"
+          command:
+            - "while true; do cat /tmp/hs_err_pid1.log; sleep 1; done"
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+              readOnly: false
         - name: kafka-channel-dispatcher
           image: ${KNATIVE_KAFKA_DISPATCHER_IMAGE}
           imagePullPolicy: IfNotPresent
@@ -64,6 +72,9 @@ spec:
             - mountPath: /etc/config
               name: config-kafka-channel-data-plane
               readOnly: true
+            - mountPath: /tmp
+              name: tmp
+              readOnly: false
             - mountPath: /etc/contract-resources
               name: contract-resources
               readOnly: true
@@ -161,6 +172,8 @@ spec:
           configMap:
             name: config-kafka-channel-data-plane
         - name: cache
+          emptyDir: { }
+        - name: tmp
           emptyDir: { }
         - name: kafka-channel-config-logging
           configMap:

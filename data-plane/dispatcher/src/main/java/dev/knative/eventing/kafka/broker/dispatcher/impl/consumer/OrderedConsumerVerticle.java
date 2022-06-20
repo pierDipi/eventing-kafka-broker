@@ -78,7 +78,6 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
         if (this.pollTimer.compareAndSet(-1, 0)) {
           this.pollTimer.set(vertx.setPeriodic(POLLING_MS, x -> poll()));
         }
-        this.poll();
         startPromise.complete();
       });
   }
@@ -93,6 +92,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
       // Only poll new records when at-least one internal per-partition queue
       // needs more records.
       if (!isWaitingForTasks()) {
+        this.isPollInFlight.set(false);
         return;
       }
 
@@ -125,14 +125,11 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
   }
 
   private void recordsHandler(KafkaConsumerRecords<Object, CloudEvent> records) {
-    if (this.closed.get()) {
+    if (this.closed.get() || records == null || records.size() == 0) {
+      isPollInFlight.set(false);
       return;
     }
-    isPollInFlight.set(false);
 
-    if (records == null || records.size() == 0) {
-      return;
-    }
     // Put records in queues
     // I assume the records are ordered per topic-partition
     for (int i = 0; i < records.size(); i++) {
@@ -140,6 +137,8 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
       final var executor = executorFor(new TopicPartition(record.topic(), record.partition()));
       executor.offer(() -> dispatch(record));
     }
+
+    isPollInFlight.set(false);
   }
 
   private Future<Void> dispatch(final KafkaConsumerRecord<Object, CloudEvent> record) {
@@ -154,7 +153,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     if (executor != null) {
       return executor;
     }
-    executor = new OrderedAsyncExecutor();
+    executor = new OrderedAsyncExecutor(topicPartition);
     this.recordDispatcherExecutors.put(topicPartition, executor);
     return executor;
   }
@@ -163,7 +162,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     final var pause = new HashSet<TopicPartition>();
     final var resume = new HashSet<TopicPartition>();
     boolean ret = false;
-    for (Map.Entry<TopicPartition, OrderedAsyncExecutor> e: this.recordDispatcherExecutors.entrySet()) {
+    for (Map.Entry<TopicPartition, OrderedAsyncExecutor> e : this.recordDispatcherExecutors.entrySet()) {
       if (e.getValue().isWaitingForTasks()) {
         resume.add(e.getKey());
         ret = true;

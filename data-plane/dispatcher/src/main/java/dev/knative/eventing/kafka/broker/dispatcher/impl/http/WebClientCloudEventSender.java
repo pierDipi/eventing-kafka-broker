@@ -89,13 +89,12 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
     TracingSpan.decorateCurrentWithEvent(event);
 
-    final Future<HttpResponse<Buffer>> future = circuitBreaker.execute(breaker -> {
-      if (closed.get()) {
-        // Once sender is closed, return a successful future to avoid retrying.
-        breaker.tryComplete(null);
-        return;
-      }
+    final Promise<HttpResponse<Buffer>> breaker = Promise.promise();
 
+    if (closed.get()) {
+      // Once sender is closed, return a successful future to avoid retrying.
+      breaker.tryComplete(null);
+    } else {
       try {
         requestEmitted();
         send(event, breaker).
@@ -104,12 +103,12 @@ public final class WebClientCloudEventSender implements CloudEventSender {
         logger.error("failed to write event to the request {}", keyValue("subscriberURI", target), e);
         breaker.tryFail(e);
       }
-    });
+    }
 
     // Handle closed return value.
-    return future.compose(r -> {
+    return breaker.future().compose(r -> {
       if (r == null) {
-       return Future.failedFuture("Sender closed for target="+target);
+        return Future.failedFuture("Sender closed for target=" + target);
       }
       return Future.succeededFuture(r);
     });

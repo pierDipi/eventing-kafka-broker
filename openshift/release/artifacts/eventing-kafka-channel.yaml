@@ -272,7 +272,7 @@ spec:
 #              name: tmp
 #              readOnly: false
         - name: kafka-channel-dispatcher
-          image: quay.io/pierdipi/knative-eventing-kafka-broker-dispatcher:v14
+          image: quay.io/pierdipi/knative-eventing-kafka-broker-dispatcher:v15
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config

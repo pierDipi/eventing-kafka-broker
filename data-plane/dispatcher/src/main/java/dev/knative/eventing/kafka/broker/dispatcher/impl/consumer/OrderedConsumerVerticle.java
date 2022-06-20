@@ -39,7 +39,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private static final Logger logger = LoggerFactory.getLogger(OrderedConsumerVerticle.class);
 
-  private static final long POLLING_MS = 200L;
+  private static final long POLLING_MS = 1000L;
   private static final Duration POLLING_TIMEOUT = Duration.ofMillis(1000L);
 
   private final Map<TopicPartition, OrderedAsyncExecutor> recordDispatcherExecutors;
@@ -85,17 +85,17 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
   private void poll() {
     if (this.closed.get() || this.isPollInFlight.get()) {
-      logger.debug("Consumer closed or poll is in-flight {}", keyValue("topics", topics));
-      return;
-    }
-
-    // Only poll new records when at-least one internal per-partition queue
-    // needs more records.
-    if (!isWaitingForTasks()) {
+//      logger.debug("Consumer closed or poll is in-flight {}", keyValue("topics", topics));
       return;
     }
 
     if (this.isPollInFlight.compareAndSet(false, true)) {
+      // Only poll new records when at-least one internal per-partition queue
+      // needs more records.
+      if (!isWaitingForTasks()) {
+        return;
+      }
+
       this.consumer.poll(POLLING_TIMEOUT)
         .onSuccess(this::recordsHandler)
         .onFailure(t -> {

@@ -21,6 +21,7 @@ import io.cloudevents.CloudEvent;
 import io.cloudevents.http.vertx.VertxMessageFactory;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.buffer.impl.BufferImpl;
 import io.vertx.ext.web.client.HttpResponse;
 import org.slf4j.Logger;
 
@@ -44,7 +45,7 @@ public abstract class BaseResponseHandler implements ResponseHandler {
   protected abstract Future<Void> doHandleEvent(CloudEvent event);
 
   @Override
-  public Future<Void> handle(HttpResponse<Buffer> response) {
+  public Future<Void> handle(final HttpResponse<Buffer> response) {
     CloudEvent event;
 
     try {
@@ -59,6 +60,7 @@ public abstract class BaseResponseHandler implements ResponseHandler {
             keyValue("response.body.len",
               response == null || response.body() == null ? "null" : response.body().length())
           );
+          ((BufferImpl) response.body()).byteBuf().clear();
         }
         return Future.succeededFuture();
       }

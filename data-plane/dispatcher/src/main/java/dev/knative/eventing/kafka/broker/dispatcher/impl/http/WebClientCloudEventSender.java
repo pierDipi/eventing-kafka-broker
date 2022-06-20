@@ -82,10 +82,10 @@ public final class WebClientCloudEventSender implements CloudEventSender {
 
   @Override
   public Future<HttpResponse<Buffer>> send(CloudEvent event) {
-    logger.debug("Sending event {} {}",
-      keyValue("id", event.getId()),
-      keyValue("subscriberURI", target)
-    );
+//    logger.debug("Sending event {} {}",
+//      keyValue("id", event.getId()),
+//      keyValue("subscriberURI", target)
+//    );
 
     TracingSpan.decorateCurrentWithEvent(event);
 

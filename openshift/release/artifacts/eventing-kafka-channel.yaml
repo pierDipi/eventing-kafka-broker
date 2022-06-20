@@ -74,7 +74,7 @@ data:
     fetch.max.bytes=1048576
     isolation.level=read_uncommitted
     max.poll.interval.ms=300000
-    max.poll.records=20
+    max.poll.records=50
     # partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor
     receive.buffer.bytes=1573000
     request.timeout.ms=2000
@@ -272,7 +272,7 @@ spec:
 #              name: tmp
 #              readOnly: false
         - name: kafka-channel-dispatcher
-          image: quay.io/pierdipi/knative-eventing-kafka-broker-dispatcher:v11
+          image: quay.io/pierdipi/knative-eventing-kafka-broker-dispatcher:v14
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -346,9 +346,9 @@ spec:
             - "-XX:+CrashOnOutOfMemoryError"
             - "-XX:+PrintFlagsFinal"
             - "-XshowSettings:vm"
-            - "-XX:MinRAMPercentage=65.0"
-            - "-XX:InitialRAMPercentage=65.0"
-            - "-XX:MaxRAMPercentage=65.0"
+            - "-XX:MinRAMPercentage=40.0"
+            - "-XX:InitialRAMPercentage=40.0"
+            - "-XX:MaxRAMPercentage=40.0"
             - "-XX:+HeapDumpOnOutOfMemoryError"
             - "-XX:HeapDumpPath=/heap-dump/heap_dump.log"
             - "-Dlogback.configurationFile=/etc/logging/config.xml"
@@ -358,26 +358,27 @@ spec:
           # TODO set resources (limits and requests)
           resources:
             requests:
-              memory: "2G"
+              memory: "1G"
               cpu: "1"
             limits:
-              memory: "5G"
-          livenessProbe:
-            failureThreshold: 3
-            tcpSocket:
-              port: 9090
-            initialDelaySeconds: 10
-            periodSeconds: 3
-            successThreshold: 1
-            timeoutSeconds: 1
-          readinessProbe:
-            failureThreshold: 3
-            tcpSocket:
-              port: 9090
-            initialDelaySeconds: 10
-            periodSeconds: 3
-            successThreshold: 1
-            timeoutSeconds: 1
+              memory: "4G"
+              cpu: "1"
+#          livenessProbe:
+#            failureThreshold: 3
+#            tcpSocket:
+#              port: 9090
+#            initialDelaySeconds: 10
+#            periodSeconds: 3
+#            successThreshold: 1
+#            timeoutSeconds: 1
+#          readinessProbe:
+#            failureThreshold: 3
+#            tcpSocket:
+#              port: 9090
+#            initialDelaySeconds: 10
+#            periodSeconds: 3
+#            successThreshold: 1
+#            timeoutSeconds: 1
           terminationMessagePolicy: FallbackToLogsOnError
           terminationMessagePath: /dev/temination-log
           securityContext:

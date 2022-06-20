@@ -100,18 +100,18 @@ public abstract class AttributesFilter implements Filter {
    */
   @Override
   public boolean test(final CloudEvent event) {
-    logger.debug("Testing event attributes. Event {}", event);
+//    logger.debug("Testing event attributes. Event {}", event);
     for (final var entry : attributes) {
       Function<CloudEvent, String> extractorFunc = entry.extractor;
       String wantedValue = entry.expectedValue;
       String existingValue = extractorFunc.apply(event);
       if (!this.match(existingValue, wantedValue)) {
-        logger.debug("Event attributes matching failed. Attribute: {} Want: {} Got: {} Event: {}",
-          entry.name, wantedValue, existingValue, event);
+//        logger.debug("Event attributes matching failed. Attribute: {} Want: {} Got: {} Event: {}",
+//          entry.name, wantedValue, existingValue, event);
         return false;
       }
     }
-    logger.debug("Event attributes matching succeeded");
+//    logger.debug("Event attributes matching succeeded");
     return true;
   }
 

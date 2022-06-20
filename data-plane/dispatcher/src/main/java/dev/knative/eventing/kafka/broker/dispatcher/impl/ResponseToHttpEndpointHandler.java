@@ -40,6 +40,6 @@ public class ResponseToHttpEndpointHandler extends BaseResponseHandler implement
 
   @Override
   public Future<Void> close() {
-    return this.cloudEventSender.close().mapEmpty();
+    return this.cloudEventSender.close();
   }
 }

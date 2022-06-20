@@ -328,7 +328,7 @@ public class RecordDispatcherImpl implements RecordDispatcher {
   private void recordDispatchLatency(final HttpResponse<?> response,
                                      final ConsumerRecordContext recordContext) {
     final var latency = recordContext.performLatency();
-    logger.debug("Dispatch latency {}", keyValue("latency", latency));
+//    logger.debug("Dispatch latency {}", keyValue("latency", latency));
 
     if (meterRegistry != null) {
       Metrics

@@ -106,12 +106,12 @@ public class IngressRequestHandlerImpl implements IngressRequestHandler {
         if (logger.isDebugEnabled()) {
           final var span = Span.fromContextOrNull(Context.current());
           if (span != null) {
-            logger.debug("Received event {} {}",
-              keyValue("event", record.value()),
-              keyValue(TracingConfig.TRACE_ID_KEY, span.getSpanContext().getTraceId())
-            );
+//            logger.debug("Received event {} {}",
+//              keyValue("event", record.value()),
+//              keyValue(TracingConfig.TRACE_ID_KEY, span.getSpanContext().getTraceId())
+//            );
           } else {
-            logger.debug("Received event {}", keyValue("event", record.value()));
+//            logger.debug("Received event {}", keyValue("event", record.value()));
           }
         }
 

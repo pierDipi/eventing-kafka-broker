@@ -762,7 +762,7 @@ data:
       <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
       </appender>
-      <root level="WARN">
+      <root level="INFO">
         <appender-ref ref="jsonConsoleAppender"/>
       </root>
     </configuration>

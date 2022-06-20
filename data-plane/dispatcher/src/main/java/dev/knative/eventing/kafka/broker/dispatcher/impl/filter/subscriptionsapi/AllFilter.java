@@ -33,14 +33,14 @@ public class AllFilter implements Filter {
 
   @Override
   public boolean test(CloudEvent cloudEvent) {
-    logger.debug("Testing event against ALL filters. Event {}", cloudEvent);
+//    logger.debug("Testing event against ALL filters. Event {}", cloudEvent);
     for (Filter filter : filters) {
       if (!filter.test(cloudEvent)) {
-        logger.debug("Test failed. Filter {} Event {}", filter, cloudEvent);
+//        logger.debug("Test failed. Filter {} Event {}", filter, cloudEvent);
         return false;
       }
     }
-    logger.debug("Test ALL filters succeeded. Event {}", cloudEvent);
+//    logger.debug("Test ALL filters succeeded. Event {}", cloudEvent);
     return true;
   }
 }

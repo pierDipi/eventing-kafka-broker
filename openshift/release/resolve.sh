@@ -23,6 +23,7 @@ function resolve_resources() {
       sed -i -e "s+\(.* image: \)\(knative.dev\)\(.*/\)\(test/\)\(.*\)+\1\2 \3\4test-\5+g" \
         -e "s+ko://++" \
         -e "s+\(.* image: \)\(knative.dev\)\(.*/\)\(.*\)+\1${image_prefix}broker-test-\4${image_tag}+g" \
+        -e "s+\(.* image: \)\({{ \.image }}\)\(.*\)+\1${image_prefix}broker-test-${image_tag}+g" \
         "$yaml"
     else
       echo "---" >>"$resolved_file_name"

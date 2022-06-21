@@ -21,6 +21,22 @@ else
   tag=""
 fi
 
+# Replace rekt images
+resolve_resources vendor/knative.dev/eventing/test/test_images/wathola-receiver vendor/knative.dev/eventing/test/test_images/wathola-receiver/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/wathola-sender vendor/knative.dev/eventing/test/test_images/wathola-sender/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/wathola-forwarder vendor/knative.dev/eventing/test/test_images/wathola-forwarder/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/wathola-fetcher vendor/knative.dev/eventing/test/test_images/wathola-fetcher/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/request-sender vendor/knative.dev/eventing/test/test_images/request-sender/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/recordevents vendor/knative.dev/eventing/test/test_images/recordevents/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/print vendor/knative.dev/eventing/test/test_images/print/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/performance vendor/knative.dev/eventing/test/test_images/performance/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/heartbeats vendor/knative.dev/eventing/test/test_images/heartbeats/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/event-sender vendor/knative.dev/eventing/test/test_images/event-sender/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/rekt/resources/containersource vendor/knative.dev/eventing/test/rekt/resources/containersource/containersource.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/reconciler-test/pkg/eventshub vendor/knative.dev/reconciler-test/pkg/eventshub/103-pod.yaml "${image_prefix}" "eventshub" true
+resolve_resources vendor/knative.dev/eventing/test/rekt/resources/flaker vendor/knative.dev/eventing/test/rekt/resources/flaker/flaker.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/rekt/resources/eventlibrary vendor/knative.dev/eventing/test/rekt/resources/eventlibrary/eventlibrary.yaml "${image_prefix}" "${tag}" true
+
 eventing_kafka_controller="${artifacts_dir}eventing-kafka-controller.yaml"
 eventing_kafka_post_install="${artifacts_dir}eventing-kafka-post-install.yaml"
 

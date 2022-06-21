@@ -1,64 +1,66 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 source $(dirname $0)/resolve.sh
+
+GITHUB_ACTIONS=true $(dirname $0)/../../hack/update-codegen.sh
+git apply openshift/patches/*
+
+# Eventing core will bring the config tracing ConfigMap, so remove it from heret
+rm -f control-plane/config/eventing-kafka-broker/200-controller/100-config-tracing.yaml
 
 release=$1
 
-broker_cp_output_file="openshift/release/knative-eventing-kafka-broker-cp-ci.yaml"
-broker_dp_output_file="openshift/release/knative-eventing-kafka-broker-dp-ci.yaml"
+artifacts_dir="openshift/release/artifacts/"
+rm -rf $artifacts_dir
+mkdir -p $artifacts_dir
 
 if [ "$release" == "ci" ]; then
-    image_prefix="registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-kafka-"
-    tag=""
+  image_prefix="registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-kafka-"
+  tag=""
 else
-    image_prefix="registry.ci.openshift.org/openshift/${release}:knative-eventing-kafka-"
-    tag=""
+  image_prefix="registry.ci.openshift.org/openshift/knative-${release}:knative-eventing-kafka-"
+  tag=""
 fi
 
+# Replace rekt images
+resolve_resources vendor/knative.dev/eventing/test/test_images/wathola-receiver vendor/knative.dev/eventing/test/test_images/wathola-receiver/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/wathola-sender vendor/knative.dev/eventing/test/test_images/wathola-sender/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/wathola-forwarder vendor/knative.dev/eventing/test/test_images/wathola-forwarder/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/wathola-fetcher vendor/knative.dev/eventing/test/test_images/wathola-fetcher/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/request-sender vendor/knative.dev/eventing/test/test_images/request-sender/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/recordevents vendor/knative.dev/eventing/test/test_images/recordevents/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/print vendor/knative.dev/eventing/test/test_images/print/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/performance vendor/knative.dev/eventing/test/test_images/performance/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/heartbeats vendor/knative.dev/eventing/test/test_images/heartbeats/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/test_images/event-sender vendor/knative.dev/eventing/test/test_images/event-sender/pod.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/rekt/resources/containersource vendor/knative.dev/eventing/test/rekt/resources/containersource/containersource.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/reconciler-test/pkg/eventshub vendor/knative.dev/reconciler-test/pkg/eventshub/103-pod.yaml "${image_prefix}" "eventshub" true
+resolve_resources vendor/knative.dev/eventing/test/rekt/resources/flaker vendor/knative.dev/eventing/test/rekt/resources/flaker/flaker.yaml "${image_prefix}" "${tag}" true
+resolve_resources vendor/knative.dev/eventing/test/rekt/resources/eventlibrary vendor/knative.dev/eventing/test/rekt/resources/eventlibrary/eventlibrary.yaml "${image_prefix}" "${tag}" true
+
+eventing_kafka_controller="${artifacts_dir}eventing-kafka-controller.yaml"
+eventing_kafka_post_install="${artifacts_dir}eventing-kafka-post-install.yaml"
+
+eventing_kafka_source="${artifacts_dir}eventing-kafka-source.yaml"
+eventing_kafka_broker="${artifacts_dir}eventing-kafka-broker.yaml"
+eventing_kafka_channel="${artifacts_dir}eventing-kafka-channel.yaml"
+eventing_kafka_sink="${artifacts_dir}eventing-kafka-sink.yaml"
+
 # the Broker Control Plane parts
-# The generic CP root folder
-resolve_resources control-plane/config/100-broker $broker_cp_output_file $image_prefix $tag
-
-resolve_resources control-plane/config/100-channel cp_channel.yaml $image_prefix $tag
-cat cp_channel.yaml >> $broker_cp_output_file
-rm cp_channel.yaml
-
-resolve_resources control-plane/config/100-kafka-internal cp_kafka_internal.yaml $image_prefix $tag
-cat cp_kafka_internal.yaml >> $broker_cp_output_file
-rm cp_kafka_internal.yaml
-
-resolve_resources control-plane/config/100-sink cp_sink.yaml $image_prefix $tag
-cat cp_sink.yaml >> $broker_cp_output_file
-rm cp_sink.yaml
-
-resolve_resources control-plane/config/100-source cp_source.yaml $image_prefix $tag
-cat cp_source.yaml >> $broker_cp_output_file
-rm cp_source.yaml
-
-resolve_resources control-plane/config/200-controller cp_broker.yaml $image_prefix $tag
-cat cp_broker.yaml >> $broker_cp_output_file
-rm cp_broker.yaml
-resolve_resources control-plane/config/200-webhook cp_broker.yaml $image_prefix $tag
-cat cp_broker.yaml >> $broker_cp_output_file
-rm cp_broker.yaml
+resolve_resources control-plane/config/eventing-kafka-broker/100-broker $eventing_kafka_controller "$image_prefix" "$tag"
+resolve_resources control-plane/config/eventing-kafka-broker/100-sink $eventing_kafka_controller "$image_prefix" "$tag"
+resolve_resources control-plane/config/eventing-kafka-broker/100-source $eventing_kafka_controller "$image_prefix" "$tag"
+resolve_resources control-plane/config/eventing-kafka-broker/100-channel $eventing_kafka_controller "$image_prefix" "$tag"
+resolve_resources control-plane/config/eventing-kafka-broker/200-controller $eventing_kafka_controller "$image_prefix" "$tag"
+resolve_resources control-plane/config/eventing-kafka-broker/200-webhook $eventing_kafka_controller "$image_prefix" "$tag"
 
 # the Broker Data Plane folders
-# The DP folder for Broker:
-resolve_resources data-plane/config/broker $broker_dp_output_file $image_prefix
-# cat dp_broker.yaml >> $broker_dp_output_file
-# rm dp_broker.yaml
+resolve_resources data-plane/config/broker $eventing_kafka_broker "$image_prefix" "$tag"
+resolve_resources data-plane/config/sink $eventing_kafka_sink "$image_prefix" "$tag"
+resolve_resources data-plane/config/source $eventing_kafka_source "$image_prefix" "$tag"
+resolve_resources data-plane/config/channel $eventing_kafka_channel "$image_prefix" "$tag"
 
-# The DP folder for Sink:
-resolve_resources data-plane/config/sink dp_sink.yaml $image_prefix $tag
-cat dp_sink.yaml >> $broker_dp_output_file
-rm dp_sink.yaml
-
-# The DP folder for Source:
-resolve_resources data-plane/config/source dp_source.yaml $image_prefix $tag
-cat dp_source.yaml >> $broker_dp_output_file
-rm dp_source.yaml
-
-# The DP folder for Channel:
-resolve_resources data-plane/config/channel dp_channel.yaml $image_prefix $tag
-cat dp_channel.yaml >> $broker_dp_output_file
-rm dp_channel.yaml
+# Post-install jobs
+resolve_resources control-plane/config/post-install $eventing_kafka_post_install "$image_prefix" "$tag"

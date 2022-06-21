@@ -4,8 +4,8 @@
 CGO_ENABLED=0
 GOOS=linux
 # Ignore errors if there are no images.
-CONTROL_PLANE_IMAGES=./control-plane/cmd/kafka-controller ./control-plane/cmd/webhook-kafka
-TEST_IMAGES=$(shell find ./test/test_images ./vendor/knative.dev/eventing/test/test_images -mindepth 1 -maxdepth 1 -type d 2> /dev/null)
+CONTROL_PLANE_IMAGES=./control-plane/cmd/kafka-controller ./control-plane/cmd/webhook-kafka ./control-plane/cmd/post-install
+TEST_IMAGES=$(shell find ./test/test_images ./vendor/knative.dev/reconciler-test/cmd ./vendor/knative.dev/eventing/test/test_images -mindepth 1 -maxdepth 1 -type d 2> /dev/null)
 KO_DOCKER_REPO=${DOCKER_REPO_OVERRIDE}
 BRANCH=
 TEST=
@@ -34,6 +34,10 @@ test-e2e:
 test-conformance:
 	sh openshift/e2e-conformance-tests.sh
 .PHONY: test-conformance
+
+test-reconciler:
+	sh openshift/e2e-rekt-tests.sh
+.PHONY: test-reconciler
 
 # Requires ko 0.2.0 or newer.
 test-images:

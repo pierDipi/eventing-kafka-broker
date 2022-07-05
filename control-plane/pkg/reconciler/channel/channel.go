@@ -430,6 +430,15 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	}
 	defer kafkaClusterAdminClient.Close()
 
+	// Protect topic deletion with a check on active Knative consumers.
+	activeConsumers, err := kafka.GetActiveConsumers(kafkaClusterAdminClient, groupsOf(channel))
+	if err != nil {
+		return fmt.Errorf("failed to describe consumer groups: %w", err)
+	}
+	if len(activeConsumers) > 0 {
+		return fmt.Errorf("consumers for subscriptions still active waiting shutdown: %s", activeConsumers.String())
+	}
+
 	topic, err := kafka.DeleteTopic(kafkaClusterAdminClient, kafka.ChannelTopic(TopicPrefix, channel))
 	if err != nil {
 		return err
@@ -438,6 +447,17 @@ func (r *Reconciler) finalizeKind(ctx context.Context, channel *messagingv1beta1
 	logger.Debug("Topic deleted", zap.String("topic", topic))
 
 	return nil
+}
+
+func groupsOf(channel *messagingv1beta1.KafkaChannel) []kafka.Group {
+	groups := make([]kafka.Group, 0, len(channel.Spec.Subscribers))
+	for _, s := range channel.Spec.Subscribers {
+		groups = append(groups, kafka.Group{
+			ID:           consumerGroup(channel, &s),
+			ResourceUUID: string(s.UID),
+		})
+	}
+	return groups
 }
 
 func (r *Reconciler) reconcileSubscribers(ctx context.Context, kafkaClient sarama.Client, kafkaClusterAdmin sarama.ClusterAdmin, channel *messagingv1beta1.KafkaChannel, channelContractResource *contract.Resource) (int, error) {

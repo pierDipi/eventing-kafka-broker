@@ -9,9 +9,6 @@ REPO_OWNER_NAME="openshift-knative"
 REPO_BRANCH="release-next"
 REPO_BRANCH_CI="${REPO_BRANCH}-ci"
 
-# Check if there's an upstream release we need to mirror downstream
-openshift/release/mirror-upstream-branches.sh
-
 # Reset REPO_BRANCH to upstream/main.
 git fetch upstream main
 git checkout upstream/main -B ${REPO_BRANCH}

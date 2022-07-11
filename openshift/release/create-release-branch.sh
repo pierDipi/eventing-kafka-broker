@@ -21,6 +21,6 @@ git commit -sm ":fire: remove unneeded workflows" .github/
 
 # Generate our OCP artifacts
 make generate-dockerfiles
-make RELEASE=$release generate-release
+make RELEASE="${target}" generate-release
 git add openshift OWNERS Makefile
 git commit -m "Add openshift specific files."

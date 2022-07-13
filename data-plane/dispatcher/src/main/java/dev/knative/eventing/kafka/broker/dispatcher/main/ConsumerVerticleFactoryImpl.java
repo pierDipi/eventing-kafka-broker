@@ -341,7 +341,7 @@ public class ConsumerVerticleFactoryImpl implements ConsumerVerticleFactory {
     var webClientOptions = this.webClientOptions;
     if (egress.getVReplicas() > 0) {
       webClientOptions = new WebClientOptions(this.webClientOptions);
-      //webClientOptions.setMaxPoolSize(egress.getVReplicas());
+      webClientOptions.setMaxPoolSize(egress.getVReplicas());
     }
     return new WebClientCloudEventSender(vertx, WebClient.create(vertx, webClientOptions), target, egressConfig);
   }

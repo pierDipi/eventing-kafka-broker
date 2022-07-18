@@ -6,5 +6,5 @@ RUN make install test-install
 
 FROM openshift/origin-base
 
-COPY --from=builder /go/bin/wathola-receiver /usr/bin/wathola-receiver
-ENTRYPOINT ["/usr/bin/wathola-receiver"]
+COPY --from=builder /go/bin/eventshub /usr/bin/eventshub
+ENTRYPOINT ["/usr/bin/eventshub"]

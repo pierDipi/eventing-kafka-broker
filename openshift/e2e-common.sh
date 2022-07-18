@@ -4,10 +4,12 @@ export EVENTING_NAMESPACE="${EVENTING_NAMESPACE:-knative-eventing}"
 export SYSTEM_NAMESPACE=$EVENTING_NAMESPACE
 export ZIPKIN_NAMESPACE=$EVENTING_NAMESPACE
 export KNATIVE_DEFAULT_NAMESPACE=$EVENTING_NAMESPACE
-export EVENTING_KAFKA_BROKER_TEST_IMAGE_TEMPLATE=$(cat <<-END
+export EVENTING_KAFKA_BROKER_TEST_IMAGE_TEMPLATE=$(
+  cat <<-END
 {{- with .Name }}
 {{- if eq . "event-sender"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_EVENT_SENDER{{end -}}
 {{- if eq . "heartbeats"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_HEARTBEATS{{end -}}
+{{- if eq . "eventshub"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_EVENTSHUB{{end -}}
 {{- if eq . "recordevents"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_RECORDEVENTS{{end -}}
 {{- if eq . "print"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_PRINT{{end -}}
 {{- if eq . "performance"}}$KNATIVE_EVENTING_KAFKA_BROKER_TEST_PERFORMANCE{{end -}}
@@ -22,7 +24,7 @@ export EVENTING_KAFKA_BROKER_TEST_IMAGE_TEMPLATE=$(cat <<-END
 END
 )
 
-function scale_up_workers(){
+function scale_up_workers() {
   local cluster_api_ns="openshift-machine-api"
 
   oc get machineset -n ${cluster_api_ns} --show-labels
@@ -42,7 +44,7 @@ function scale_up_workers(){
 #             $3 - desired number of replicas
 function wait_until_machineset_scales_up() {
   echo -n "Waiting until machineset $2 in namespace $1 scales up to $3 replicas"
-  for _ in {1..150}; do  # timeout after 15 minutes
+  for _ in {1..150}; do # timeout after 15 minutes
     local available
     available=$(oc get machineset -n "$1" "$2" -o jsonpath="{.status.availableReplicas}")
     if [[ ${available} -eq $3 ]]; then
@@ -58,7 +60,9 @@ function wait_until_machineset_scales_up() {
 
 # Loops until duration (car) is exceeded or command (cdr) returns non-zero
 function timeout() {
-  SECONDS=0; TIMEOUT=$1; shift
+  SECONDS=0
+  TIMEOUT=$1
+  shift
   while eval $*; do
     sleep 5
     [[ $SECONDS -gt $TIMEOUT ]] && echo "ERROR: Timed out" && return 1
@@ -66,80 +70,56 @@ function timeout() {
   return 0
 }
 
-function kafka_setup() {
-  echo ">> Prepare to deploy Strimzi"
-  ./test/kafka/kafka_setup.sh || fail_test "Failed to set up Kafka cluster"
-}
-
-function install_serverless(){
+function install_serverless() {
   header "Installing Serverless Operator"
-  local operator_dir=/tmp/serverless-operator
-  local failed=0
-  git clone --branch main https://github.com/openshift-knative/serverless-operator.git $operator_dir || return 1
-  # unset OPENSHIFT_BUILD_NAMESPACE (old CI) and OPENSHIFT_CI (new CI) as its used in serverless-operator's CI
-  # environment as a switch to use CI built images, we want pre-built images of k-s-o and k-o-i
-  unset OPENSHIFT_BUILD_NAMESPACE
-  unset OPENSHIFT_CI
-  pushd $operator_dir
 
-  ./hack/install.sh && header "Serverless Operator installed successfully" || failed=1
-  popd
+  cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: knative-eventing
+EOF
+
+  ./test/kafka/kafka_setup.sh || return $?
+
+  KNATIVE_EVENTING_KAFKA_BROKER_MANIFESTS_DIR="$(pwd)/openshift/release/artifacts"
+  export KNATIVE_EVENTING_KAFKA_BROKER_MANIFESTS_DIR
+
+  local operator_dir=/tmp/serverless-operator
+  git clone --branch main https://github.com/openshift-knative/serverless-operator.git $operator_dir
+  export GOPATH=/tmp/go
+  local failed=0
+  pushd $operator_dir || return $?
+  OPENSHIFT_CI="true" make generated-files install-kafka || failed=$?
+  popd || return $?
+
+  oc apply -f openshift/knative-eventing.yaml
+
+  oc wait --for=condition=Ready knativekafkas.operator.serverless.openshift.io knative-kafka -n knative-eventing --timeout=900s
+  oc wait --for=condition=Ready knativeeventing.operator.knative.dev knative-eventing -n knative-eventing --timeout=900s
+
   return $failed
 }
 
-function install_knative_kafka() {
-  header "Set Kafka as default Broker"
-  cat <<-EOF | oc apply -f -
-apiVersion: operator.knative.dev/v1alpha1
-kind: KnativeEventing
-metadata:
-  name: knative-eventing
-  namespace: knative-eventing
-spec:
-  defaultBrokerClass: Kafka
-  config:
-    config-br-defaults:
-      default-br-config: |
-        clusterDefault:
-          apiVersion: v1
-          kind: ConfigMap
-          name: kafka-broker-config
-          namespace: knative-eventing
----
-EOF
+function run_e2e_tests() {
 
-  header "Installing Knative Kafka Control Plane"
+  go_test_e2e -timeout=100m -short ./test/e2e/ \
+    -imagetemplate "${TEST_IMAGE_TEMPLATE}" || return $?
 
-  CP_RELEASE_YAML="openshift/release/knative-eventing-kafka-broker-cp-ci.yaml"
-
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-kafka-controller|${KNATIVE_EVENTING_KAFKA_BROKER_KAFKA_CONTROLLER}|g" ${CP_RELEASE_YAML}
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-webhook-kafka|${KNATIVE_EVENTING_KAFKA_BROKER_WEBHOOK_KAFKA}|g"       ${CP_RELEASE_YAML}
-
-  oc apply -f ${CP_RELEASE_YAML}
-  wait_until_pods_running $EVENTING_NAMESPACE || return 1
-
-  header "Installing Knative Kafka Data Plane"
-
-  DP_RELEASE_YAML="openshift/release/knative-eventing-kafka-broker-dp-ci.yaml"
-
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-dispatcher|${KNATIVE_EVENTING_KAFKA_BROKER_DISPATCHER}|g" ${DP_RELEASE_YAML}
-  sed -i -e "s|registry.ci.openshift.org/openshift/knative-.*:knative-eventing-kafka-broker-receiver|${KNATIVE_EVENTING_KAFKA_BROKER_RECEIVER}|g"     ${DP_RELEASE_YAML}
-
-  oc apply -f ${DP_RELEASE_YAML}
-  wait_until_pods_running $EVENTING_NAMESPACE || return 1
+  go_test_e2e -timeout=100m -short ./test/e2e_channel/ \
+    -imagetemplate "${TEST_IMAGE_TEMPLATE}" || return $?
 }
 
-function run_e2e_tests(){
+function run_conformance_tests() {
+  go_test_e2e -timeout=100m ./test/e2e/conformance \
+    -imagetemplate "${TEST_IMAGE_TEMPLATE}" || return $?
 
-  go_test_e2e -timeout=30m ./test/e2e/ \
-    -imagetemplate "${TEST_IMAGE_TEMPLATE}" || fail_test "E2E suite failed"
+  go_test_e2e -timeout=100m ./test/e2e_channel/conformance \
+    -imagetemplate "${TEST_IMAGE_TEMPLATE}" || return $?
 }
 
-function run_conformance_tests(){
-  go_test_e2e -timeout=30m ./test/e2e/conformance \
-    -imagetemplate "${TEST_IMAGE_TEMPLATE}" || fail_test "E2E conformance suite failed"
-}
-
-function run_e2e_new_tests(){
-  go_test_e2e -timeout=30m ./test/e2e_new || fail_test "E2E (new) suite failed"
+function run_e2e_new_tests() {
+  ./test/scripts/first-event-delay.sh || return $?
+  go_test_e2e -timeout=100m ./test/e2e_new/... || return $?
+  go_test_e2e -timeout=100m ./test/e2e_new_channel/... || return $?
 }

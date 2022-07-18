@@ -26,14 +26,6 @@ make generate-dockerfiles
 make RELEASE=ci generate-release
 git add openshift OWNERS Makefile
 git commit -m ":open_file_folder: Update openshift specific files."
-
-# Apply patches if present
-PATCHES_DIR="$(pwd)/openshift/patches/"
-if [ -d "$PATCHES_DIR" ] && [ "$(ls -A "$PATCHES_DIR")" ]; then
-    git apply openshift/patches/*
-    make RELEASE=ci generate-release
-    git commit -am ":fire: Apply carried patches."
-fi
 git push -f openshift ${REPO_BRANCH}
 
 # Trigger CI

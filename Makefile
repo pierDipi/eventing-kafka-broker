@@ -77,3 +77,25 @@ generate-release:
 update-ci:
 	sh ./openshift/ci-operator/update-ci.sh $(OPENSHIFT) $(CONTROL_PLANE_IMAGES)
 .PHONY: update-ci
+
+# Example usage:
+# export IMAGE_PREFIX="quay.io/pierdipi/knative-eventing-kafka-broker-"
+# make images
+# make generate-release RELEASE=nightly
+# make deploy
+images:
+	docker build -t ${IMAGE_PREFIX}-dispatcher -f openshift/ci-operator/knative-images/dispatcher/Dockerfile .
+	docker push ${IMAGE_PREFIX}-dispatcher
+	docker build -t ${IMAGE_PREFIX}-receiver -f openshift/ci-operator/knative-images/receiver/Dockerfile .
+	docker push ${IMAGE_PREFIX}-receiver
+	docker build -t ${IMAGE_PREFIX}-kafka-controller -f openshift/ci-operator/knative-images/kafka-controller/Dockerfile .
+	docker push ${IMAGE_PREFIX}-kafka-controller
+	docker build -t ${IMAGE_PREFIX}-post-install -f openshift/ci-operator/knative-images/post-install/Dockerfile .
+	docker push ${IMAGE_PREFIX}-post-install
+	docker build -t ${IMAGE_PREFIX}-webhook-kafka -f openshift/ci-operator/knative-images/webhook-kafka/Dockerfile .
+	docker push ${IMAGE_PREFIX}-webhook-kafka
+.PHONY: images
+
+deploy: images generate-release
+	./openshift/install.sh
+.PHONY: deploy

@@ -5,5 +5,5 @@ metadata:
 spec:
   containers:
     - name: heartbeats
-      image: registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-kafka-broker-test-heartbeats
+      image: quay.io/pierdipi/knative-eventing-kafka-brokerbroker-test-heartbeats
 

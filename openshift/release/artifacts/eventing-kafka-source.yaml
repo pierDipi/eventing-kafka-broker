@@ -18,7 +18,7 @@ metadata:
   name: config-kafka-source-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
   annotations:
     knative.dev/example-checksum: "8157ecb1"
 data:
@@ -181,7 +181,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-source-data-plane
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 rules:
   - apiGroups:
       - "*"
@@ -214,7 +214,7 @@ metadata:
   name: knative-kafka-source-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 ---
 ---
 
@@ -237,7 +237,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-source-data-plane
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-source-data-plane
@@ -270,7 +270,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-source-dispatcher
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 spec:
   serviceName: kafka-source-dispatcher
   podManagementPolicy: "Parallel"
@@ -283,7 +283,7 @@ spec:
       labels:
         app: kafka-source-dispatcher
         app.kubernetes.io/component: kafka-dispatcher
-        kafka.eventing.knative.dev/release: ci
+        kafka.eventing.knative.dev/release: nightly
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
       topologySpreadConstraints:
@@ -307,7 +307,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-source-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-kafka-broker-dispatcher
+          image: quay.io/pierdipi/knative-eventing-kafka-brokerbroker-dispatcher
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config

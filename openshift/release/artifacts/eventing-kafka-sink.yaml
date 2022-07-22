@@ -18,7 +18,7 @@ metadata:
   name: config-kafka-sink-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
   annotations:
     knative.dev/example-checksum: "a8ce4acb"
 data:
@@ -114,7 +114,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-sink-data-plane
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 rules:
   - apiGroups:
       - "*"
@@ -147,7 +147,7 @@ metadata:
   name: knative-kafka-sink-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 ---
 ---
 
@@ -170,7 +170,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-sink-data-plane
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-sink-data-plane
@@ -203,7 +203,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-sink-receiver
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 spec:
   selector:
     matchLabels:
@@ -213,7 +213,7 @@ spec:
       name: kafka-sink-receiver
       labels:
         app: kafka-sink-receiver
-        kafka.eventing.knative.dev/release: ci
+        kafka.eventing.knative.dev/release: nightly
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
       topologySpreadConstraints:
@@ -237,7 +237,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-sink-receiver
-          image: registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-kafka-broker-receiver
+          image: quay.io/pierdipi/knative-eventing-kafka-brokerbroker-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -350,7 +350,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-sink-receiver
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 spec:
   selector:
     app: kafka-sink-receiver

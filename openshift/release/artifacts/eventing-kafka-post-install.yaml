@@ -20,7 +20,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-controller-post-install
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 rules:
   - apiGroups:
       - apps
@@ -228,7 +228,7 @@ metadata:
   name: knative-kafka-controller-post-install
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 ---
 # Copyright 2020 The Knative Authors
 #
@@ -249,7 +249,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-storage-version-migrator
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 rules:
   # Storage version upgrader needs to be able to patch CRDs.
   - apiGroups:
@@ -331,7 +331,7 @@ metadata:
   name: knative-kafka-storage-version-migrator
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 
 ---
 
@@ -340,7 +340,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-storage-version-migrator
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-storage-version-migrator
@@ -371,7 +371,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-controller-post-install
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-controller-post-install
@@ -402,7 +402,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-controller-post-install
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 spec:
   ttlSecondsAfterFinished: 600
   backoffLimit: 10
@@ -410,7 +410,7 @@ spec:
     metadata:
       labels:
         app: kafka-controller-post-install
-        kafka.eventing.knative.dev/release: ci
+        kafka.eventing.knative.dev/release: nightly
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
@@ -418,7 +418,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: post-install
-          image: registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-kafka-broker-post-install
+          image: quay.io/pierdipi/knative-eventing-kafka-brokerbroker-post-install
           env:
             - name: SYSTEM_NAMESPACE
               valueFrom:
@@ -448,7 +448,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: "knative-kafka-storage-version-migrator"
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 spec:
   ttlSecondsAfterFinished: 600
   backoffLimit: 10
@@ -456,7 +456,7 @@ spec:
     metadata:
       labels:
         app: "knative-kafka-storage-version-migrator"
-        kafka.eventing.knative.dev/release: ci
+        kafka.eventing.knative.dev/release: nightly
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
@@ -464,7 +464,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: migrate
-          image: registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-kafka-broker-migrate
+          image: quay.io/pierdipi/knative-eventing-kafka-brokerbroker-migrate
           env:
             - name: IGNORE_NOT_FOUND
               value: "true"

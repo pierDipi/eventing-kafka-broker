@@ -4,6 +4,8 @@ export EVENTING_NAMESPACE="${EVENTING_NAMESPACE:-knative-eventing}"
 export SYSTEM_NAMESPACE=$EVENTING_NAMESPACE
 export ZIPKIN_NAMESPACE=$EVENTING_NAMESPACE
 export KNATIVE_DEFAULT_NAMESPACE=$EVENTING_NAMESPACE
+export KNATIVE_EVENTING_KAFKA_BROKER_MANIFESTS_DIR="$(pwd)/openshift/release/artifacts"
+
 export EVENTING_KAFKA_BROKER_TEST_IMAGE_TEMPLATE=$(
   cat <<-END
 {{- with .Name }}
@@ -82,15 +84,14 @@ EOF
 
   ./test/kafka/kafka_setup.sh || return $?
 
-  KNATIVE_EVENTING_KAFKA_BROKER_MANIFESTS_DIR="$(pwd)/openshift/release/artifacts"
-  export KNATIVE_EVENTING_KAFKA_BROKER_MANIFESTS_DIR
-
   local operator_dir=/tmp/serverless-operator
   git clone --branch main https://github.com/openshift-knative/serverless-operator.git $operator_dir
   export GOPATH=/tmp/go
   local failed=0
   pushd $operator_dir || return $?
-  OPENSHIFT_CI="true" make generated-files install-kafka || failed=$?
+  OPENSHIFT_CI="true" make generated-files || failed=$?
+  cat ./knative-operator/deploy/resources/knativekafka/controller/eventing-kafka-controller.yaml
+  OPENSHIFT_CI="true" make install-kafka || failed=$?
   popd || return $?
 
   oc apply -f openshift/knative-eventing.yaml

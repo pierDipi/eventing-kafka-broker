@@ -18,7 +18,7 @@ metadata:
   name: config-kafka-channel-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
   annotations:
     knative.dev/example-checksum: "6ce544b6"
 data:
@@ -199,7 +199,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-channel-data-plane
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 rules:
   - apiGroups:
       - "*"
@@ -232,7 +232,7 @@ metadata:
   name: knative-kafka-channel-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 ---
 ---
 
@@ -255,7 +255,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-channel-data-plane
   labels:
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-channel-data-plane
@@ -288,7 +288,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-channel-dispatcher
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 spec:
   selector:
     matchLabels:
@@ -298,7 +298,7 @@ spec:
       name: kafka-channel-dispatcher
       labels:
         app: kafka-channel-dispatcher
-        kafka.eventing.knative.dev/release: ci
+        kafka.eventing.knative.dev/release: nightly
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
       topologySpreadConstraints:
@@ -322,7 +322,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-channel-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-kafka-broker-dispatcher
+          image: quay.io/pierdipi/knative-eventing-kafka-brokerbroker-dispatcher
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -450,7 +450,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-channel-receiver
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 spec:
   selector:
     matchLabels:
@@ -460,7 +460,7 @@ spec:
       name: kafka-channel-receiver
       labels:
         app: kafka-channel-receiver
-        kafka.eventing.knative.dev/release: ci
+        kafka.eventing.knative.dev/release: nightly
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
       topologySpreadConstraints:
@@ -484,7 +484,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-channel-receiver
-          image: registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-kafka-broker-receiver
+          image: quay.io/pierdipi/knative-eventing-kafka-brokerbroker-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -597,7 +597,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-channel-receiver
-    kafka.eventing.knative.dev/release: ci
+    kafka.eventing.knative.dev/release: nightly
 spec:
   selector:
     app: kafka-channel-receiver

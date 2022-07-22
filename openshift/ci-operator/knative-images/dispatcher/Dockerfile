@@ -37,10 +37,13 @@ RUN ./mvnw package -pl=dispatcher -Drelease -am -DskipTests -Deditorconfig.skip 
 
 RUN mkdir /app && cp /build/dispatcher/target/dispatcher-1.0-SNAPSHOT.jar /app/app.jar
 
-# We use the generated JDK from the "builder" image, so we can just go with the ubi-minimal
-FROM registry.access.redhat.com/ubi8/openjdk-17-runtime as running
+RUN curl -L https://github.com/jvm-profiling-tools/async-profiler/releases/download/v2.7/async-profiler-2.7-linux-x64.tar.gz -o async-profiler.tar.gz
+RUN ls -al && mkdir async-profiler && tar -xf async-profiler.tar.gz -C async-profiler && ls -al
 
-EXPOSE 8080 8778 9779
+# We use the generated JDK from the "builder" image, so we can just go with the ubi-minimal
+FROM registry.access.redhat.com/ubi8/openjdk-17 as running
+
+COPY --from=builder /build/async-profiler /app
 
 USER 185
 

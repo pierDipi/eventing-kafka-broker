@@ -23,7 +23,7 @@ spec:
   restartPolicy: "Never"
   containers:
     - name: flaker
-      image: registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-kafka-broker-test-event-flaker
+      image: quay.io/pierdipi/knative-eventing-kafka-brokerbroker-test-event-flaker
       imagePullPolicy: "IfNotPresent"
       env:
         - name: "K_SINK"

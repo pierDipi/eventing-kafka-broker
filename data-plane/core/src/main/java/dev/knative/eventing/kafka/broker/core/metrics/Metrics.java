@@ -40,7 +40,6 @@ import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -144,13 +143,9 @@ public class Metrics {
    */
   public static MetricsOptions getOptions(final BaseEnv metricsConfigs) {
     final var registry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
-    return new MicrometerMetricsOptions()
+    final var options = new MicrometerMetricsOptions()
       .setEnabled(true)
-      .addDisabledMetricsCategory(MetricsDomain.HTTP_CLIENT)
-      .addDisabledMetricsCategory(MetricsDomain.HTTP_SERVER)
       .addDisabledMetricsCategory(MetricsDomain.VERTICLES)
-      .addDisabledMetricsCategory(MetricsDomain.NET_CLIENT)
-      .addDisabledMetricsCategory(MetricsDomain.NET_SERVER)
       .addDisabledMetricsCategory(MetricsDomain.EVENT_BUS)
       .addDisabledMetricsCategory(MetricsDomain.DATAGRAM_SOCKET)
       // NAMED_POOL allocates a lot, so disable it.
@@ -173,6 +168,17 @@ public class Metrics {
         .setStartEmbeddedServer(true)
         .setEnabled(true)
       );
+
+    if (!metricsConfigs.isMetricsHTTPClientEnabled()) {
+      options.addDisabledMetricsCategory(MetricsDomain.HTTP_CLIENT);
+      options.addDisabledMetricsCategory(MetricsDomain.NET_CLIENT);
+    }
+    if (!metricsConfigs.isMetricsHTTPServerEnabled()) {
+      options.addDisabledMetricsCategory(MetricsDomain.HTTP_SERVER);
+      options.addDisabledMetricsCategory(MetricsDomain.NET_SERVER);
+    }
+
+    return options;
   }
 
   /**

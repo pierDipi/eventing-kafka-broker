@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -90,7 +91,7 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
 
     // Only poll new records when at-least one internal per-partition queue
     // needs more records.
-    if (!isWaitingForTasks()) {
+    if (areAllExecutorsBusy()) {
       logger.debug("all executors are busy {}", keyValue("topics", topics));
       return;
     }
@@ -163,12 +164,32 @@ public class OrderedConsumerVerticle extends BaseConsumerVerticle {
     return executor;
   }
 
-  private boolean isWaitingForTasks() {
-    for (OrderedAsyncExecutor value : this.recordDispatcherExecutors.values()) {
-      if (value.isWaitingForTasks()) {
-        return true;
+  private boolean areAllExecutorsBusy() {
+    if (recordDispatcherExecutors.isEmpty()) {
+      // No executors
+      return false;
+    }
+
+    var res = true;
+    final var toResume = new HashSet<TopicPartition>();
+    final var toPause = new HashSet<TopicPartition>();
+
+    for (var executor : recordDispatcherExecutors.entrySet()) {
+      if (executor.getValue().isWaitingForTasks()) {
+        toResume.add(executor.getKey());
+        res = false;
+      } else {
+        toPause.add(executor.getKey());
       }
     }
-    return this.recordDispatcherExecutors.size() == 0;
+
+    if (!toPause.isEmpty()) {
+      this.consumer.pause(toPause);
+    }
+    if (!toResume.isEmpty()) {
+      this.consumer.resume(toResume);
+    }
+
+    return res;
   }
 }

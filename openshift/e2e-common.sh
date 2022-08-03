@@ -2,7 +2,7 @@
 
 export EVENTING_NAMESPACE="${EVENTING_NAMESPACE:-knative-eventing}"
 export SYSTEM_NAMESPACE=$EVENTING_NAMESPACE
-export ZIPKIN_NAMESPACE=$EVENTING_NAMESPACE
+export TRACING_NAMESPACE=$EVENTING_NAMESPACE
 export KNATIVE_DEFAULT_NAMESPACE=$EVENTING_NAMESPACE
 export EVENTING_KAFKA_BROKER_TEST_IMAGE_TEMPLATE=$(
   cat <<-END
@@ -90,19 +90,23 @@ EOF
   export GOPATH=/tmp/go
   local failed=0
   pushd $operator_dir || return $?
-  OPENSHIFT_CI="true" make generated-files install-kafka || failed=$?
+  make OPENSHIFT_CI="true" TRACING_BACKEND=zipkin \
+      generated-files install-tracing install-operator || failed=$?
   popd || return $?
 
   oc apply -f openshift/knative-eventing.yaml
 
-  oc wait --for=condition=Ready knativekafkas.operator.serverless.openshift.io knative-kafka -n knative-eventing --timeout=900s
   oc wait --for=condition=Ready knativeeventing.operator.knative.dev knative-eventing -n knative-eventing --timeout=900s
+
+  # Install KnativeKafka after installing KnativeEventing with tracing enabled
+  pushd $operator_dir || return $?
+  INSTALL_SERVING="false" INSTALL_EVENTING="false" INSTALL_KAFKA="true" ./hack/install.sh
+  popd || return $?
 
   return $failed
 }
 
 function run_e2e_tests() {
-
   go_test_e2e -timeout=100m -short ./test/e2e/ \
     -imagetemplate "${TEST_IMAGE_TEMPLATE}" || return $?
 

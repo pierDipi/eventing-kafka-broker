@@ -90,8 +90,10 @@ EOF
   export GOPATH=/tmp/go
   local failed=0
   pushd $operator_dir || return $?
+  export ON_CLUSTER_BUILDS=true
+  export DOCKER_REPO_OVERRIDE=image-registry.openshift-image-registry.svc:5000/openshift-marketplace
   make OPENSHIFT_CI="true" TRACING_BACKEND=zipkin \
-      generated-files install-tracing install-operator || failed=$?
+    generated-files images install-tracing install-operator || failed=$?
   popd || return $?
 
   oc apply -f openshift/knative-eventing.yaml

@@ -21,16 +21,19 @@ import (
 	"fmt"
 
 	mf "github.com/manifestival/manifestival"
+	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes/scheme"
+	appslisters "k8s.io/client-go/listers/apps/v1"
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/utils/pointer"
 	eventing "knative.dev/eventing/pkg/apis/eventing/v1"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/resolver"
 
@@ -39,24 +42,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/base"
 )
-
-// TODO: 1.
-// TODO: Read config-kafka-broker-data-plane in user namespace first, fallback to the one in knative-eventing.
-// TODO: Though, this would mean that we need to mount the configmap from knative-eventing to the pod in user namespace.
-// TODO: This is not supported by Kubernetes. If we want this, we need to read the configmap content dynamically, with
-// TODO: necessary RBAC.
-
-// TODO: 2.
-// TODO: config-kafka-broker-data-plane is created by the reconciler dynamically.
-// TODO: This means, the contents can ONLY be changed by users after a broker is created.
-// TODO: Also, reconciler will reconcile it when it is changed.
-
-// TODO: 3.
-// TODO: config-tracing and config-logging has the same mounting issues. We need to read these manually.
-
-// TODO: 4.
-// TODO: Do we reconcile everything when one of the configmaps change?
-// TODO: Specifically, contract configmap, etc.
 
 // TODO: 5.
 // TODO: IPListerWithMapping struct can leak resources in case of a leader change
@@ -68,7 +53,8 @@ type NamespacedReconciler struct {
 
 	Resolver *resolver.URIResolver
 
-	ConfigMapLister corelisters.ConfigMapLister
+	ConfigMapLister  corelisters.ConfigMapLister
+	DeploymentLister appslisters.DeploymentLister
 
 	// NewKafkaClusterAdminClient creates new sarama ClusterAdmin. It's convenient to add this as Reconciler field so that we can
 	// mock the function used during the reconciliation loop.
@@ -98,7 +84,18 @@ func (r *NamespacedReconciler) ReconcileKind(ctx context.Context, broker *eventi
 	}
 
 	if err = manifest.Apply(); err != nil {
-		return fmt.Errorf("unable to apply dataplane manifest. namespace: %s, broker: %v, error: %v", broker.Namespace, broker, err)
+		return fmt.Errorf("unable to apply dataplane manifest. namespace: %s, broker: %v, error: %w", broker.Namespace, broker, err)
+	}
+
+	logger := logging.FromContext(ctx).Desugar()
+	logger.Debug("Data plane created")
+
+	for _, res := range manifest.Resources() {
+		logger.Debug("Resource created",
+			zap.String("gvk", res.GroupVersionKind().String()),
+			zap.String("resource.name", res.GetName()),
+			zap.String("resource.namespace", res.GetNamespace()),
+		)
 	}
 
 	return br.ReconcileKind(ctx, broker)
@@ -149,12 +146,109 @@ func (r *NamespacedReconciler) createReconcilerForBrokerInstance(broker *eventin
 func (r *NamespacedReconciler) getManifest(broker *eventing.Broker) (mf.Manifest, error) {
 	manifest := r.BaseDataPlaneManifest
 
-	manifest, err := manifest.Transform(mf.InjectNamespace(broker.Namespace))
+	additionalConfigMaps, err := r.configMapsFromSystemNamespace(broker)
+	if err != nil {
+		return mf.Manifest{}, err
+	}
+	manifest = manifest.Append(additionalConfigMaps)
+
+	additionalDeployments, err := r.datePlaneFromSystemNamespace(broker)
+	if err != nil {
+		return mf.Manifest{}, err
+	}
+	manifest = manifest.Append(additionalDeployments)
+
+	manifest, err = manifest.Transform(mf.InjectNamespace(broker.Namespace))
 	if err != nil {
 		return mf.Manifest{}, fmt.Errorf("unable to transform base dataplane manifest with namespace injection. namespace: %s, error: %v", broker.Namespace, err)
 	}
 
 	return manifest.Transform(appendNewOwnerRefsToPersisted(manifest.Client, broker))
+}
+
+func (r *NamespacedReconciler) datePlaneFromSystemNamespace(broker *eventing.Broker) (mf.Manifest, error) {
+	configMaps := []string{
+		"kafka-broker-receiver",
+		"kafka-broker-dispatcher",
+	}
+	manifests := mf.Manifest{}
+	for _, name := range configMaps {
+		manifest, err := r.createManifestFromSystemDeployment(broker, name)
+		if err != nil {
+			return mf.Manifest{}, err
+		}
+		manifests = manifests.Append(manifest)
+	}
+	return manifests, nil
+}
+
+func (r *NamespacedReconciler) configMapsFromSystemNamespace(broker *eventing.Broker) (mf.Manifest, error) {
+	configMaps := []string{
+		"config-kafka-broker-data-plane",
+		"config-tracing",
+		"kafka-config-logging",
+	}
+	manifests := mf.Manifest{}
+	for _, name := range configMaps {
+		manifest, err := r.createManifestFromSystemConfigMap(broker, name)
+		if err != nil {
+			return mf.Manifest{}, err
+		}
+		manifests = manifests.Append(manifest)
+	}
+	return manifests, nil
+}
+
+func (r *NamespacedReconciler) createManifestFromSystemConfigMap(broker *eventing.Broker, name string) (mf.Manifest, error) {
+	sysCM, err := r.ConfigMapLister.ConfigMaps(r.SystemNamespace).Get(name)
+	if err != nil {
+		return mf.Manifest{}, fmt.Errorf("failed to get ConfigMap %s/%s: %w", r.SystemNamespace, name, err)
+	}
+
+	cm := &corev1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{Kind: "ConfigMap", APIVersion: corev1.SchemeGroupVersion.String()},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:   broker.GetNamespace(),
+			Name:        sysCM.Name,
+			Labels:      sysCM.Labels,
+			Annotations: sysCM.Annotations,
+		},
+		Immutable:  sysCM.Immutable,
+		Data:       sysCM.Data,
+		BinaryData: sysCM.BinaryData,
+	}
+	return manifestFromObject(cm)
+}
+
+func (r *NamespacedReconciler) createManifestFromSystemDeployment(broker *eventing.Broker, name string) (mf.Manifest, error) {
+	sysDeployment, err := r.DeploymentLister.Deployments(r.SystemNamespace).Get(name)
+	if err != nil {
+		return mf.Manifest{}, fmt.Errorf("failed to get Deployment %s/%s: %w", r.SystemNamespace, name, err)
+	}
+
+	cm := &appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{Kind: "Deployment", APIVersion: appsv1.SchemeGroupVersion.String()},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:   broker.GetNamespace(),
+			Name:        sysDeployment.Name,
+			Labels:      sysDeployment.Labels,
+			Annotations: sysDeployment.Annotations,
+		},
+		Spec: sysDeployment.Spec,
+	}
+	return manifestFromObject(cm)
+}
+
+func manifestFromObject(obj runtime.Object) (mf.Manifest, error) {
+	unstr, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
+	if err != nil {
+		return mf.Manifest{}, err
+	}
+	manifest, err := mf.ManifestFrom(mf.Slice{unstructured.Unstructured{Object: unstr}})
+	if err != nil {
+		return mf.Manifest{}, err
+	}
+	return manifest, err
 }
 
 func appendNewOwnerRefsToPersisted(client mf.Client, broker *eventing.Broker) mf.Transformer {
@@ -211,26 +305,4 @@ func appendOwnerRef(refs []metav1.OwnerReference, broker *eventing.Broker) ([]me
 	newRef.BlockOwnerDeletion = pointer.Bool(true)
 
 	return append(refs, newRef), true
-}
-
-func setImagesForDeployments(imageMap map[string]string) mf.Transformer {
-	return func(resource *unstructured.Unstructured) error {
-		if resource.GetKind() != "Deployment" {
-			return nil
-		}
-
-		var deployment = &appsv1.Deployment{}
-		if err := scheme.Scheme.Convert(resource, deployment, nil); err != nil {
-			return err
-		}
-
-		for i := range deployment.Spec.Template.Spec.Containers {
-			if img, exists := imageMap[deployment.Spec.Template.Spec.Containers[i].Image]; exists {
-				deployment.Spec.Template.Spec.Containers[i].Image = img
-				continue
-			}
-		}
-
-		return scheme.Scheme.Convert(deployment, resource, nil)
-	}
 }

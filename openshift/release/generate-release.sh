@@ -57,6 +57,7 @@ resolve_resources control-plane/config/eventing-kafka-broker/100-broker $eventin
 resolve_resources control-plane/config/eventing-kafka-broker/100-sink $eventing_kafka_controller "$image_prefix" "$tag"
 resolve_resources control-plane/config/eventing-kafka-broker/100-source $eventing_kafka_controller "$image_prefix" "$tag"
 resolve_resources control-plane/config/eventing-kafka-broker/100-channel $eventing_kafka_controller "$image_prefix" "$tag"
+resolve_resources control-plane/config/eventing-kafka-broker/100-kafka-internal $eventing_kafka_controller "$image_prefix" "$tag"
 resolve_resources control-plane/config/eventing-kafka-broker/200-controller $eventing_kafka_controller "$image_prefix" "$tag"
 resolve_resources control-plane/config/eventing-kafka-broker/200-webhook $eventing_kafka_controller "$image_prefix" "$tag"
 

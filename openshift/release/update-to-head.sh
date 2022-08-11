@@ -23,6 +23,7 @@ git commit -sm ":fire: remove unneeded workflows" .github/
 
 # Generate our OCP artifacts
 make generate-dockerfiles
+git apply openshift/patches/*
 make RELEASE=ci generate-release
 git add .
 git commit -m ":open_file_folder: Update openshift specific files."

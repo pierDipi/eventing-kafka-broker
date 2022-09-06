@@ -92,11 +92,11 @@ var (
 
 var DefaultEnv = &config.Env{
 	DataPlaneConfigMapNamespace: "knative-eventing",
-	DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
+	ContractConfigMapName:       "kafka-broker-brokers-triggers",
 	GeneralConfigMapName:        "kafka-broker-config",
 	IngressName:                 "kafka-broker-ingress",
 	SystemNamespace:             "knative-eventing",
-	DataPlaneConfigFormat:       base.Json,
+	ContractConfigMapFormat:     base.Json,
 	DefaultBackoffDelayMs:       1000,
 }
 
@@ -114,7 +114,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 
 	testKey := fmt.Sprintf("%s/%s", BrokerNamespace, BrokerName)
 
-	env.DataPlaneConfigFormat = format
+	env.ContractConfigMapFormat = format
 
 	table := TableTest{
 		{
@@ -575,7 +575,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				&corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: env.DataPlaneConfigMapNamespace,
-						Name:      env.DataPlaneConfigMapName + "a", // Use a different name
+						Name:      env.ContractConfigMapName + "a", // Use a different name
 					},
 				},
 			},
@@ -1917,7 +1917,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 
 	testKey := fmt.Sprintf("%s/%s", BrokerNamespace, BrokerName)
 
-	env.DataPlaneConfigFormat = format
+	env.ContractConfigMapFormat = format
 
 	table := TableTest{
 		{
@@ -1988,11 +1988,11 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 						},
 					},
 					Generation: 1,
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, &env),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources:  []*contract.Resource{},
 					Generation: 2,
 				}),
@@ -2319,8 +2319,8 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 				PodLister:                   listers.GetPodLister(),
 				SecretLister:                listers.GetSecretLister(),
 				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
-				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
+				DataPlaneConfigMapName:      env.ContractConfigMapName,
+				DataPlaneConfigFormat:       env.ContractConfigMapFormat,
 				SystemNamespace:             env.SystemNamespace,
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,

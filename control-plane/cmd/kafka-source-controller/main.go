@@ -26,7 +26,6 @@ import (
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/injection/sharedmain"
 
-	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 	sourcev2 "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/source/v2"
 )
@@ -52,14 +51,6 @@ func main() {
 			Name: "consumergroup-controller",
 			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
 				return consumergroup.NewController(ctx)
-			},
-		},
-
-		// Consumer controller
-		injection.NamedControllerConstructor{
-			Name: "consumer-controller",
-			ControllerConstructor: func(ctx context.Context, watcher configmap.Watcher) *controller.Impl {
-				return consumer.NewController(ctx)
 			},
 		},
 	)

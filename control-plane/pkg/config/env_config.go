@@ -24,13 +24,20 @@ import (
 
 type Env struct {
 	DataPlaneConfigMapNamespace string `required:"true" split_words:"true"`
-	DataPlaneConfigMapName      string `required:"true" split_words:"true"`
-	GeneralConfigMapName        string `required:"true" split_words:"true"`
-	IngressName                 string `required:"true" split_words:"true"`
-	IngressPodPort              string `required:"false" split_words:"true"`
-	SystemNamespace             string `required:"true" split_words:"true"`
-	DataPlaneConfigFormat       string `required:"true" split_words:"true"`
-	DefaultBackoffDelayMs       uint64 `required:"false" split_words:"true"`
+
+	// ContractConfigMapName is the name of the configmap that holds the contract between the control plane
+	// and the data plane.
+	ContractConfigMapName string `required:"true" split_words:"true"` // example: kafka-broker-brokers-triggers
+
+	// GeneralConfigMapName is the name of the configmap that holds configuration that affects the control plane
+	// and the data plane. For example, Kafka bootstrap server information could be in here for broker configuration.
+	GeneralConfigMapName string `required:"true" split_words:"true"` // example: kafka-broker-config
+
+	IngressName             string `required:"true" split_words:"true"` // example: kafka-broker-ingress
+	IngressPodPort          string `required:"false" split_words:"true"`
+	SystemNamespace         string `required:"true" split_words:"true"`
+	ContractConfigMapFormat string `required:"true" split_words:"true"`
+	DefaultBackoffDelayMs   uint64 `required:"false" split_words:"true"`
 }
 
 // ValidationOption represents a function to validate the Env configurations.
@@ -53,5 +60,5 @@ func GetEnvConfig(prefix string, validations ...ValidationOption) (*Env, error) 
 }
 
 func (c *Env) DataPlaneConfigMapAsString() string {
-	return fmt.Sprintf("%s/%s", c.DataPlaneConfigMapNamespace, c.DataPlaneConfigMapName)
+	return fmt.Sprintf("%s/%s", c.DataPlaneConfigMapNamespace, c.ContractConfigMapName)
 }

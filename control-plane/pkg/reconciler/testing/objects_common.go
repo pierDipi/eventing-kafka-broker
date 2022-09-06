@@ -119,7 +119,7 @@ func ServiceURLDestination(ns, name string) *duckv1.Destination {
 
 func NewConfigMapWithBinaryData(env *config.Env, data []byte, options ...reconcilertesting.ConfigMapOption) runtime.Object {
 	return reconcilertesting.NewConfigMap(
-		env.DataPlaneConfigMapName,
+		env.ContractConfigMapName,
 		env.DataPlaneConfigMapNamespace,
 		append(options, func(configMap *corev1.ConfigMap) {
 			if configMap.BinaryData == nil {
@@ -146,7 +146,7 @@ func NewConfigMapWithTextData(namespace, name string, data map[string]string) ru
 func NewConfigMapFromContract(contract *contract.Contract, env *config.Env, options ...reconcilertesting.ConfigMapOption) runtime.Object {
 	var data []byte
 	var err error
-	if env.DataPlaneConfigFormat == base.Protobuf {
+	if env.ContractConfigMapFormat == base.Protobuf {
 		data, err = proto.Marshal(contract)
 	} else {
 		data, err = protojson.Marshal(contract)

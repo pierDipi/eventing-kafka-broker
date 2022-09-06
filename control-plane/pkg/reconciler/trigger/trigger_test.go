@@ -56,11 +56,11 @@ import (
 
 var DefaultEnv = &config.Env{
 	DataPlaneConfigMapNamespace: "knative-eventing",
-	DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
+	ContractConfigMapName:       "kafka-broker-brokers-triggers",
 	GeneralConfigMapName:        "kafka-broker-config",
 	IngressName:                 "kafka-broker-ingress",
 	SystemNamespace:             "knative-eventing",
-	DataPlaneConfigFormat:       base.Json,
+	ContractConfigMapFormat:     base.Json,
 	DefaultBackoffDelayMs:       1000,
 }
 
@@ -117,7 +117,7 @@ func triggerReconciliation(t *testing.T, format string, env config.Env, useNewFi
 
 	testKey := fmt.Sprintf("%s/%s", TriggerNamespace, TriggerName)
 
-	env.DataPlaneConfigFormat = format
+	env.ContractConfigMapFormat = format
 
 	table := TableTest{
 		{
@@ -2052,7 +2052,7 @@ func triggerFinalizer(t *testing.T, format string, env config.Env) {
 
 	testKey := fmt.Sprintf("%s/%s", TriggerNamespace, TriggerName)
 
-	env.DataPlaneConfigFormat = format
+	env.ContractConfigMapFormat = format
 
 	table := TableTest{
 		{
@@ -2758,9 +2758,8 @@ func useTableWithFlags(t *testing.T, table TableTest, env *config.Env, flags fea
 				PodLister:                   listers.GetPodLister(),
 				SecretLister:                listers.GetSecretLister(),
 				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
-				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
-				SystemNamespace:             env.SystemNamespace,
+				DataPlaneConfigMapName:      env.ContractConfigMapName,
+				DataPlaneConfigFormat:       env.ContractConfigMapFormat,
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,
 			},

@@ -56,11 +56,11 @@ const (
 
 var DefaultEnv = &config.Env{
 	DataPlaneConfigMapNamespace: "knative-eventing",
-	DataPlaneConfigMapName:      "kafka-source-sources",
+	ContractConfigMapName:       "kafka-source-sources",
 	GeneralConfigMapName:        "kafka-broker-config",
 	IngressName:                 "kafka-source-ingress",
 	SystemNamespace:             "knative-eventing",
-	DataPlaneConfigFormat:       base.Json,
+	ContractConfigMapFormat:     base.Json,
 }
 
 var (
@@ -510,8 +510,8 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 				PodLister:                   listers.GetPodLister(),
 				SecretLister:                listers.GetSecretLister(),
 				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
-				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
+				DataPlaneConfigMapName:      env.ContractConfigMapName,
+				DataPlaneConfigFormat:       env.ContractConfigMapFormat,
 				SystemNamespace:             env.SystemNamespace,
 				DispatcherLabel:             base.SourceDispatcherLabel,
 			},

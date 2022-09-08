@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"time"
 
+	"github.com/magiconair/properties"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
@@ -29,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgotesting "k8s.io/client-go/testing"
 	"k8s.io/utils/pointer"
+	sources "knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	reconcilertesting "knative.dev/eventing/pkg/reconciler/testing/v1"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
@@ -478,5 +480,31 @@ func PodRunning() PodOption {
 func PodAnnotations(annotations map[string]string) PodOption {
 	return func(pod *corev1.Pod) {
 		pod.Annotations = annotations
+	}
+}
+
+func DataPlaneConfigMap(namespace, name, key string, options ...base.ConfigMapOption) *corev1.ConfigMap {
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      name,
+		},
+		Data: map[string]string{
+			key: "",
+		},
+	}
+
+	for _, opt := range options {
+		opt(cm)
+	}
+
+	return cm
+}
+
+func DataPlaneConfigInitialOffset(key string, offset sources.Offset) base.ConfigMapOption {
+	return func(cm *corev1.ConfigMap) {
+		props := properties.MustLoadString(cm.Data[key])
+		_, _, _ = props.Set("auto.offset.reset", string(offset))
+		cm.Data[key] = props.String()
 	}
 }

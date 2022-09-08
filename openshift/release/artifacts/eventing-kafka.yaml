@@ -1297,22 +1297,31 @@ spec:
             - name: SOURCE_DATA_PLANE_CONFIG_MAP_NAMESPACE
               value: knative-eventing
 
-            - name: BROKER_DATA_PLANE_CONFIG_MAP_NAME
+            - name: BROKER_CONTRACT_CONFIG_MAP_NAME
               value: kafka-broker-brokers-triggers
-            - name: CHANNEL_DATA_PLANE_CONFIG_MAP_NAME
+            - name: CHANNEL_CONTRACT_CONFIG_MAP_NAME
               value: kafka-channel-channels-subscriptions
-            - name: SINK_DATA_PLANE_CONFIG_MAP_NAME
+            - name: SINK_CONTRACT_CONFIG_MAP_NAME
               value: kafka-sink-sinks
-            - name: SOURCE_DATA_PLANE_CONFIG_MAP_NAME
+            - name: SOURCE_CONTRACT_CONFIG_MAP_NAME
               value: kafka-source-sources
 
-            - name: BROKER_DATA_PLANE_CONFIG_FORMAT
+            - name: BROKER_DATA_PLANE_CONFIG_CONFIG_MAP_NAME
+              value: config-kafka-broker-data-plane
+            - name: SOURCE_DATA_PLANE_CONFIG_CONFIG_MAP_NAME
+              value: config-kafka-source-data-plane
+            - name: SINK_DATA_PLANE_CONFIG_CONFIG_MAP_NAME
+              value: config-kafka-source-data-plane
+            - name: CHANNEL_DATA_PLANE_CONFIG_CONFIG_MAP_NAME
+              value: config-kafka-source-data-plane
+
+            - name: BROKER_CONTRACT_CONFIG_MAP_FORMAT
               value: json
-            - name: CHANNEL_DATA_PLANE_CONFIG_FORMAT
+            - name: CHANNEL_CONTRACT_CONFIG_MAP_FORMAT
               value: json
-            - name: SINK_DATA_PLANE_CONFIG_FORMAT
+            - name: SINK_CONTRACT_CONFIG_MAP_FORMAT
               value: json
-            - name: SOURCE_DATA_PLANE_CONFIG_FORMAT
+            - name: SOURCE_CONTRACT_CONFIG_MAP_FORMAT
               value: json
 
             - name: BROKER_INGRESS_NAME
@@ -2343,7 +2352,7 @@ data:
     value.deserializer=io.cloudevents.kafka.CloudEventDeserializer
     fetch.min.bytes=1
     heartbeat.interval.ms=3000
-    max.partition.fetch.bytes=1048576
+    max.partition.fetch.bytes=65536
     session.timeout.ms=10000
     # ssl.key.password=
     # ssl.keystore.location=
@@ -2360,8 +2369,8 @@ data:
     fetch.max.bytes=52428800
     isolation.level=read_uncommitted
     max.poll.interval.ms=300000
-    max.poll.records=500
-    # partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor
+    max.poll.records=50
+    partition.assignment.strategy=org.apache.kafka.clients.consumer.StickyAssignor
     receive.buffer.bytes=65536
     request.timeout.ms=2000
     # sasl.client.callback.handler.class=
@@ -2403,6 +2412,7 @@ data:
     # ssl.trustmanager.algorithm
   config-kafka-source-webclient.properties: |
     idleTimeout=10000
+    maxPoolSize=100
 ---
 ---
 
@@ -2716,7 +2726,7 @@ data:
     value.deserializer=io.cloudevents.kafka.CloudEventDeserializer
     fetch.min.bytes=1
     heartbeat.interval.ms=3000
-    max.partition.fetch.bytes=1048576
+    max.partition.fetch.bytes=65536
     session.timeout.ms=10000
     # ssl.key.password=
     # ssl.keystore.location=
@@ -2724,7 +2734,7 @@ data:
     # ssl.truststore.location=
     # ssl.truststore.password=
     allow.auto.create.topics=true
-    auto.offset.reset=earliest
+    auto.offset.reset=latest
     client.dns.lookup=use_all_dns_ips
     connections.max.idle.ms=540000
     default.api.timeout.ms=2000
@@ -2733,8 +2743,8 @@ data:
     fetch.max.bytes=52428800
     isolation.level=read_uncommitted
     max.poll.interval.ms=300000
-    max.poll.records=500
-    # partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor
+    max.poll.records=50
+    partition.assignment.strategy=org.apache.kafka.clients.consumer.StickyAssignor
     receive.buffer.bytes=65536
     request.timeout.ms=2000
     # sasl.client.callback.handler.class=
@@ -2776,6 +2786,7 @@ data:
     # ssl.trustmanager.algorithm
   config-kafka-broker-webclient.properties: |
     idleTimeout=10000
+    maxPoolSize=100
   config-kafka-broker-httpserver.properties: |
     idleTimeout=0
 ---
@@ -3285,7 +3296,7 @@ data:
     value.deserializer=io.cloudevents.kafka.CloudEventDeserializer
     fetch.min.bytes=1
     heartbeat.interval.ms=3000
-    max.partition.fetch.bytes=1048576
+    max.partition.fetch.bytes=65536
     session.timeout.ms=10000
     # ssl.key.password=
     # ssl.keystore.location=
@@ -3301,8 +3312,8 @@ data:
     fetch.max.bytes=52428800
     isolation.level=read_uncommitted
     max.poll.interval.ms=300000
-    max.poll.records=500
-    # partition.assignment.strategy=org.apache.kafka.clients.consumer.CooperativeStickyAssignor
+    max.poll.records=50
+    partition.assignment.strategy=org.apache.kafka.clients.consumer.StickyAssignor
     receive.buffer.bytes=65536
     request.timeout.ms=2000
     # sasl.client.callback.handler.class=
@@ -3344,6 +3355,7 @@ data:
     # ssl.trustmanager.algorithm
   config-kafka-channel-webclient.properties: |
     idleTimeout=10000
+    maxPoolSize=100
   config-kafka-channel-httpserver.properties: |
     idleTimeout=0
 ---

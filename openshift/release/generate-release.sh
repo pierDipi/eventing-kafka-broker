@@ -5,7 +5,6 @@ set -euo pipefail
 source $(dirname $0)/resolve.sh
 
 GITHUB_ACTIONS=true $(dirname $0)/../../hack/update-codegen.sh
-git apply openshift/patches/close_offsetmanager.patch
 git apply openshift/patches/disable-ko-publish-rekt.patch
 git apply openshift/patches/override-min-version.patch
 git apply openshift/patches/use_kafkacat_from_ocp.patch

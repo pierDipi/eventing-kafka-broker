@@ -85,11 +85,11 @@ var (
 
 var DefaultEnv = &config.Env{
 	DataPlaneConfigMapNamespace: "knative-eventing",
-	DataPlaneConfigMapName:      "kafka-sink-sinks",
+	ContractConfigMapName:       "kafka-sink-sinks",
 	GeneralConfigMapName:        "kafka-broker-config",
 	IngressName:                 "kafka-sink-ingress",
 	SystemNamespace:             "knative-eventing",
-	DataPlaneConfigFormat:       base.Json,
+	ContractConfigMapFormat:     base.Json,
 }
 
 func TestSinkReconciler(t *testing.T) {
@@ -107,7 +107,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 
 	testKey := fmt.Sprintf("%s/%s", SinkNamespace, SinkName)
 
-	env.DataPlaneConfigFormat = format
+	env.ContractConfigMapFormat = format
 
 	table := TableTest{
 		{
@@ -458,7 +458,7 @@ func sinkReconciliation(t *testing.T, format string, env config.Env) {
 				&corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: env.DataPlaneConfigMapNamespace,
-						Name:      env.DataPlaneConfigMapName + "a", // Use a different name
+						Name:      env.ContractConfigMapName + "a", // Use a different name
 					},
 				},
 			},
@@ -975,7 +975,7 @@ func sinkFinalization(t *testing.T, format string, env config.Env) {
 
 	testKey := fmt.Sprintf("%s/%s", SinkNamespace, SinkName)
 
-	env.DataPlaneConfigFormat = format
+	env.ContractConfigMapFormat = format
 
 	table := TableTest{
 		{
@@ -1323,8 +1323,8 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 				PodLister:                   listers.GetPodLister(),
 				SecretLister:                listers.GetSecretLister(),
 				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
-				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
+				ContractConfigMapName:       env.ContractConfigMapName,
+				ContractConfigMapFormat:     env.ContractConfigMapFormat,
 				SystemNamespace:             env.SystemNamespace,
 				ReceiverLabel:               base.SinkReceiverLabel,
 			},

@@ -37,20 +37,22 @@ func TestGetEnvConfig(t *testing.T) {
 			name:   "broker prefix",
 			prefix: "BROKER",
 			want: &Env{
-				DataPlaneConfigMapNamespace: "knative-eventing",
-				DataPlaneConfigMapName:      "kafka-brokers-triggers",
-				GeneralConfigMapName:        "kafka-config",
-				IngressName:                 "kafka-broker-ingress",
-				SystemNamespace:             "knative-eventing",
-				DataPlaneConfigFormat:       "json",
+				DataPlaneConfigMapNamespace:  "knative-eventing",
+				ContractConfigMapName:        "kafka-brokers-triggers",
+				GeneralConfigMapName:         "kafka-config",
+				IngressName:                  "kafka-broker-ingress",
+				SystemNamespace:              "knative-eventing",
+				ContractConfigMapFormat:      "json",
+				DataPlaneConfigConfigMapName: "config-kafka-broker-data-plane",
 			},
 			setEnv: func() {
 				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE", "knative-eventing")
-				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_MAP_NAME", "kafka-brokers-triggers")
+				_ = os.Setenv("BROKER_CONTRACT_CONFIG_MAP_NAME", "kafka-brokers-triggers")
+				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_CONFIG_MAP_NAME", "config-kafka-broker-data-plane")
 				_ = os.Setenv("BROKER_GENERAL_CONFIG_MAP_NAME", "kafka-config")
 				_ = os.Setenv("BROKER_INGRESS_NAME", "kafka-broker-ingress")
 				_ = os.Setenv("BROKER_SYSTEM_NAMESPACE", "knative-eventing")
-				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_FORMAT", "json")
+				_ = os.Setenv("BROKER_CONTRACT_CONFIG_MAP_FORMAT", "json")
 			},
 			wantErr: false,
 		},
@@ -58,20 +60,22 @@ func TestGetEnvConfig(t *testing.T) {
 			name:   "sink prefix",
 			prefix: "SINK",
 			want: &Env{
-				DataPlaneConfigMapNamespace: "knative-eventing",
-				DataPlaneConfigMapName:      "kafka-sinks",
-				GeneralConfigMapName:        "kafka-config",
-				IngressName:                 "kafka-sink-ingress",
-				SystemNamespace:             "knative-eventing",
-				DataPlaneConfigFormat:       "json",
+				DataPlaneConfigMapNamespace:  "knative-eventing",
+				ContractConfigMapName:        "kafka-sinks",
+				DataPlaneConfigConfigMapName: "config-kafka-sink-data-plane",
+				GeneralConfigMapName:         "kafka-config",
+				IngressName:                  "kafka-sink-ingress",
+				SystemNamespace:              "knative-eventing",
+				ContractConfigMapFormat:      "json",
 			},
 			setEnv: func() {
 				_ = os.Setenv("SINK_DATA_PLANE_CONFIG_MAP_NAMESPACE", "knative-eventing")
-				_ = os.Setenv("SINK_DATA_PLANE_CONFIG_MAP_NAME", "kafka-sinks")
+				_ = os.Setenv("SINK_CONTRACT_CONFIG_MAP_NAME", "kafka-sinks")
 				_ = os.Setenv("SINK_GENERAL_CONFIG_MAP_NAME", "kafka-config")
+				_ = os.Setenv("SINK_DATA_PLANE_CONFIG_CONFIG_MAP_NAME", "config-kafka-sink-data-plane")
 				_ = os.Setenv("SINK_INGRESS_NAME", "kafka-sink-ingress")
 				_ = os.Setenv("SINK_SYSTEM_NAMESPACE", "knative-eventing")
-				_ = os.Setenv("SINK_DATA_PLANE_CONFIG_FORMAT", "json")
+				_ = os.Setenv("SINK_CONTRACT_CONFIG_MAP_FORMAT", "json")
 			},
 			wantErr: false,
 		},
@@ -79,11 +83,11 @@ func TestGetEnvConfig(t *testing.T) {
 			name:   "missing required variable - SINK_DATA_PLANE_CONFIG_MAP_NAMESPACE",
 			prefix: "SINK",
 			setEnv: func() {
-				_ = os.Setenv("SINK_DATA_PLANE_CONFIG_MAP_NAME", "kafka-sinks")
+				_ = os.Setenv("SINK_CONTRACT_CONFIG_MAP_NAME", "kafka-sinks")
 				_ = os.Setenv("SINK_GENERAL_CONFIG_MAP_NAME", "kafka-config")
 				_ = os.Setenv("SINK_INGRESS_NAME", "kafka-sink-ingress")
 				_ = os.Setenv("SINK_SYSTEM_NAMESPACE", "knative-eventing")
-				_ = os.Setenv("SINK_DATA_PLANE_CONFIG_FORMAT", "json")
+				_ = os.Setenv("SINK_DATA_PLANE_CONFIG_MAP_FORMAT", "json")
 			},
 			wantErr: true,
 		},
@@ -100,11 +104,11 @@ func TestGetEnvConfig(t *testing.T) {
 			},
 			setEnv: func() {
 				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE", "knative-eventing")
-				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_MAP_NAME", "kafka-brokers-triggers")
+				_ = os.Setenv("BROKER_CONTRACT_CONFIG_MAP_NAME", "kafka-brokers-triggers")
 				_ = os.Setenv("BROKER_GENERAL_CONFIG_MAP_NAME", "kafka-config")
 				_ = os.Setenv("BROKER_INGRESS_NAME", "kafka-broker-ingress")
 				_ = os.Setenv("BROKER_SYSTEM_NAMESPACE", "knative-eventing")
-				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_FORMAT", "json")
+				_ = os.Setenv("BROKER_CONTRACT_CONFIG_MAP_FORMAT", "json")
 				_ = os.Setenv("BROKER_DEFAULT_BACKOFF_DELAY_MS", "0")
 			},
 			wantErr: true,
@@ -122,11 +126,11 @@ func TestGetEnvConfig(t *testing.T) {
 			},
 			setEnv: func() {
 				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE", "knative-eventing")
-				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_MAP_NAME", "kafka-brokers-triggers")
+				_ = os.Setenv("BROKER_CONTRACT_CONFIG_MAP_NAME", "kafka-brokers-triggers")
 				_ = os.Setenv("BROKER_GENERAL_CONFIG_MAP_NAME", "kafka-config")
 				_ = os.Setenv("BROKER_INGRESS_NAME", "kafka-broker-ingress")
 				_ = os.Setenv("BROKER_SYSTEM_NAMESPACE", "knative-eventing")
-				_ = os.Setenv("BROKER_DATA_PLANE_CONFIG_FORMAT", "json")
+				_ = os.Setenv("BROKER_CONTRACT_CONFIG_MAP_FORMAT", "json")
 			},
 			wantErr: true,
 		},

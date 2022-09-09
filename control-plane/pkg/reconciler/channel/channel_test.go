@@ -72,11 +72,11 @@ var finalizerUpdatedEvent = Eventf(
 
 var DefaultEnv = &config.Env{
 	DataPlaneConfigMapNamespace: "knative-eventing",
-	DataPlaneConfigMapName:      "kafka-channel-channels-subscriptions",
+	ContractConfigMapName:       "kafka-channel-channels-subscriptions",
 	GeneralConfigMapName:        "kafka-channel-config",
 	IngressName:                 "kafka-channel-ingress",
 	SystemNamespace:             "knative-eventing",
-	DataPlaneConfigFormat:       base.Json,
+	ContractConfigMapFormat:     base.Json,
 }
 
 func TestReconcileKind(t *testing.T) {
@@ -1621,8 +1621,8 @@ func useTable(t *testing.T, table TableTest, env config.Env) {
 				PodLister:                   listers.GetPodLister(),
 				SecretLister:                listers.GetSecretLister(),
 				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
-				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
+				ContractConfigMapName:       env.ContractConfigMapName,
+				ContractConfigMapFormat:     env.ContractConfigMapFormat,
 				SystemNamespace:             env.SystemNamespace,
 				DispatcherLabel:             base.ChannelDispatcherLabel,
 				ReceiverLabel:               base.ChannelReceiverLabel,

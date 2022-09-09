@@ -92,11 +92,11 @@ var (
 
 var DefaultEnv = &config.Env{
 	DataPlaneConfigMapNamespace: "knative-eventing",
-	DataPlaneConfigMapName:      "kafka-broker-brokers-triggers",
+	ContractConfigMapName:       "kafka-broker-brokers-triggers",
 	GeneralConfigMapName:        "kafka-broker-config",
 	IngressName:                 "kafka-broker-ingress",
 	SystemNamespace:             "knative-eventing",
-	DataPlaneConfigFormat:       base.Json,
+	ContractConfigMapFormat:     base.Json,
 	DefaultBackoffDelayMs:       1000,
 }
 
@@ -114,7 +114,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 
 	testKey := fmt.Sprintf("%s/%s", BrokerNamespace, BrokerName)
 
-	env.DataPlaneConfigFormat = format
+	env.ContractConfigMapFormat = format
 
 	table := TableTest{
 		{
@@ -173,6 +173,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 					),
 				},
 			},
@@ -235,6 +236,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(ExternalTopicName),
 					),
 				},
 			},
@@ -338,6 +340,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerTopicReady,
 						StatusBrokerProbeFailed(prober.StatusNotReady),
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 					),
 				},
 			},
@@ -399,6 +402,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						StatusBrokerProbeFailed(prober.StatusUnknown),
 					),
 				},
@@ -458,6 +462,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
@@ -517,6 +522,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
@@ -575,7 +581,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 				&corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: env.DataPlaneConfigMapNamespace,
-						Name:      env.DataPlaneConfigMapName + "a", // Use a different name
+						Name:      env.ContractConfigMapName + "a", // Use a different name
 					},
 				},
 			},
@@ -621,6 +627,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigMapUpdatedReady(&env),
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
@@ -676,6 +683,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 					),
@@ -757,6 +765,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 					),
@@ -854,6 +863,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved("http://www.my-sink.com/api"),
@@ -939,6 +949,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 					),
@@ -1016,6 +1027,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 					),
@@ -1085,6 +1097,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigNotParsed("failed to resolve Spec.Delivery.DeadLetterSink: destination missing Ref and URI, expected at least one"),
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 					),
 				},
 			},
@@ -1185,6 +1198,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 					),
@@ -1266,6 +1280,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						BrokerConfigMapSecretAnnotation("secret-1"),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
@@ -1475,6 +1490,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerConfigParsed,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
@@ -1568,6 +1584,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
@@ -1634,6 +1651,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
@@ -1697,6 +1715,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
@@ -1763,6 +1782,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerDataPlaneAvailable,
 						StatusBrokerTopicReady,
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 						StatusBrokerConfigParsed,
 						BrokerAddressable(&env),
 						StatusBrokerProbeSucceeded,
@@ -1816,6 +1836,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 					),
 				},
 			},
@@ -1868,6 +1889,7 @@ func brokerReconciliation(t *testing.T, format string, env config.Env) {
 						StatusBrokerProbeSucceeded,
 						BrokerDLSResolved(ServiceURL),
 						BrokerConfigMapAnnotations(),
+						WithTopicStatusAnnotation(BrokerTopic()),
 					),
 				},
 			},
@@ -1917,7 +1939,7 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 
 	testKey := fmt.Sprintf("%s/%s", BrokerNamespace, BrokerName)
 
-	env.DataPlaneConfigFormat = format
+	env.ContractConfigMapFormat = format
 
 	table := TableTest{
 		{
@@ -1988,11 +2010,11 @@ func brokerFinalization(t *testing.T, format string, env config.Env) {
 						},
 					},
 					Generation: 1,
-				}, env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat),
+				}, &env),
 			},
 			Key: testKey,
 			WantUpdates: []clientgotesting.UpdateActionImpl{
-				ConfigMapUpdate(env.DataPlaneConfigMapNamespace, env.DataPlaneConfigMapName, env.DataPlaneConfigFormat, &contract.Contract{
+				ConfigMapUpdate(&env, &contract.Contract{
 					Resources:  []*contract.Resource{},
 					Generation: 2,
 				}),
@@ -2319,8 +2341,8 @@ func useTable(t *testing.T, table TableTest, env *config.Env) {
 				PodLister:                   listers.GetPodLister(),
 				SecretLister:                listers.GetSecretLister(),
 				DataPlaneConfigMapNamespace: env.DataPlaneConfigMapNamespace,
-				DataPlaneConfigMapName:      env.DataPlaneConfigMapName,
-				DataPlaneConfigFormat:       env.DataPlaneConfigFormat,
+				ContractConfigMapName:       env.ContractConfigMapName,
+				ContractConfigMapFormat:     env.ContractConfigMapFormat,
 				SystemNamespace:             env.SystemNamespace,
 				DispatcherLabel:             base.BrokerDispatcherLabel,
 				ReceiverLabel:               base.BrokerReceiverLabel,

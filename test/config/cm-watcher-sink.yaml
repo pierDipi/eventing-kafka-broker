@@ -46,7 +46,9 @@ spec:
           env:
             - name: DATA_PLANE_CONFIG_MAP_NAMESPACE
               value: knative-eventing
-            - name: DATA_PLANE_CONFIG_MAP_NAME
+            - name: DATA_PLANE_CONFIG_CONFIG_MAP_NAME
+              value: config-kafka-broker-data-plane
+            - name: CONTRACT_CONFIG_MAP_NAME
               value: kafka-sink-sinks
             - name: CONFIG_LOGGING_NAME
               value: config-logging
@@ -54,7 +56,7 @@ spec:
               value: config-observability
             - name: METRICS_DOMAIN
               value: knative.dev/eventing
-            - name: DATA_PLANE_CONFIG_FORMAT
+            - name: CONTRACT_CONFIG_MAP_FORMAT
               value: json
             - name: INGRESS_NAME
               value: kafka-sink-ingress

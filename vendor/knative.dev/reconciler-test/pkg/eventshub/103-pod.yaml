@@ -24,7 +24,7 @@ spec:
   restartPolicy: "Never"
   containers:
     - name: eventshub
-      image: registry.ci.openshift.org/openshift/knative-v1.4:knative-eventing-kafka-broker-test-eventshub
+      image: registry.ci.openshift.org/openshift/knative-v1.5:knative-eventing-kafka-broker-test-eventshub
       imagePullPolicy: "IfNotPresent"
       {{ if .withReadiness }}
       readinessProbe:

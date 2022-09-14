@@ -5,4 +5,4 @@ metadata:
 spec:
   containers:
     - name: wathola-receiver
-      image: registry.ci.openshift.org/openshift/knative-v1.4:knative-eventing-kafka-broker-test-wathola-receiver
+      image: registry.ci.openshift.org/openshift/knative-v1.5:knative-eventing-kafka-broker-test-wathola-receiver

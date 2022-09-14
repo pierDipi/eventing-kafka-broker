@@ -21,7 +21,7 @@ metadata:
   name: kafka-broker-config
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 data:
   default.topic.partitions: "10"
   default.topic.replication.factor: "3"
@@ -48,7 +48,7 @@ metadata:
   labels:
     duck.knative.dev/addressable: "true"
     knative.dev/crd-install: "true"
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   group: eventing.knative.dev
   names:
@@ -318,7 +318,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: eventing-kafka-source-observer
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
     duck.knative.dev/source: "true"
 rules:
   - apiGroups:
@@ -350,7 +350,7 @@ metadata:
   name: config-kafka-source-defaults
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
   annotations:
     knative.dev/example-checksum: "b6ed351d"
 data:
@@ -411,7 +411,7 @@ metadata:
   name: kafka-channel-config
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 data:
   bootstrap.servers: "my-cluster-kafka-bootstrap.kafka:9092"
 ---
@@ -703,7 +703,7 @@ metadata:
   name: config-kafka-descheduler
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 data:
     predicates: |+
                     []
@@ -752,7 +752,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
   name: config-kafka-leader-election
   namespace: knative-eventing
   annotations:
@@ -818,7 +818,7 @@ metadata:
   name: config-kafka-scheduler
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 data:
     predicates: |+
                   [
@@ -860,7 +860,7 @@ metadata:
   name: kafka-config-logging
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 data:
   config.xml: |
     <configuration>
@@ -891,7 +891,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: knative-kafka-addressable-resolver
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
     duck.knative.dev/addressable: "true"
 # Do not use this role directly. These rules will be added to the "addressable-resolver" role.
 rules:
@@ -934,7 +934,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-channelable-manipulator
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
     duck.knative.dev/channelable: "true"
 # Do not use this role directly. These rules will be added to the "channelable-manipulator" role.
 rules:
@@ -974,7 +974,7 @@ kind: ClusterRole
 metadata:
   name: kafka-controller
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 rules:
   - apiGroups:
       - "*"
@@ -1177,7 +1177,7 @@ metadata:
   name: kafka-controller
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 ---
 ---
 
@@ -1200,7 +1200,7 @@ kind: ClusterRoleBinding
 metadata:
   name: kafka-controller
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 subjects:
   - kind: ServiceAccount
     name: kafka-controller
@@ -1216,7 +1216,7 @@ kind: ClusterRoleBinding
 metadata:
   name: kafka-controller-addressable-resolver
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 subjects:
   - kind: ServiceAccount
     name: kafka-controller
@@ -1249,7 +1249,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-controller
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   selector:
     matchLabels:
@@ -1259,7 +1259,7 @@ spec:
       name: kafka-controller
       labels:
         app: kafka-controller
-        kafka.eventing.knative.dev/release: v1.4
+        kafka.eventing.knative.dev/release: v1.5
     spec:
       securityContext:
         runAsNonRoot: true
@@ -1285,7 +1285,7 @@ spec:
 
       containers:
         - name: controller
-          image: registry.ci.openshift.org/openshift/knative-v1.4:knative-eventing-kafka-broker-kafka-controller
+          image: registry.ci.openshift.org/openshift/knative-v1.5:knative-eventing-kafka-broker-kafka-controller
           imagePullPolicy: IfNotPresent
           env:
             - name: BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE
@@ -1433,7 +1433,7 @@ kind: ClusterRole
 metadata:
   name: kafka-webhook-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 rules:
   # For watching logging configuration and getting certs.
   - apiGroups:
@@ -1545,7 +1545,7 @@ metadata:
   name: kafka-webhook-eventing
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 ---
 ---
 
@@ -1568,7 +1568,7 @@ kind: ClusterRoleBinding
 metadata:
   name: kafka-webhook-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 subjects:
   - kind: ServiceAccount
     name: kafka-webhook-eventing
@@ -1598,7 +1598,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: defaulting.webhook.kafka.eventing.knative.dev
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 webhooks:
   - admissionReviewVersions: [ "v1", "v1beta1" ]
     clientConfig:
@@ -1629,7 +1629,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: pods.defaulting.webhook.kafka.eventing.knative.dev
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 webhooks:
   # Dispatcher pods webhook config.
   - admissionReviewVersions: [ "v1", "v1beta1" ]
@@ -1671,7 +1671,7 @@ metadata:
   name: kafka-webhook-eventing-certs
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 # The data is populated at install time.
 ---
 # Copyright 2020 The Knative Authors
@@ -1693,7 +1693,7 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: validation.webhook.kafka.eventing.knative.dev
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 webhooks:
   - admissionReviewVersions: ["v1", "v1beta1"]
     clientConfig:
@@ -1726,7 +1726,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-webhook-eventing
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   selector:
     matchLabels:
@@ -1735,7 +1735,7 @@ spec:
     metadata:
       labels:
         app: kafka-webhook-eventing
-        kafka.eventing.knative.dev/release: v1.4
+        kafka.eventing.knative.dev/release: v1.5
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes.
       affinity:
@@ -1756,7 +1756,7 @@ spec:
         - name: kafka-webhook-eventing
           terminationMessagePolicy: FallbackToLogsOnError
 
-          image: registry.ci.openshift.org/openshift/knative-v1.4:knative-eventing-kafka-broker-webhook-kafka
+          image: registry.ci.openshift.org/openshift/knative-v1.5:knative-eventing-kafka-broker-webhook-kafka
 
           resources:
             requests:
@@ -1821,7 +1821,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-webhook-eventing
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   ports:
     - name: https-webhook
@@ -1854,7 +1854,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-controller-post-install
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 rules:
   - apiGroups:
       - apps
@@ -2061,7 +2061,7 @@ metadata:
   name: knative-kafka-controller-post-install
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 ---
 # Copyright 2020 The Knative Authors
 #
@@ -2082,7 +2082,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-storage-version-migrator
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 rules:
   # Storage version upgrader needs to be able to patch CRDs.
   - apiGroups:
@@ -2151,7 +2151,7 @@ metadata:
   name: knative-kafka-storage-version-migrator
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 
 ---
 
@@ -2160,7 +2160,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-storage-version-migrator
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-storage-version-migrator
@@ -2191,7 +2191,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-controller-post-install
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-controller-post-install
@@ -2222,7 +2222,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-controller-post-install
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   ttlSecondsAfterFinished: 600
   backoffLimit: 10
@@ -2230,7 +2230,7 @@ spec:
     metadata:
       labels:
         app: kafka-controller-post-install
-        kafka.eventing.knative.dev/release: v1.4
+        kafka.eventing.knative.dev/release: v1.5
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
@@ -2238,7 +2238,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: post-install
-          image: registry.ci.openshift.org/openshift/knative-v1.4:knative-eventing-kafka-broker-post-install
+          image: registry.ci.openshift.org/openshift/knative-v1.5:knative-eventing-kafka-broker-post-install
           env:
             - name: SYSTEM_NAMESPACE
               valueFrom:
@@ -2268,7 +2268,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: "knative-kafka-storage-version-migrator"
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   ttlSecondsAfterFinished: 600
   backoffLimit: 10
@@ -2276,7 +2276,7 @@ spec:
     metadata:
       labels:
         app: "knative-kafka-storage-version-migrator"
-        kafka.eventing.knative.dev/release: v1.4
+        kafka.eventing.knative.dev/release: v1.5
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
@@ -2284,7 +2284,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: migrate
-          image: registry.ci.openshift.org/openshift/knative-v1.4:knative-eventing-kafka-broker-migrate
+          image: registry.ci.openshift.org/openshift/knative-v1.5:knative-eventing-kafka-broker-migrate
           env:
             - name: IGNORE_NOT_FOUND
               value: "true"
@@ -2314,7 +2314,7 @@ metadata:
   name: config-kafka-source-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 data:
   config-kafka-source-producer.properties: |
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
@@ -2435,7 +2435,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-source-data-plane
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 rules:
   - apiGroups:
       - "*"
@@ -2468,7 +2468,7 @@ metadata:
   name: knative-kafka-source-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 ---
 ---
 
@@ -2491,7 +2491,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-source-data-plane
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-source-data-plane
@@ -2524,7 +2524,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-source-dispatcher
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   selector:
     matchLabels:
@@ -2534,7 +2534,7 @@ spec:
       name: kafka-source-dispatcher
       labels:
         app: kafka-source-dispatcher
-        kafka.eventing.knative.dev/release: v1.4
+        kafka.eventing.knative.dev/release: v1.5
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
       topologySpreadConstraints:
@@ -2558,7 +2558,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-source-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.4:knative-eventing-kafka-broker-dispatcher
+          image: registry.ci.openshift.org/openshift/knative-v1.5:knative-eventing-kafka-broker-dispatcher
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -2690,7 +2690,7 @@ metadata:
   name: config-kafka-broker-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 data:
   config-kafka-broker-producer.properties: |
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
@@ -2811,7 +2811,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-broker-data-plane
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 rules:
   - apiGroups:
       - "*"
@@ -2844,7 +2844,7 @@ metadata:
   name: knative-kafka-broker-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 ---
 ---
 
@@ -2867,7 +2867,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-broker-data-plane
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-broker-data-plane
@@ -2900,7 +2900,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-broker-dispatcher
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   selector:
     matchLabels:
@@ -2910,7 +2910,7 @@ spec:
       name: kafka-broker-dispatcher
       labels:
         app: kafka-broker-dispatcher
-        kafka.eventing.knative.dev/release: v1.4
+        kafka.eventing.knative.dev/release: v1.5
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
       topologySpreadConstraints:
@@ -2934,7 +2934,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-broker-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.4:knative-eventing-kafka-broker-dispatcher
+          image: registry.ci.openshift.org/openshift/knative-v1.5:knative-eventing-kafka-broker-dispatcher
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -3067,7 +3067,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-broker-receiver
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   selector:
     matchLabels:
@@ -3077,7 +3077,7 @@ spec:
       name: kafka-broker-receiver
       labels:
         app: kafka-broker-receiver
-        kafka.eventing.knative.dev/release: v1.4
+        kafka.eventing.knative.dev/release: v1.5
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
       topologySpreadConstraints:
@@ -3101,7 +3101,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-broker-receiver
-          image: registry.ci.openshift.org/openshift/knative-v1.4:knative-eventing-kafka-broker-receiver
+          image: registry.ci.openshift.org/openshift/knative-v1.5:knative-eventing-kafka-broker-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -3219,7 +3219,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-broker-receiver
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   selector:
     app: kafka-broker-receiver
@@ -3260,7 +3260,7 @@ metadata:
   name: config-kafka-channel-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 data:
   config-kafka-channel-producer.properties: |
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
@@ -3380,7 +3380,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-channel-data-plane
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 rules:
   - apiGroups:
       - "*"
@@ -3413,7 +3413,7 @@ metadata:
   name: knative-kafka-channel-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 ---
 ---
 
@@ -3436,7 +3436,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-channel-data-plane
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-channel-data-plane
@@ -3469,7 +3469,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-channel-dispatcher
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   selector:
     matchLabels:
@@ -3479,7 +3479,7 @@ spec:
       name: kafka-channel-dispatcher
       labels:
         app: kafka-channel-dispatcher
-        kafka.eventing.knative.dev/release: v1.4
+        kafka.eventing.knative.dev/release: v1.5
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
       topologySpreadConstraints:
@@ -3503,7 +3503,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-channel-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.4:knative-eventing-kafka-broker-dispatcher
+          image: registry.ci.openshift.org/openshift/knative-v1.5:knative-eventing-kafka-broker-dispatcher
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -3636,7 +3636,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-channel-receiver
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   selector:
     matchLabels:
@@ -3646,7 +3646,7 @@ spec:
       name: kafka-channel-receiver
       labels:
         app: kafka-channel-receiver
-        kafka.eventing.knative.dev/release: v1.4
+        kafka.eventing.knative.dev/release: v1.5
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
       topologySpreadConstraints:
@@ -3670,7 +3670,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-channel-receiver
-          image: registry.ci.openshift.org/openshift/knative-v1.4:knative-eventing-kafka-broker-receiver
+          image: registry.ci.openshift.org/openshift/knative-v1.5:knative-eventing-kafka-broker-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -3788,7 +3788,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-channel-receiver
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   selector:
     app: kafka-channel-receiver
@@ -3829,7 +3829,7 @@ metadata:
   name: config-kafka-sink-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 data:
   config-kafka-sink-producer.properties: |
     key.serializer=org.apache.kafka.common.serialization.StringSerializer
@@ -3884,7 +3884,7 @@ kind: ClusterRole
 metadata:
   name: knative-kafka-sink-data-plane
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 rules:
   - apiGroups:
       - "*"
@@ -3917,7 +3917,7 @@ metadata:
   name: knative-kafka-sink-data-plane
   namespace: knative-eventing
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 ---
 ---
 
@@ -3940,7 +3940,7 @@ kind: ClusterRoleBinding
 metadata:
   name: knative-kafka-sink-data-plane
   labels:
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 subjects:
   - kind: ServiceAccount
     name: knative-kafka-sink-data-plane
@@ -3973,7 +3973,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-sink-receiver
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   selector:
     matchLabels:
@@ -3983,7 +3983,7 @@ spec:
       name: kafka-sink-receiver
       labels:
         app: kafka-sink-receiver
-        kafka.eventing.knative.dev/release: v1.4
+        kafka.eventing.knative.dev/release: v1.5
     spec:
       # To avoid node becoming SPOF, spread our replicas to different nodes and zones.
       topologySpreadConstraints:
@@ -4007,7 +4007,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-sink-receiver
-          image: registry.ci.openshift.org/openshift/knative-v1.4:knative-eventing-kafka-broker-receiver
+          image: registry.ci.openshift.org/openshift/knative-v1.5:knative-eventing-kafka-broker-receiver
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -4125,7 +4125,7 @@ metadata:
   namespace: knative-eventing
   labels:
     app: kafka-sink-receiver
-    kafka.eventing.knative.dev/release: v1.4
+    kafka.eventing.knative.dev/release: v1.5
 spec:
   selector:
     app: kafka-sink-receiver

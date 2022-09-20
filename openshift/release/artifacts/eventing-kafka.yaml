@@ -1404,6 +1404,10 @@ spec:
           ports:
             - containerPort: 9090
               name: metrics
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
           terminationMessagePolicy: FallbackToLogsOnError
           terminationMessagePath: /dev/temination-log
           securityContext:
@@ -2624,7 +2628,10 @@ spec:
             - "-Dcom.redhat.fips=false"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
+          resources:
+            requests:
+              cpu: 200m
+              memory: 300Mi
           livenessProbe:
             failureThreshold: 3
             tcpSocket:
@@ -3001,7 +3008,10 @@ spec:
             - "-Dcom.redhat.fips=false"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
+          resources:
+            requests:
+              cpu: 200m
+              memory: 300Mi
           livenessProbe:
             failureThreshold: 3
             tcpSocket:
@@ -3170,7 +3180,10 @@ spec:
             - "-Dcom.redhat.fips=false"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
+          resources:
+            requests:
+              cpu: 200m
+              memory: 300Mi
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -3572,7 +3585,10 @@ spec:
             - "-Dcom.redhat.fips=false"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
+          resources:
+            requests:
+              cpu: 200m
+              memory: 300Mi
           livenessProbe:
             failureThreshold: 3
             tcpSocket:
@@ -3741,7 +3757,10 @@ spec:
             - "-Dcom.redhat.fips=false"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
+          resources:
+            requests:
+              cpu: 200m
+              memory: 300Mi
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -4079,7 +4098,10 @@ spec:
             - "-Dcom.redhat.fips=false"
             - "-jar"
             - "/app/app.jar"
-          # TODO set resources (limits and requests)
+          resources:
+            requests:
+              cpu: 200m
+              memory: 300Mi
           livenessProbe:
             failureThreshold: 3
             httpGet:

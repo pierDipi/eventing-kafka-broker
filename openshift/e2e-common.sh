@@ -24,6 +24,9 @@ export EVENTING_KAFKA_BROKER_TEST_IMAGE_TEMPLATE=$(
 END
 )
 
+# shellcheck disable=SC1090
+source "$(dirname "$0")/../test/e2e-common.sh"
+
 function scale_up_workers() {
   local cluster_api_ns="openshift-machine-api"
 
@@ -81,6 +84,8 @@ metadata:
 EOF
 
   ./test/kafka/kafka_setup.sh || return $?
+  create_sasl_secrets || return $?
+  create_tls_secrets || return $?
 
   KNATIVE_EVENTING_KAFKA_BROKER_MANIFESTS_DIR="$(pwd)/openshift/release/artifacts"
   export KNATIVE_EVENTING_KAFKA_BROKER_MANIFESTS_DIR

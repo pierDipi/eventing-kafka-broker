@@ -6,6 +6,13 @@ metadata:
 spec:
   defaultBrokerClass: Kafka
   config:
+    config-features:
+      kreference-group: "disabled"
+      delivery-retryafter: "disabled"
+      delivery-timeout: "enabled"
+      kreference-mapping: "disabled"
+      strict-subscriber: "disabled"
+      new-trigger-filters: "disabled"
     config-br-defaults:
       default-br-config: |
         clusterDefault:

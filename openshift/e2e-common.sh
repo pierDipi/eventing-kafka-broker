@@ -98,17 +98,11 @@ EOF
   export ON_CLUSTER_BUILDS=true
   export DOCKER_REPO_OVERRIDE=image-registry.openshift-image-registry.svc:5000/openshift-marketplace
   make OPENSHIFT_CI="true" TRACING_BACKEND=zipkin \
-    generated-files images install-tracing install-operator || failed=$?
+    generated-files images install-tracing install-kafka || failed=$?
   popd || return $?
 
   oc apply -f openshift/knative-eventing.yaml
-
   oc wait --for=condition=Ready knativeeventing.operator.knative.dev knative-eventing -n knative-eventing --timeout=900s
-
-  # Install KnativeKafka after installing KnativeEventing with tracing enabled
-  pushd $operator_dir || return $?
-  INSTALL_SERVING="false" INSTALL_EVENTING="false" INSTALL_KAFKA="true" ./hack/install.sh
-  popd || return $?
 
   return $failed
 }

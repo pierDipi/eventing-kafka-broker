@@ -6,6 +6,12 @@ metadata:
 spec:
   defaultBrokerClass: Kafka
   config:
+    tracing:
+      backend: zipkin
+      debug: "true"
+      enable: "true"
+      sample-rate: "1.0"
+      zipkin-endpoint: "http://zipkin.knative-eventing.svc.cluster.local:9411/api/v2/spans"
     config-features:
       kreference-group: "disabled"
       delivery-retryafter: "disabled"

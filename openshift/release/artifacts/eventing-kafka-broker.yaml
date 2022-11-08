@@ -414,8 +414,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       volumes:
         - name: config-kafka-broker-data-plane
           configMap:
@@ -586,8 +584,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       volumes:
         - name: kafka-broker-brokers-triggers
           configMap:

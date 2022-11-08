@@ -1618,8 +1618,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       restartPolicy: Always
 ---
 ---
@@ -2001,8 +1999,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
 
           ports:
             - name: https-webhook
@@ -2490,8 +2486,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
 ---
 # Copyright 2020 The Knative Authors
 #
@@ -2545,8 +2539,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
 ---
 # Copyright 2021 The Knative Authors
 #
@@ -2952,8 +2944,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       volumes:
         - name: config-kafka-source-data-plane
           configMap:
@@ -3386,8 +3376,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       volumes:
         - name: config-kafka-broker-data-plane
           configMap:
@@ -3558,8 +3546,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       volumes:
         - name: kafka-broker-brokers-triggers
           configMap:
@@ -4018,8 +4004,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       volumes:
         - name: config-kafka-channel-data-plane
           configMap:
@@ -4190,8 +4174,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       volumes:
         - name: kafka-channel-channels-subscriptions
           configMap:
@@ -4567,8 +4549,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       volumes:
         - name: kafka-sink-sinks
           configMap:

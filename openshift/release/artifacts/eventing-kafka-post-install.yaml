@@ -441,8 +441,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
 ---
 # Copyright 2020 The Knative Authors
 #
@@ -496,5 +494,3 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault

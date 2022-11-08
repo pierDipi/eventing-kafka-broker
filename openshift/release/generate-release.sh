@@ -19,11 +19,11 @@ rm -rf $artifacts_dir
 mkdir -p $artifacts_dir
 
 if [ "$release" == "ci" ]; then
-  image_prefix="registry.ci.openshift.org/openshift/knative-nightly:knative-eventing-kafka-"
-  tag=""
+  image_prefix="registry.ci.openshift.org/openshift/knative-eventing-kafka-broker"
+  tag="knative-nightly"
 else
-  image_prefix="registry.ci.openshift.org/openshift/knative-${release}:knative-eventing-kafka-"
-  tag=""
+  image_prefix="registry.ci.openshift.org/openshift/knative-eventing-kafka-broker"
+  tag="knative-${release}"
 fi
 
 # Replace rekt images
@@ -38,7 +38,7 @@ resolve_resources vendor/knative.dev/eventing/test/test_images/performance vendo
 resolve_resources vendor/knative.dev/eventing/test/test_images/heartbeats vendor/knative.dev/eventing/test/test_images/heartbeats/pod.yaml "${image_prefix}" "${tag}" true
 resolve_resources vendor/knative.dev/eventing/test/test_images/event-sender vendor/knative.dev/eventing/test/test_images/event-sender/pod.yaml "${image_prefix}" "${tag}" true
 resolve_resources vendor/knative.dev/eventing/test/rekt/resources/containersource vendor/knative.dev/eventing/test/rekt/resources/containersource/containersource.yaml "${image_prefix}" "${tag}" true
-resolve_resources vendor/knative.dev/reconciler-test/pkg/eventshub vendor/knative.dev/reconciler-test/pkg/eventshub/103-pod.yaml "${image_prefix}" "eventshub" true
+resolve_resources vendor/knative.dev/reconciler-test/pkg/eventshub vendor/knative.dev/reconciler-test/pkg/eventshub/103-pod.yaml "${image_prefix}" "${tag}" true "eventshub"
 resolve_resources vendor/knative.dev/eventing/test/rekt/resources/flaker vendor/knative.dev/eventing/test/rekt/resources/flaker/flaker.yaml "${image_prefix}" "${tag}" true
 resolve_resources vendor/knative.dev/eventing/test/rekt/resources/eventlibrary vendor/knative.dev/eventing/test/rekt/resources/eventlibrary/eventlibrary.yaml "${image_prefix}" "${tag}" true
 

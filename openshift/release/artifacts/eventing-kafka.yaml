@@ -1486,7 +1486,7 @@ spec:
 
       containers:
         - name: controller
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-kafka-controller
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-kafka-controller:knative-v1.6
           imagePullPolicy: IfNotPresent
           env:
             - name: BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE
@@ -1618,8 +1618,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       restartPolicy: Always
 ---
 ---
@@ -1965,7 +1963,7 @@ spec:
         - name: kafka-webhook-eventing
           terminationMessagePolicy: FallbackToLogsOnError
 
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-webhook-kafka
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-webhook-kafka:knative-v1.6
 
           resources:
             requests:
@@ -2001,8 +1999,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
 
           ports:
             - name: https-webhook
@@ -2475,7 +2471,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: post-install
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-post-install
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-post-install:knative-v1.6
           env:
             - name: SYSTEM_NAMESPACE
               valueFrom:
@@ -2490,8 +2486,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
 ---
 # Copyright 2020 The Knative Authors
 #
@@ -2530,7 +2524,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: migrate
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-migrate
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-migrate:knative-v1.6
           env:
             - name: IGNORE_NOT_FOUND
               value: "true"
@@ -2545,8 +2539,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
 ---
 # Copyright 2021 The Knative Authors
 #
@@ -2856,7 +2848,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-source-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-dispatcher
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-dispatcher:knative-v1.6
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -2952,8 +2944,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       volumes:
         - name: config-kafka-source-data-plane
           configMap:
@@ -3296,7 +3286,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-broker-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-dispatcher
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-dispatcher:knative-v1.6
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -3386,8 +3376,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       volumes:
         - name: config-kafka-broker-data-plane
           configMap:
@@ -3465,7 +3453,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-broker-receiver
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-receiver
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-receiver:knative-v1.6
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -3558,8 +3546,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       volumes:
         - name: kafka-broker-brokers-triggers
           configMap:
@@ -3928,7 +3914,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-channel-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-dispatcher
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-dispatcher:knative-v1.6
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -4018,8 +4004,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       volumes:
         - name: config-kafka-channel-data-plane
           configMap:
@@ -4097,7 +4081,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-channel-receiver
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-receiver
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-receiver:knative-v1.6
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -4190,8 +4174,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       volumes:
         - name: kafka-channel-channels-subscriptions
           configMap:
@@ -4474,7 +4456,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-sink-receiver
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-receiver
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-receiver:knative-v1.6
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -4567,8 +4549,6 @@ spec:
             capabilities:
               drop:
               - ALL
-            seccompProfile:
-              type: RuntimeDefault
       volumes:
         - name: kafka-sink-sinks
           configMap:

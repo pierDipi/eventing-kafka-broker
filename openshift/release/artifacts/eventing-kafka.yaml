@@ -1486,7 +1486,7 @@ spec:
 
       containers:
         - name: controller
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-kafka-controller
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-kafka-controller:knative-v1.6
           imagePullPolicy: IfNotPresent
           env:
             - name: BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE
@@ -1963,7 +1963,7 @@ spec:
         - name: kafka-webhook-eventing
           terminationMessagePolicy: FallbackToLogsOnError
 
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-webhook-kafka
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-webhook-kafka:knative-v1.6
 
           resources:
             requests:
@@ -2471,7 +2471,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: post-install
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-post-install
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-post-install:knative-v1.6
           env:
             - name: SYSTEM_NAMESPACE
               valueFrom:
@@ -2524,7 +2524,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: migrate
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-migrate
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-migrate:knative-v1.6
           env:
             - name: IGNORE_NOT_FOUND
               value: "true"
@@ -2848,7 +2848,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-source-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-dispatcher
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-dispatcher:knative-v1.6
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -3286,7 +3286,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-broker-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-dispatcher
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-dispatcher:knative-v1.6
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -3453,7 +3453,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-broker-receiver
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-receiver
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-receiver:knative-v1.6
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -3914,7 +3914,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-channel-dispatcher
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-dispatcher
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-dispatcher:knative-v1.6
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -4081,7 +4081,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-channel-receiver
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-receiver
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-receiver:knative-v1.6
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config
@@ -4456,7 +4456,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: kafka-sink-receiver
-          image: registry.ci.openshift.org/openshift/knative-v1.6:knative-eventing-kafka-broker-receiver
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-receiver:knative-v1.6
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - mountPath: /etc/config

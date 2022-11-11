@@ -71,17 +71,13 @@ func Install(name string, options ...EventsHubOption) feature.StepFn {
 
 		isReceiver := strings.Contains(envs["EVENT_GENERATORS"], "receiver")
 
-		cfg := map[string]interface{}{
+		// Deploy
+		if _, err := manifest.InstallYamlFS(ctx, templates, map[string]interface{}{
 			"name":          name,
 			"envs":          envs,
 			"image":         ImageFromContext(ctx),
 			"withReadiness": isReceiver,
-		}
-
-		manifest.PodSecurityCfgFn(ctx, t)(cfg)
-
-		// Deploy
-		if _, err := manifest.InstallYamlFS(ctx, templates, cfg); err != nil {
+		}); err != nil {
 			log.Fatal(err)
 		}
 

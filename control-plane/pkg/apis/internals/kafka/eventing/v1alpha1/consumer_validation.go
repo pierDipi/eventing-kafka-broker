@@ -22,9 +22,15 @@ import (
 
 	"knative.dev/eventing-kafka/pkg/apis/sources/v1beta1"
 	"knative.dev/pkg/apis"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 )
 
 func (c *Consumer) Validate(ctx context.Context) *apis.FieldError {
+	if err := eventing.AllowKafkaControllerOnly(ctx); err != nil {
+		return err
+	}
+
 	specCtx := ctx
 	if apis.IsInUpdate(ctx) {
 		specCtx = apis.WithinUpdate(ctx, apis.GetBaseline(ctx).(*Consumer).Spec)

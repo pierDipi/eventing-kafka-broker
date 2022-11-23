@@ -20,6 +20,8 @@ import (
 	"context"
 
 	"knative.dev/pkg/apis"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 )
 
 var (
@@ -27,6 +29,10 @@ var (
 )
 
 func (c *ConsumerGroup) Validate(ctx context.Context) *apis.FieldError {
+	if err := eventing.AllowKafkaControllerOnly(ctx); err != nil {
+		return err
+	}
+
 	ctx = apis.WithinParent(ctx, c.ObjectMeta)
 	if apis.IsInUpdate(ctx) {
 		err := c.CheckImmutableFields(ctx, apis.GetBaseline(ctx).(*ConsumerGroup).Labels)

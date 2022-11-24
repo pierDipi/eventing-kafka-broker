@@ -124,7 +124,7 @@ public class WebClientCloudEventSenderTest {
 
     sender.close().onSuccess(v -> context.completeNow());
   }
-  
+
   @Test
   @Timeout(value = 20000)
   public void shouldNotRetry(final Vertx vertx, final VertxTestContext context) throws ExecutionException, InterruptedException {
@@ -156,19 +156,12 @@ public class WebClientCloudEventSenderTest {
       vertx,
       WebClient.create(vertx),
       "http://localhost:" + port,
-      FakeConsumerVerticleContext.get(
-        FakeConsumerVerticleContext.get().getResource(),
-        DataPlaneContract.Egress.newBuilder(FakeConsumerVerticleContext.get().getEgress())
-          .setEgressConfig(
-            DataPlaneContract.EgressConfig.newBuilder()
-              .setBackoffDelay(100L)
-              .setTimeout(1000L)
-              .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
-              .setRetry(retry)
-              .build()
-          )
-          .build()
-      )
+      DataPlaneContract.EgressConfig.newBuilder()
+        .setBackoffDelay(100L)
+        .setTimeout(1000L)
+        .setBackoffPolicy(DataPlaneContract.BackoffPolicy.Linear)
+        .setRetry(retry)
+        .build()
     );
 
     final var success = new AtomicBoolean(true);

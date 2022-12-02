@@ -604,7 +604,10 @@ func (r *Reconciler) isKEDAEnabled(ctx context.Context, namespace string) bool {
 }
 
 func (r Reconciler) ensureContractConfigmapsExist(ctx context.Context, scheduler Scheduler) error {
-	selector := labels.SelectorFromSet(map[string]string{"app": scheduler.StatefulSetName})
+	selector := labels.SelectorFromSet(map[string]string{
+		"app": scheduler.StatefulSetName,
+		"app-version": "v2",
+	})
 	pods, err := r.PodLister.
 		Pods(r.SystemNamespace).
 		List(selector)

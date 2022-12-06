@@ -115,3 +115,18 @@ func TestBrokerCannotReachKafkaCluster(t *testing.T) {
 
 	env.Test(ctx, t, features.BrokerCannotReachKafkaCluster())
 }
+
+func TestNamespacedBrokerResourcesPropagation(t *testing.T) {
+	t.Skip("We propagate service monitors in Serverless Operator so this test won't work for now")
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
+		environment.Managed(t),
+	)
+
+	env.Test(ctx, t, features.NamespacedBrokerResourcesPropagation())
+}

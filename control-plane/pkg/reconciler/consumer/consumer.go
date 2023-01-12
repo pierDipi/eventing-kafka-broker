@@ -310,7 +310,7 @@ func removeResource(_ *zap.Logger, ct *contract.Contract, c *kafkainternals.Cons
 		return coreconfig.ResourceUnchanged
 	}
 	coreconfig.DeleteResource(ct, idx)
-	return coreconfig.ResourceChanged
+	return idx
 }
 
 // schedule mutates the ConfigMap associated with the pod specified by Consumer.Spec.PodBind.

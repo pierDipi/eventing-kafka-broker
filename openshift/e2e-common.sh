@@ -120,3 +120,8 @@ function run_e2e_new_tests() {
   go_test_e2e -timeout=100m ./test/e2e_new/... || return $?
   go_test_e2e -timeout=100m ./test/e2e_new_channel/... || return $?
 }
+
+function run_kafka_broker_conformance_tests() {
+  export BROKER_CLASS="Kafka"
+  go_test_e2e -timeout=100m -run TestBrokerConformance ./test/e2e_new/... || return $?
+}

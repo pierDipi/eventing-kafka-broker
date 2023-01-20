@@ -107,7 +107,12 @@ func (r *Reconciler) reconcileKind(ctx context.Context, broker *eventing.Broker)
 	}
 	statusConditionManager.DataPlaneAvailable()
 
-	topicConfig, brokerConfig, err := r.topicConfig(logger, broker)
+	brokerConfig, err := r.brokerConfigMap(logger, broker)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return statusConditionManager.FailedToResolveConfig(err)
+	}
+
+	topicConfig, err := r.topicConfig(logger, broker, brokerConfig)
 	if err != nil {
 		return statusConditionManager.FailedToResolveConfig(err)
 	}
@@ -348,16 +353,14 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		return controller.NewRequeueAfter(5 * time.Second)
 	}
 
-	_, brokerConfig, err := r.brokerConfigMap(logger, broker)
-
+	brokerConfig, err := r.brokerConfigMap(logger, broker)
+	if err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
 	// If the broker config data is empty we simply return,
 	// as the configuration may already be gone
 	if len(brokerConfig.Data) == 0 {
 		return nil
-	}
-
-	if err != nil && !apierrors.IsNotFound(err) {
-		return err
 	}
 
 	_, externalTopic := isExternalTopic(broker)
@@ -372,25 +375,22 @@ func (r *Reconciler) finalizeKind(ctx context.Context, broker *eventing.Broker) 
 		}
 	}
 
+	if secret != nil {
+		logger.Debug("Secret reference",
+			zap.String("apiVersion", secret.APIVersion),
+			zap.String("name", secret.Name),
+			zap.String("namespace", secret.Namespace),
+			zap.String("kind", secret.Kind),
+		)
+	}
+
 	// External topics are not managed by the broker,
 	// therefore we do not delete them
 	//	_, externalTopic := isExternalTopic(broker)
 	if !externalTopic {
-
-		// I do not like the use of `_`
-		// TODO: refactor
-		topicConfig, _, err := r.topicConfig(logger, broker)
+		topicConfig, err := r.topicConfig(logger, broker, brokerConfig)
 		if err != nil {
 			return fmt.Errorf("failed to resolve broker config: %w", err)
-		}
-
-		if secret != nil {
-			logger.Debug("Secret reference",
-				zap.String("apiVersion", secret.APIVersion),
-				zap.String("name", secret.Name),
-				zap.String("namespace", secret.Namespace),
-				zap.String("kind", secret.Kind),
-			)
 		}
 
 		// get security option for Sarama with secret info in it
@@ -459,11 +459,11 @@ func (r *Reconciler) brokerNamespace(broker *eventing.Broker) string {
 	return namespace
 }
 
-func (r *Reconciler) brokerConfigMap(logger *zap.Logger, broker *eventing.Broker) (bool, *corev1.ConfigMap, error) {
+func (r *Reconciler) brokerConfigMap(logger *zap.Logger, broker *eventing.Broker) (*corev1.ConfigMap, error) {
 	logger.Debug("broker config", zap.Any("broker.spec.config", broker.Spec.Config))
 
 	if strings.ToLower(broker.Spec.Config.Kind) != "configmap" {
-		return false, nil, fmt.Errorf("supported config Kind: ConfigMap - got %s", broker.Spec.Config.Kind)
+		return nil, fmt.Errorf("supported config Kind: ConfigMap - got %s", broker.Spec.Config.Kind)
 	}
 
 	namespace := r.brokerNamespace(broker)
@@ -477,40 +477,31 @@ func (r *Reconciler) brokerConfigMap(logger *zap.Logger, broker *eventing.Broker
 	// `StatusReasonNotFound` error instead of the error generated from the fake
 	// "re-built" ConfigMap.
 
-	isRebuilt := false
 	cm, getCmError := r.ConfigMapLister.ConfigMaps(namespace).Get(broker.Spec.Config.Name)
 	if getCmError != nil && !apierrors.IsNotFound(getCmError) {
-		return isRebuilt, cm, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, getCmError)
+		return cm, fmt.Errorf("failed to get configmap %s/%s: %w", namespace, broker.Spec.Config.Name, getCmError)
 	}
 	if apierrors.IsNotFound(getCmError) {
+		// will at least return an empty CM
 		cm = rebuildCMFromStatusAnnotations(broker)
-		isRebuilt = true
 	}
 
-	return isRebuilt, cm, getCmError
+	return cm, getCmError
 }
 
-// TODO: pass the configmap to this function
-func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker) (*kafka.TopicConfig, *corev1.ConfigMap, error) {
-
-	isRebuilt, cm, getCmError := r.brokerConfigMap(logger, broker)
-	// For generic errors, we return the error, when the ConfigMap wasn't found we try to get topic information from
-	// the rebuilt ConfigMap, if it's still not possible we return the `getCmError` down below.
-	if getCmError != nil && !apierrors.IsNotFound(getCmError) {
-		return nil, nil, getCmError
-	}
-
-	topicConfig, err := kafka.TopicConfigFromConfigMap(logger, cm)
+func (r *Reconciler) topicConfig(logger *zap.Logger, broker *eventing.Broker, brokerConfig *corev1.ConfigMap) (*kafka.TopicConfig, error) {
+	topicConfig, err := kafka.TopicConfigFromConfigMap(logger, brokerConfig)
 	if err != nil {
-		if isRebuilt {
-			return nil, cm, fmt.Errorf("unable to build topic config, failed to get configmap %s/%s: %w", r.brokerNamespace(broker), broker.Spec.Config.Name, getCmError)
+		// Check if the rebuilt CM is empty
+		if brokerConfig != nil && len(brokerConfig.Data) == 0 {
+			return nil, fmt.Errorf("unable to rebuild topic config, failed to get configmap %s/%s", r.brokerNamespace(broker), broker.Spec.Config.Name)
 		}
-		return nil, cm, fmt.Errorf("unable to build topic config from configmap: %w - ConfigMap data: %v", err, cm.Data)
+		return nil, fmt.Errorf("unable to build topic config from configmap: %w - ConfigMap data: %v", err, brokerConfig.Data)
 	}
 
-	storeConfigMapAsStatusAnnotation(broker, cm)
+	storeConfigMapAsStatusAnnotation(broker, brokerConfig)
 
-	return topicConfig, cm, nil
+	return topicConfig, nil
 }
 
 // Save ConfigMap's data into broker annotations, to prevent issue when the ConfigMap itself is being deleted
@@ -524,7 +515,7 @@ func storeConfigMapAsStatusAnnotation(broker *eventing.Broker, cm *corev1.Config
 	}
 }
 
-// Creates the Broker ConfigMap from the status annotation
+// Creates the Broker ConfigMap from the status annotation, if any present
 func rebuildCMFromStatusAnnotations(br *eventing.Broker) *corev1.ConfigMap {
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{

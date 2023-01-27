@@ -167,8 +167,14 @@ func TestReconcileKind(t *testing.T) {
 			Name: "Consumers in multiple pods, with pods pending and unknown phase",
 			Objects: []runtime.Object{
 				NewService(),
-				NewDispatcherPod("p1", PodLabel(kafkainternals.SourceStatefulSetName), PodPending()),
-				NewDispatcherPod("p2", PodLabel(kafkainternals.SourceStatefulSetName)),
+				NewDispatcherPod("p1",
+					PodLabel("app", kafkainternals.SourceStatefulSetName),
+					PodLabel("app-version", "v2"),
+					PodPending()),
+				NewDispatcherPod("p2",
+					PodLabel("app", kafkainternals.SourceStatefulSetName),
+					PodLabel("app-version", "v2"),
+				),
 				NewConsumerGroup(
 					ConsumerGroupConsumerSpec(NewConsumerSpec(
 						ConsumerTopics("t1", "t2"),
@@ -1622,7 +1628,7 @@ func TestReconcileKind(t *testing.T) {
 		_, exampleConfig := cm.ConfigMapsFromTestFile(t, configapis.FlagsConfigName)
 		store.OnConfigChanged(exampleConfig)
 
-		r := Reconciler{
+		r := &Reconciler{
 			SchedulerFunc: func(s string) Scheduler {
 				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
 				return Scheduler{
@@ -1764,7 +1770,7 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 
 		ctx, _ = kedaclient.With(ctx)
 
-		r := Reconciler{
+		r := &Reconciler{
 			SchedulerFunc: func(s string) Scheduler {
 				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
 				return Scheduler{

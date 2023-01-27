@@ -48,8 +48,8 @@ type evictor struct {
 // newEvictor creates a new evictor.
 //
 // fields are additional logger fields to be attached to the evictor logger.
-func newEvictor(ctx context.Context, fields ...zap.Field) evictor {
-	return evictor{
+func newEvictor(ctx context.Context, fields ...zap.Field) *evictor {
+	return &evictor{
 		ctx:             ctx,
 		kubeClient:      kubeclient.Get(ctx),
 		InternalsClient: kafkainternalsclient.Get(ctx).InternalV1alpha1(),
@@ -60,7 +60,7 @@ func newEvictor(ctx context.Context, fields ...zap.Field) evictor {
 	}
 }
 
-func (e evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduckv1alpha1.Placement) error {
+func (e *evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduckv1alpha1.Placement) error {
 	key := vpod.GetKey()
 
 	logger := e.logger.
@@ -115,6 +115,12 @@ func (e evictor) evict(pod *corev1.Pod, vpod scheduler.VPod, from *eventingduckv
 }
 
 func (e *evictor) disablePodScheduling(logger *zap.Logger, pod *corev1.Pod) error {
+	// To avoid unnecessary updates, check whether the unschedulable pod annotation is already
+	// present, in that case, return early.
+	if v, ok := pod.Annotations[scheduler.PodAnnotationKey]; ok && v == "true" {
+		return nil
+	}
+
 	if pod.Annotations == nil {
 		pod.Annotations = make(map[string]string, 1)
 	}

@@ -27,16 +27,13 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
-	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apiserver/pkg/storage/names"
-	"k8s.io/client-go/tools/cache"
 	"knative.dev/eventing-kafka/pkg/common/kafka/offset"
 	"knative.dev/eventing/pkg/scheduler"
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
-	"knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	nodeinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/node"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
@@ -130,9 +127,14 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	consumerGroupInformer := consumergroup.Get(ctx)
 
 	impl := cgreconciler.NewImpl(ctx, r)
+	r.EnqueueAfter = func(cg *kafkainternals.ConsumerGroup, delay time.Duration) {
+		key := types.NamespacedName{Namespace: cg.GetNamespace(), Name: cg.GetName()}
+		impl.EnqueueKeyAfter(key, delay)
+	}
 
 	configStore := config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
 		r.KafkaFeatureFlags.Reset(value)
+		logger.Info("Global resync due to Kafka feature flags changed")
 		impl.GlobalResync(consumerGroupInformer.Informer())
 	})
 	configStore.WatchConfigs(watcher)
@@ -140,27 +142,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	consumerGroupInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 	consumerInformer.Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))
 
-	globalResync := func(interface{}) {
-		impl.GlobalResync(consumerGroupInformer.Informer())
-	}
-
-	ResyncOnStatefulSetChange(ctx, globalResync)
-
 	//Todo: ScaledObject informer when KEDA is installed
 
 	return impl
-}
-
-func ResyncOnStatefulSetChange(ctx context.Context, handle func(interface{})) {
-	systemNamespace := system.Namespace()
-
-	statefulset.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-		FilterFunc: func(obj interface{}) bool {
-			ss := obj.(*appsv1.StatefulSet)
-			return ss.GetNamespace() == systemNamespace && kafkainternals.IsKnownStatefulSet(ss.GetName())
-		},
-		Handler: controller.HandleAll(handle),
-	})
 }
 
 func enqueueConsumerGroupFromConsumer(enqueue func(name types.NamespacedName)) func(obj interface{}) {

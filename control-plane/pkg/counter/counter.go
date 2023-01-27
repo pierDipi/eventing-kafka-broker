@@ -32,7 +32,7 @@ type Counter struct {
 }
 
 func NewExpiringCounter(ctx context.Context) *Counter {
-	cache := prober.NewLocalExpiringCache(ctx, 10*time.Minute)
+	cache := prober.NewLocalExpiringCache(ctx, 30*time.Minute)
 	return &Counter{
 		cache: cache,
 	}

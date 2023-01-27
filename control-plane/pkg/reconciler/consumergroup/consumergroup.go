@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"sync"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
@@ -71,6 +73,7 @@ type schedulerFunc func(s string) Scheduler
 
 type Reconciler struct {
 	SchedulerFunc   schedulerFunc
+	SchedulerMu     sync.Mutex
 	ConsumerLister  kafkainternalslisters.ConsumerLister
 	InternalsClient internalv1alpha1.InternalV1alpha1Interface
 	SecretLister    corelisters.SecretLister
@@ -100,9 +103,10 @@ type Reconciler struct {
 	// DeleteConsumerGroupMetadataCounter is an in-memory counter to count how many times we have
 	// tried to delete consumer group metadata from Kafka.
 	DeleteConsumerGroupMetadataCounter *counter.Counter
+	EnqueueAfter                       func(cg *kafkainternals.ConsumerGroup, delay time.Duration)
 }
 
-func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
+func (r *Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
 	if err := r.reconcileInitialOffset(ctx, cg); err != nil {
 		return cg.MarkInitializeOffsetFailed("InitializeOffset", err)
 	}
@@ -146,10 +150,12 @@ func (r Reconciler) ReconcileKind(ctx context.Context, cg *kafkainternals.Consum
 	}
 	cg.MarkReconcileConsumersSucceeded()
 
+	r.maybeRequeueOnPendingReplicas(cg)
+
 	return nil
 }
 
-func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
+func (r *Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.ConsumerGroup) reconciler.Event {
 
 	cg.Spec.Replicas = pointer.Int32(0)
 	err := r.schedule(ctx, cg) //de-schedule placements
@@ -183,7 +189,7 @@ func (r Reconciler) FinalizeKind(ctx context.Context, cg *kafkainternals.Consume
 	return nil
 }
 
-func (r Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+func (r *Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
 	saramaSecurityOption, err := r.newAuthConfigOption(ctx, cg)
 	if err != nil {
 		return fmt.Errorf("failed to create config options for Kafka cluster auth: %w", err)
@@ -211,7 +217,7 @@ func (r Reconciler) deleteConsumerGroupMetadata(ctx context.Context, cg *kafkain
 	return nil
 }
 
-func (r Reconciler) reconcileConsumers(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+func (r *Reconciler) reconcileConsumers(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
 
 	// Get consumers associated with the ConsumerGroup.
 	existingConsumers, err := r.ConsumerLister.Consumers(cg.GetNamespace()).List(labels.SelectorFromSet(cg.Spec.Selector))
@@ -240,7 +246,7 @@ func (r Reconciler) reconcileConsumers(ctx context.Context, cg *kafkainternals.C
 	return nil
 }
 
-func (r Reconciler) reconcileConsumersInPlacement(ctx context.Context, cg *kafkainternals.ConsumerGroup, pc ConsumersPerPlacement) error {
+func (r *Reconciler) reconcileConsumersInPlacement(ctx context.Context, cg *kafkainternals.ConsumerGroup, pc ConsumersPerPlacement) error {
 
 	placement := *pc.Placement
 	consumers := pc.Consumers
@@ -295,7 +301,7 @@ func (r Reconciler) reconcileConsumersInPlacement(ctx context.Context, cg *kafka
 	return nil
 }
 
-func (r Reconciler) createConsumer(ctx context.Context, cg *kafkainternals.ConsumerGroup, placement eventingduckv1alpha1.Placement) error {
+func (r *Reconciler) createConsumer(ctx context.Context, cg *kafkainternals.ConsumerGroup, placement eventingduckv1alpha1.Placement) error {
 	c := cg.ConsumerFromTemplate()
 
 	c.Name = r.NameGenerator.GenerateName(cg.GetName() + "-")
@@ -308,7 +314,7 @@ func (r Reconciler) createConsumer(ctx context.Context, cg *kafkainternals.Consu
 	return nil
 }
 
-func (r Reconciler) finalizeConsumer(ctx context.Context, consumer *kafkainternals.Consumer) error {
+func (r *Reconciler) finalizeConsumer(ctx context.Context, consumer *kafkainternals.Consumer) error {
 	dOpts := metav1.DeleteOptions{
 		Preconditions: &metav1.Preconditions{UID: &consumer.UID},
 	}
@@ -319,7 +325,7 @@ func (r Reconciler) finalizeConsumer(ctx context.Context, consumer *kafkainterna
 	return nil
 }
 
-func (r Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+func (r *Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
 	statefulSetScheduler := r.SchedulerFunc(cg.GetUserFacingResourceRef().Kind)
 
 	// Ensure Contract configmaps are created before scheduling to avoid having pending pods due to missing
@@ -341,12 +347,30 @@ func (r Reconciler) schedule(ctx context.Context, cg *kafkainternals.ConsumerGro
 	return nil
 }
 
+func (r *Reconciler) maybeRequeueOnPendingReplicas(cg *kafkainternals.ConsumerGroup) {
+	// Instead of watching StatefulSet changes and globally resync all ConsumerGroups when the
+	// statefulset is scaled up or down, we requeue individual ConsumerGroups when the virtual
+	// replicas count doesn't match the expected total replicas, which means there are pending
+	// replicas to be scheduled and so the autoscaler will eventually scale up the statefulset
+	// to make room for _this_ consumer group.
+	//
+	// On scale down, the evictor is patching consumer groups, which means that we will reconcile
+	// the individual object that was affected by the eviction.
+	count := int32(0)
+	for _, p := range cg.Status.Placements {
+		count += p.VReplicas
+	}
+	if count != *cg.Spec.Replicas {
+		r.EnqueueAfter(cg, 5*time.Second)
+	}
+}
+
 type ConsumersPerPlacement struct {
 	Placement *eventingduckv1alpha1.Placement
 	Consumers []*kafkainternals.Consumer
 }
 
-func (r Reconciler) joinConsumersByPlacement(placements []eventingduckv1alpha1.Placement, consumers []*kafkainternals.Consumer) []ConsumersPerPlacement {
+func (r *Reconciler) joinConsumersByPlacement(placements []eventingduckv1alpha1.Placement, consumers []*kafkainternals.Consumer) []ConsumersPerPlacement {
 	placementConsumers := make([]ConsumersPerPlacement, 0, int(math.Max(float64(len(placements)), float64(len(consumers)))))
 
 	// Group consumers by Pod bind.
@@ -401,7 +425,7 @@ func (r Reconciler) joinConsumersByPlacement(placements []eventingduckv1alpha1.P
 	return placementConsumers
 }
 
-func (r Reconciler) propagateStatus(cg *kafkainternals.ConsumerGroup) (*apis.Condition, error) {
+func (r *Reconciler) propagateStatus(cg *kafkainternals.ConsumerGroup) (*apis.Condition, error) {
 	consumers, err := r.ConsumerLister.Consumers(cg.GetNamespace()).List(labels.SelectorFromSet(cg.Spec.Selector))
 	if err != nil {
 		return nil, fmt.Errorf("failed to list consumers for selector %+v: %w", cg.Spec.Selector, err)
@@ -433,7 +457,7 @@ func (r Reconciler) propagateStatus(cg *kafkainternals.ConsumerGroup) (*apis.Con
 	return condition, nil
 }
 
-func (r Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+func (r *Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
 	if cg.Spec.Template.Spec.Delivery == nil || cg.Spec.Template.Spec.Delivery.InitialOffset == sources.OffsetEarliest {
 		return nil
 	}
@@ -477,7 +501,7 @@ func (r Reconciler) reconcileInitialOffset(ctx context.Context, cg *kafkainterna
 	return nil
 }
 
-func (r Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
+func (r *Reconciler) reconcileKedaObjects(ctx context.Context, cg *kafkainternals.ConsumerGroup) error {
 	var triggerAuthentication *kedav1alpha1.TriggerAuthentication
 	var secret *corev1.Secret
 
@@ -620,7 +644,7 @@ func (r *Reconciler) isKEDAEnabled(ctx context.Context, namespace string) bool {
 	return false
 }
 
-func (r Reconciler) ensureContractConfigmapsExist(ctx context.Context, scheduler Scheduler) error {
+func (r *Reconciler) ensureContractConfigmapsExist(ctx context.Context, scheduler Scheduler) error {
 	selector := labels.SelectorFromSet(map[string]string{
 		"app":         scheduler.StatefulSetName,
 		"app-version": "v2",
@@ -645,7 +669,7 @@ func (r Reconciler) ensureContractConfigmapsExist(ctx context.Context, scheduler
 	return nil
 }
 
-func (r Reconciler) ensureContractConfigMapExists(ctx context.Context, p *corev1.Pod, name string) error {
+func (r *Reconciler) ensureContractConfigMapExists(ctx context.Context, p *corev1.Pod, name string) error {
 	// Check if ConfigMap exists in lister cache
 	_, err := r.ConfigMapLister.ConfigMaps(r.SystemNamespace).Get(name)
 	// ConfigMap already exists, return
@@ -665,7 +689,7 @@ func (r Reconciler) ensureContractConfigMapExists(ctx context.Context, p *corev1
 		DataPlaneConfigMapTransformer: base.PodOwnerReference(p),
 	}
 
-	if _, err := b.GetOrCreateDataPlaneConfigMap(ctx); err != nil && apierrors.IsAlreadyExists(err) {
+	if _, err := b.GetOrCreateDataPlaneConfigMap(ctx); err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("failed to create ConfigMap %s/%s: %w", r.SystemNamespace, name, err)
 	}
 	return nil

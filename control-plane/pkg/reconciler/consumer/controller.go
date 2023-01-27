@@ -33,7 +33,6 @@ import (
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/informers/eventing/v1alpha1/consumergroup"
 	creconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/client/internals/kafka/injection/reconciler/eventing/v1alpha1/consumer"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/contract"
-	cgreconciler "knative.dev/eventing-kafka-broker/control-plane/pkg/reconciler/consumergroup"
 )
 
 type ControllerConfig struct {
@@ -72,12 +71,6 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 
 	r.Tracker = impl.Tracker
 	secretinformer.Get(ctx).Informer().AddEventHandler(controller.HandleAll(r.Tracker.OnChanged))
-
-	globalResync := func(interface{}) {
-		impl.GlobalResync(consumerInformer.Informer())
-	}
-
-	cgreconciler.ResyncOnStatefulSetChange(ctx, globalResync)
 
 	return impl
 }

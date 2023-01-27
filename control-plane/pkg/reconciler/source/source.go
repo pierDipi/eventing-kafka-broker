@@ -31,7 +31,10 @@ import (
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
+	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
+
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/config"
 
 	internals "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	internalscg "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing/v1alpha1"
@@ -59,6 +62,7 @@ type Reconciler struct {
 	ConsumerGroupLister internalslst.ConsumerGroupLister
 	InternalsClient     internalsclient.Interface
 	KedaClient          kedaclientset.Interface
+	KafkaFeatureFlags   *config.KafkaFeatureFlags
 }
 
 func (r *Reconciler) ReconcileKind(ctx context.Context, ks *sources.KafkaSource) reconciler.Event {
@@ -111,6 +115,7 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 			},
 		},
 		Spec: internalscg.ConsumerGroupSpec{
+			Replicas: ks.Spec.Consumers,
 			Template: internalscg.ConsumerTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
@@ -155,12 +160,16 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 	// TODO: make keda annotation values configurable and maybe unexposed
 	expectedCg.Annotations = kedafunc.SetAutoscalingAnnotations(ks.Annotations)
 
+	// If KEDA is enabled, then we ignore KafkaSource replicas setting
+	if r.isKEDAEnabled(ctx, ks.GetNamespace()) {
+		expectedCg.Spec.Replicas = nil
+	}
+
 	cg, err := r.ConsumerGroupLister.ConsumerGroups(ks.GetNamespace()).Get(string(ks.UID)) //Get by consumer group id
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, err
 	}
 	if apierrors.IsNotFound(err) {
-		expectedCg.Spec.Replicas = ks.Spec.Consumers
 		cg, err := r.InternalsClient.InternalV1alpha1().ConsumerGroups(expectedCg.GetNamespace()).Create(ctx, expectedCg, metav1.CreateOptions{})
 		if err != nil && !apierrors.IsAlreadyExists(err) {
 			return nil, fmt.Errorf("failed to create consumer group %s/%s: %w", expectedCg.GetNamespace(), expectedCg.GetName(), err)
@@ -179,11 +188,6 @@ func (r Reconciler) reconcileConsumerGroup(ctx context.Context, ks *sources.Kafk
 		Status:     cg.Status,
 	}
 	newCg.Annotations = expectedCg.Annotations
-
-	// If KEDA is not enabled, then we must update the ConsumerGroup replicas to match KafkaSource consumers
-	if !r.isKEDAEnabled(ctx, cg.GetNamespace()) {
-		newCg.Spec.Replicas = ks.Spec.Consumers
-	}
 
 	if cg, err = r.InternalsClient.InternalV1alpha1().ConsumerGroups(cg.GetNamespace()).Update(ctx, newCg, metav1.UpdateOptions{}); err != nil {
 		return nil, fmt.Errorf("failed to update consumer group %s/%s: %w", newCg.GetNamespace(), newCg.GetName(), err)
@@ -224,7 +228,11 @@ func (r *Reconciler) isKEDAEnabled(ctx context.Context, namespace string) bool {
 		return true
 	}*/
 
-	if _, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace).List(ctx, metav1.ListOptions{}); err == nil {
+	if r.KafkaFeatureFlags.IsControllerAutoscalerEnabled() {
+		if _, err := r.KedaClient.KedaV1alpha1().ScaledObjects(namespace).List(ctx, metav1.ListOptions{}); err != nil {
+			logging.FromContext(ctx).Debug("KEDA not installed, failed to list ScaledObjects")
+			return false
+		}
 		return true
 	}
 	return false

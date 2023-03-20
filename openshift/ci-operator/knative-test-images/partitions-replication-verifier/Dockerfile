@@ -1,11 +1,16 @@
-# Do not edit! This file was generate via Makefile
+# DO NOT EDIT! Generated Dockerfile for test/test_images/partitions-replication-verifier.
 FROM registry.ci.openshift.org/openshift/release:golang-1.18 as builder
 
 COPY . .
-RUN make install test-install
+
+RUN mkdir -p /var/run/ko && \
+    mkdir -p test/test_images/partitions-replication-verifier/kodata && \
+    go build -o /usr/bin/main ./test/test_images/partitions-replication-verifier && \
+    cp -r test/test_images/partitions-replication-verifier/kodata /var/run/ko
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal
 USER 65532
 
-COPY --from=builder /go/bin/partitions-replication-verifier /usr/bin/partitions-replication-verifier
-ENTRYPOINT ["/usr/bin/partitions-replication-verifier"]
+COPY --from=builder /usr/bin/main /usr/bin/main
+COPY --from=builder /var/run/ko /var/run/ko
+ENTRYPOINT ["/usr/bin/main"]

@@ -15,19 +15,17 @@ git apply openshift/patches/fix_scheduler_and_autoscaler_scale_down_delay.patch
 # Eventing core will bring the config tracing ConfigMap, so remove it from heret
 rm -f control-plane/config/eventing-kafka-broker/200-controller/100-config-tracing.yaml
 
-release=$1
+image_prefix="registry.ci.openshift.org/openshift/knative-eventing-kafka-broker"
+tag=$(yq r openshift/project.yaml project.tag)
+release=${tag/knative-/} # This is used by resolve_resources function so it's not unused as the IDE suggests
+
+echo "Release: $release"
+
+$(dirname $0)/../generate.sh
 
 artifacts_dir="openshift/release/artifacts/"
 rm -rf $artifacts_dir
 mkdir -p $artifacts_dir
-
-if [ "$release" == "ci" ]; then
-  image_prefix="registry.ci.openshift.org/openshift/knative-eventing-kafka-broker"
-  tag="knative-nightly"
-else
-  image_prefix="registry.ci.openshift.org/openshift/knative-eventing-kafka-broker"
-  tag="knative-${release}"
-fi
 
 # Replace rekt images
 resolve_resources vendor/knative.dev/eventing/test/test_images/wathola-receiver vendor/knative.dev/eventing/test/test_images/wathola-receiver/pod.yaml "${image_prefix}" "${tag}" true

@@ -15,4 +15,4 @@ generate \
   --excludes ".*kafka-source-controller.*"
 
 # TODO move this logic to generate command in openshift-knative/hack
-cp -r "${repo_root_dir}/openshift/ci-operator/static-images/"* "${repo_root_dir}/openshift/ci-operator/knative-images"
+cp -r "${repo_root_dir}/openshift/static-images/"* "${repo_root_dir}/openshift/ci-operator/knative-images"

@@ -1558,7 +1558,7 @@ spec:
 
       containers:
         - name: controller
-          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-kafka-controller:knative-release-v1.9
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-kafka-controller:knative-v1.9
           imagePullPolicy: IfNotPresent
           env:
             - name: BROKER_DATA_PLANE_CONFIG_MAP_NAMESPACE
@@ -2028,7 +2028,7 @@ spec:
         - name: kafka-webhook-eventing
           terminationMessagePolicy: FallbackToLogsOnError
 
-          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-webhook-kafka:knative-release-v1.9
+          image: registry.ci.openshift.org/openshift/knative-eventing-kafka-broker-webhook-kafka:knative-v1.9
 
           resources:
             requests:

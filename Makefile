@@ -64,15 +64,9 @@ test-e2e-local:
 	./openshift/e2e-tests-local.sh $(TEST)
 .PHONY: test-e2e-local
 
-# Generate Dockerfiles used by ci-operator. The files need to be committed manually.
-generate-dockerfiles:
-	./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/knative-images $(CONTROL_PLANE_IMAGES)
-	./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/knative-test-images $(TEST_IMAGES)
-.PHONY: generate-dockerfiles
-
 # Generate an aggregated knative release yaml file, as well as a CI file with replaced image references
 generate-release:
-	./openshift/release/generate-release.sh $(RELEASE)
+	./openshift/release/generate-release.sh
 .PHONY: generate-release
 
 # Update CI configuration in the $(OPENSHIFT) directory.

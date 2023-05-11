@@ -1,0 +1,15 @@
+schemaVersion: 2.2.0
+metadata:
+  name: knative-eventing-kafka-broker
+  version: 1.9.0
+components:
+  - name: controller
+    image:
+      imageName: knative-eventing-kafka-broker-controller:knative-v1.9
+      dockerfile:
+        uri: openshift/ci-operator/knative-images/kafka-controller/Dockerfile
+  - name: receiver
+    image:
+      imageName: knative-eventing-kafka-broker-receiver:knative-v1.9
+      dockerfile:
+        uri: openshift/ci-operator/knative-images/receiver/Dockerfile

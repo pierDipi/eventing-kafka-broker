@@ -10428,6 +10428,15 @@ public final class DataPlaneContract {
      * </pre>
      *
      * <code>string replyUrl = 3;</code>
+     * @return Whether the replyUrl field is set.
+     */
+    boolean hasReplyUrl();
+    /**
+     * <pre>
+     * Send the response to an url
+     * </pre>
+     *
+     * <code>string replyUrl = 3;</code>
      * @return The replyUrl.
      */
     java.lang.String getReplyUrl();
@@ -11167,6 +11176,17 @@ public final class DataPlaneContract {
     }
 
     public static final int REPLYURL_FIELD_NUMBER = 3;
+    /**
+     * <pre>
+     * Send the response to an url
+     * </pre>
+     *
+     * <code>string replyUrl = 3;</code>
+     * @return Whether the replyUrl field is set.
+     */
+    public boolean hasReplyUrl() {
+      return replyStrategyCase_ == 3;
+    }
     /**
      * <pre>
      * Send the response to an url
@@ -12685,6 +12705,18 @@ public final class DataPlaneContract {
         return this;
       }
 
+      /**
+       * <pre>
+       * Send the response to an url
+       * </pre>
+       *
+       * <code>string replyUrl = 3;</code>
+       * @return Whether the replyUrl field is set.
+       */
+      @java.lang.Override
+      public boolean hasReplyUrl() {
+        return replyStrategyCase_ == 3;
+      }
       /**
        * <pre>
        * Send the response to an url

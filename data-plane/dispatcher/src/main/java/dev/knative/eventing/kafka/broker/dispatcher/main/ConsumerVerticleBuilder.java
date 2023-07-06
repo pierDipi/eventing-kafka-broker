@@ -59,7 +59,9 @@ import org.apache.kafka.common.TopicPartition;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -228,12 +230,9 @@ public class ConsumerVerticleBuilder {
       return new NoopResponseHandler();
     }
 
-    final Properties producerConfigs = new Properties();
-    producerConfigs.putAll(consumerVerticleContext.getProducerConfigs());
-
     final ReactiveKafkaProducer<String, CloudEvent> producer = this.consumerVerticleContext
       .getProducerFactory()
-      .create(vertx, new KafkaProducer<>(producerConfigs));
+      .create(vertx, consumerVerticleContext.getProducerConfigs());
     return new ResponseToKafkaTopicHandler(producer, consumerVerticleContext.getResource().getTopics(0));
   }
 

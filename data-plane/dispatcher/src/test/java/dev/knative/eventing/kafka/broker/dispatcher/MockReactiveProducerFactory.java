@@ -15,17 +15,19 @@
  */
 package dev.knative.eventing.kafka.broker.dispatcher;
 
+import org.apache.kafka.clients.producer.MockProducer;
 import org.apache.kafka.clients.producer.Producer;
 
 import dev.knative.eventing.kafka.broker.core.ReactiveKafkaProducer;
 import dev.knative.eventing.kafka.broker.core.ReactiveProducerFactory;
 import io.vertx.core.Vertx;
 
+import java.util.Map;
+
 public class MockReactiveProducerFactory<K, V> implements ReactiveProducerFactory<K, V> {
 
-    @Override
-    public ReactiveKafkaProducer<K, V> create(Vertx vertx, Producer<K, V> producer) {
-        return new MockReactiveKafkaProducer<>(vertx, producer);
-    }
-    
+  @Override
+  public ReactiveKafkaProducer<K, V> create(Vertx v, Map<String, Object> configs) {
+    return new MockReactiveKafkaProducer<>(v, new MockProducer<>(true, null, null));
+  }
 }

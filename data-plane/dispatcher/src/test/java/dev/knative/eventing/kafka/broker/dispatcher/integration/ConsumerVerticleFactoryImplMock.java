@@ -55,7 +55,7 @@ public class ConsumerVerticleFactoryImplMock implements ConsumerVerticleFactory 
   }
 
   private ReactiveKafkaProducer<String, CloudEvent> createProducer(Vertx vertx,
-                                                           Producer<String, CloudEvent> producerConfigs) {
+                                                                   Map<String, Object> stringObjectMap) {
     return new MockReactiveKafkaProducer<>(vertx, new MockProducer<>(
       true,
       new StringSerializer(),
@@ -69,7 +69,7 @@ public class ConsumerVerticleFactoryImplMock implements ConsumerVerticleFactory 
    * @return
    */
   private ReactiveKafkaConsumer<Object, CloudEvent> createConsumer(Vertx vertx,
-                                                           Map<String, Object> consumerConfigs) {
+                                                                   Map<String, Object> consumerConfigs) {
     final var consumer = new MockConsumer<Object, CloudEvent>(OffsetResetStrategy.LATEST);
 
     consumer.schedulePollTask(() -> {

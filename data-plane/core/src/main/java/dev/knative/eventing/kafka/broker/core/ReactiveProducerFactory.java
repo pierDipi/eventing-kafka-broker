@@ -19,9 +19,11 @@ import org.apache.kafka.clients.producer.Producer;
 
 import io.vertx.core.Vertx;
 
+import java.util.Map;
+
 /**
  * Factory for creating ReactiveKafkaProducer
- * 
+ *
  * @param <K> the key type
  * @param <V> the value type
  */
@@ -32,9 +34,9 @@ public interface ReactiveProducerFactory<K, V> {
      * Create a new ReactiveKafkaProducer
      *
      * @param v        the Vertx instance used when creating the vertx KafkaProducer
-     * @param producer the Kafka producer
+     * @param configs  the Kafka producer configurations.
      * @return a new ReactiveKafkaProducer
      */
-    ReactiveKafkaProducer<K, V> create(Vertx v, Producer<K, V> producer);
+    ReactiveKafkaProducer<K, V> create(Vertx v, final Map<String, Object> configs);
 
 }

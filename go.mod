@@ -43,6 +43,7 @@ require (
 	knative.dev/hack v0.0.0-20230712131415-ddae80293c43
 	knative.dev/pkg v0.0.0-20230718152110-aef227e72ead
 	knative.dev/reconciler-test v0.0.0-20230726074640-26cee79ad63d
+	go.opencensus.io v0.24.0
 	sigs.k8s.io/controller-runtime v0.12.3
 )
 

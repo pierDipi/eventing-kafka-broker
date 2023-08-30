@@ -25,5 +25,5 @@ git apply openshift/patches/*
 tag=${target/release-/}
 yq write --inplace openshift/project.yaml project.tag "knative-$tag"
 make generate-release
-git add .github/workflows openshift OWNERS Makefile
+git add .
 git commit -m "Add openshift specific files."

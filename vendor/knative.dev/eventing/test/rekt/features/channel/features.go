@@ -26,14 +26,17 @@ import (
 	"github.com/cloudevents/sdk-go/v2/test"
 	"github.com/google/uuid"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
+	"knative.dev/reconciler-test/pkg/environment"
 	"knative.dev/reconciler-test/pkg/eventshub"
-	"knative.dev/reconciler-test/pkg/eventshub/assert"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/manifest"
 	"knative.dev/reconciler-test/pkg/resources/service"
 
+	"knative.dev/reconciler-test/pkg/eventshub/assert"
+
 	eventasssert "knative.dev/reconciler-test/pkg/eventshub/assert"
 
+	"knative.dev/eventing/test/rekt/features"
 	"knative.dev/eventing/test/rekt/resources/channel"
 	"knative.dev/eventing/test/rekt/resources/channel_impl"
 	"knative.dev/eventing/test/rekt/resources/containersource"
@@ -88,7 +91,7 @@ func ChannelChain(length int, createSubscriberFn func(ref *duckv1.KReference, ur
 func DeadLetterSink(createSubscriberFn func(ref *duckv1.KReference, uri string) manifest.CfgFn) *feature.Feature {
 	f := feature.NewFeature()
 	sink := feature.MakeRandomK8sName("sink")
-	failer := feature.MakeK8sNamePrefix("failer")
+	failer := feature.MakeRandomK8sName("failer")
 	cs := feature.MakeRandomK8sName("containersource")
 	name := feature.MakeRandomK8sName("channel")
 	sub := feature.MakeRandomK8sName("subscription")
@@ -107,10 +110,12 @@ func DeadLetterSink(createSubscriberFn func(ref *duckv1.KReference, uri string) 
 	f.Requirement("containersource is ready", containersource.IsReady(cs))
 	f.Requirement("Channel has dead letter sink uri", channel_impl.HasDeadLetterSinkURI(name, channel_impl.GVR()))
 
-	f.Assert("dls receives events", assert.OnStore(sink).
-		MatchEvent(test.HasType("dev.knative.eventing.samples.heartbeat")).
-		AtLeast(1),
-	)
+	f.Assert("dls receives events", func(ctx context.Context, t feature.T) {
+		assert.OnStore(sink).
+			Match(features.HasKnNamespaceHeader(environment.FromContext(ctx).Namespace())).
+			MatchEvent(test.HasType("dev.knative.eventing.samples.heartbeat")).
+			AtLeast(1)(ctx, t)
+	})
 
 	return f
 }
@@ -118,7 +123,7 @@ func DeadLetterSink(createSubscriberFn func(ref *duckv1.KReference, uri string) 
 func DeadLetterSinkGenericChannel(createSubscriberFn func(ref *duckv1.KReference, uri string) manifest.CfgFn) *feature.Feature {
 	f := feature.NewFeature()
 	sink := feature.MakeRandomK8sName("sink")
-	failer := feature.MakeK8sNamePrefix("failer")
+	failer := feature.MakeRandomK8sName("failer")
 	cs := feature.MakeRandomK8sName("containersource")
 	name := feature.MakeRandomK8sName("channel")
 	sub := feature.MakeRandomK8sName("subscription")
@@ -140,10 +145,12 @@ func DeadLetterSinkGenericChannel(createSubscriberFn func(ref *duckv1.KReference
 	f.Requirement("containersource is ready", containersource.IsReady(cs))
 	f.Requirement("Channel has dead letter sink uri", channel_impl.HasDeadLetterSinkURI(name, channel.GVR()))
 
-	f.Assert("dls receives events", assert.OnStore(sink).
-		MatchEvent(test.HasType("dev.knative.eventing.samples.heartbeat")).
-		AtLeast(1),
-	)
+	f.Assert("dls receives events", func(ctx context.Context, t feature.T) {
+		assert.OnStore(sink).
+			Match(features.HasKnNamespaceHeader(environment.FromContext(ctx).Namespace())).
+			MatchEvent(test.HasType("dev.knative.eventing.samples.heartbeat")).
+			AtLeast(1)(ctx, t)
+	})
 
 	return f
 }
@@ -306,10 +313,12 @@ func ChannelPreferHeaderCheck(createSubscriberFn func(ref *duckv1.KReference, ur
 	))
 
 	f.Stable("test message without explicit prefer header should have the header").
-		Must("delivers events",
+		Must("delivers events", func(ctx context.Context, t feature.T) {
 			eventasssert.OnStore(sink).Match(
+				features.HasKnNamespaceHeader(environment.FromContext(ctx).Namespace()),
 				eventasssert.HasAdditionalHeader("Prefer", "reply"),
-			).AtLeast(1))
+			).AtLeast(1)(ctx, t)
+		})
 
 	return f
 }
@@ -429,7 +438,6 @@ func channelSubscriberReturnedErrorWithData(createSubscriberFn func(ref *duckv1.
 	f.Setup("install sink", eventshub.Install(sink, eventshub.StartReceiver))
 
 	errorData := "<!doctype html>\n<html>\n<head>\n    <title>Error Page(tm)</title>\n</head>\n<body>\n<p>Quoth the server, 404!\n</body></html>"
-	sanitizeBodyData := sanitizeHTTPBody([]byte(errorData))
 	f.Setup("install failing receiver", eventshub.Install(failer,
 		eventshub.StartReceiver,
 		eventshub.DropFirstN(1),
@@ -463,7 +471,7 @@ func channelSubscriberReturnedErrorWithData(createSubscriberFn func(ref *duckv1.
 			return test.HasExtension("knativeerrorcode", "422")
 		},
 		func(ctx context.Context) test.EventMatcher {
-			return test.HasExtension("knativeerrordata", base64.StdEncoding.EncodeToString([]byte(sanitizeBodyData)))
+			return test.HasExtension("knativeerrordata", base64.StdEncoding.EncodeToString([]byte(errorData)))
 		},
 	))
 
@@ -483,36 +491,4 @@ func assertEnhancedWithKnativeErrorExtensions(sinkName string, matcherfns ...fun
 			assert.MatchEvent(matchers...),
 		)
 	}
-}
-
-func sanitizeHTTPBody(body []byte) string {
-	if !hasControlChars(body) {
-		return string(body)
-	}
-
-	sanitizedResponse := make([]byte, 0, len(body))
-	for _, v := range body {
-		if !isControl(v) {
-			sanitizedResponse = append(sanitizedResponse, v)
-		}
-	}
-	return string(sanitizedResponse)
-}
-
-func isControl(c byte) bool {
-	// US ASCII codes range for printable graphic characters and a space.
-	// http://www.columbia.edu/kermit/ascii.html
-	const asciiUnitSeparator = 31
-	const asciiRubout = 127
-
-	return int(c) < asciiUnitSeparator || int(c) > asciiRubout
-}
-
-func hasControlChars(data []byte) bool {
-	for _, v := range data {
-		if isControl(v) {
-			return true
-		}
-	}
-	return false
 }

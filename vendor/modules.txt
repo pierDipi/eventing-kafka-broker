@@ -1231,11 +1231,12 @@ k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/eventing v0.37.0
+# knative.dev/eventing v0.37.0 => github.com/openshift-knative/eventing v0.99.1-0.20230831170232-cf89b7eadfce
 ## explicit; go 1.19
 knative.dev/eventing/cmd/event_display
 knative.dev/eventing/cmd/heartbeats
 knative.dev/eventing/hack
+knative.dev/eventing/pkg/apis
 knative.dev/eventing/pkg/apis/config
 knative.dev/eventing/pkg/apis/duck
 knative.dev/eventing/pkg/apis/duck/v1
@@ -1344,6 +1345,7 @@ knative.dev/eventing/test/performance/infra/common
 knative.dev/eventing/test/performance/infra/event_state
 knative.dev/eventing/test/performance/infra/receiver
 knative.dev/eventing/test/performance/infra/sender
+knative.dev/eventing/test/rekt/features
 knative.dev/eventing/test/rekt/features/broker
 knative.dev/eventing/test/rekt/features/channel
 knative.dev/eventing/test/rekt/features/knconf
@@ -1494,7 +1496,7 @@ knative.dev/pkg/webhook/json
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/reconciler-test v0.0.0-20230420091239-6c21623d2555
+# knative.dev/reconciler-test v0.0.0-20230810072039-8843b15af690
 ## explicit; go 1.18
 knative.dev/reconciler-test/cmd/eventshub
 knative.dev/reconciler-test/pkg/environment
@@ -1503,6 +1505,7 @@ knative.dev/reconciler-test/pkg/eventshub/assert
 knative.dev/reconciler-test/pkg/eventshub/dropevents
 knative.dev/reconciler-test/pkg/eventshub/dropevents/dropeventsfibonacci
 knative.dev/reconciler-test/pkg/eventshub/dropevents/dropeventsfirst
+knative.dev/reconciler-test/pkg/eventshub/forwarder
 knative.dev/reconciler-test/pkg/eventshub/logger_vent
 knative.dev/reconciler-test/pkg/eventshub/rbac
 knative.dev/reconciler-test/pkg/eventshub/receiver
@@ -1517,6 +1520,7 @@ knative.dev/reconciler-test/pkg/logging
 knative.dev/reconciler-test/pkg/manifest
 knative.dev/reconciler-test/pkg/milestone
 knative.dev/reconciler-test/pkg/resources/job
+knative.dev/reconciler-test/pkg/resources/knativeservice
 knative.dev/reconciler-test/pkg/resources/secret
 knative.dev/reconciler-test/pkg/resources/service
 knative.dev/reconciler-test/pkg/state
@@ -1539,3 +1543,4 @@ sigs.k8s.io/structured-merge-diff/v4/value
 ## explicit; go 1.12
 sigs.k8s.io/yaml
 # github.com/cloudevents/sdk-go/sql/v2 => github.com/cloudevents/sdk-go/sql/v2 v2.0.0-20220930150014-52b12276cc4a
+# knative.dev/eventing => github.com/openshift-knative/eventing v0.99.1-0.20230831170232-cf89b7eadfce

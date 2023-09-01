@@ -253,7 +253,7 @@ func (s *StatefulSetScheduler) Schedule(vpod scheduler.VPod) ([]duckv1alpha1.Pla
 }
 
 func (s *StatefulSetScheduler) scheduleVPod(vpod scheduler.VPod) ([]duckv1alpha1.Placement, error) {
-	logger := s.logger.With("key", vpod.GetKey())
+	logger := s.logger.With("key", vpod.GetKey(), zap.String("component", "scheduler"))
 	// Get the current placements state
 	// Quite an expensive operation but safe and simple.
 	state, err := s.stateAccessor.State(s.reserved)
@@ -332,10 +332,11 @@ func (s *StatefulSetScheduler) scheduleVPod(vpod scheduler.VPod) ([]duckv1alpha1
 
 	if left > 0 {
 		// Give time for the autoscaler to do its job
-		logger.Info("not enough pod replicas to schedule. Awaiting autoscaler", zap.Any("placement", placements), zap.Int32("left", left))
+		logger.Infow("not enough pod replicas to schedule")
 
 		// Trigger the autoscaler
 		if s.autoscaler != nil {
+			logger.Infow("Awaiting autoscaler", zap.Any("placement", placements), zap.Int32("left", left))
 			s.autoscaler.Autoscale(s.ctx)
 		}
 

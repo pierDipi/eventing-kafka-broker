@@ -656,6 +656,8 @@ github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1y
 github.com/onsi/gomega v1.10.2/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.16.0/go.mod h1:HnhC7FXeEQY45zxNK3PPoIUhzk/80Xly9PcubAlGdZY=
 github.com/onsi/gomega v1.20.1 h1:PA/3qinGoukvymdIDV8pii6tiZgC8kbmJO6Z5+b002Q=
+github.com/openshift-knative/eventing v0.99.1-0.20230831170232-cf89b7eadfce h1:39gQdnfDinjp5JnaZBRCLRJSkvquaRvxRPITqmc0TFg=
+github.com/openshift-knative/eventing v0.99.1-0.20230831170232-cf89b7eadfce/go.mod h1:tUUt7Myic84z4nSY00Km4noZE/JZ9/Gz4mf8yCwFzRg=
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/openzipkin/zipkin-go v0.3.0 h1:XtuXmOLIXLjiU2XduuWREDT0LOKtSgos/g7i7RYyoZQ=
 github.com/openzipkin/zipkin-go v0.3.0/go.mod h1:4c3sLeE8xjNqehmF5RpAFLPLJxXscc0R4l6Zg0P1tTQ=
@@ -1524,14 +1526,12 @@ k8s.io/utils v0.0.0-20200912215256-4140de9c8800/go.mod h1:jPW/WVKK9YHAvNhRxK0md/
 k8s.io/utils v0.0.0-20210819203725-bdf08cb9a70a/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 k8s.io/utils v0.0.0-20221108210102-8e77b1f39fe2 h1:GfD9OzL11kvZN5iArC6oTS7RTj7oJOIfnislxYlqTj8=
 k8s.io/utils v0.0.0-20221108210102-8e77b1f39fe2/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
-knative.dev/eventing v0.37.0 h1:OtX8B9nvUSTNcbbpoNFDyeGaGU/5+aetj94i6oATpQU=
-knative.dev/eventing v0.37.0/go.mod h1:62baPXiw5GPpPyV3f0GF64X7tOjc5x9cg64RAh1gjs4=
 knative.dev/hack v0.0.0-20230417170854-f591fea109b3 h1:+W4WBOq83tfGXKhtv8OB/uJeYqze3zh69GKiz1ucuqk=
 knative.dev/hack v0.0.0-20230417170854-f591fea109b3/go.mod h1:yk2OjGDsbEnQjfxdm0/HJKS2WqTLEFg/N6nUs6Rqx3Q=
 knative.dev/pkg v0.0.0-20230418073056-dfad48eaa5d0 h1:EFQcoUo8I4bc+U3y6tR1B3ONYZSHWUdAfI7Vh7dae8g=
 knative.dev/pkg v0.0.0-20230418073056-dfad48eaa5d0/go.mod h1:2qWPP9Gjh9Q7ETti+WRHnBnGCSCq+6q7m3p/nmUQviE=
-knative.dev/reconciler-test v0.0.0-20230420091239-6c21623d2555 h1:DpYnNF7NiSKgPIh64nwSCAsr+6a48R9DhK9nE8X/+ps=
-knative.dev/reconciler-test v0.0.0-20230420091239-6c21623d2555/go.mod h1:vZihHUKPh+sMzzx2lHgkM2tKr+f/lZqMJ9O7Jw0DaYs=
+knative.dev/reconciler-test v0.0.0-20230810072039-8843b15af690 h1:47Ik6D1Wx8JxCc8u9oDHzeLcukFKRiysr204FnemZ84=
+knative.dev/reconciler-test v0.0.0-20230810072039-8843b15af690/go.mod h1:By7fsbkjKWbTmxwAs9lL1itxZI1otbhiEsAZmprEtvI=
 pgregory.net/rapid v0.3.3 h1:jCjBsY4ln4Atz78QoBWxUEvAHaFyNDQg9+WU62aCn1U=
 pgregory.net/rapid v0.3.3/go.mod h1:UYpPVyjFHzYBGHIxLFoupi8vwk6rXNzRY9OMvVxFIOU=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=

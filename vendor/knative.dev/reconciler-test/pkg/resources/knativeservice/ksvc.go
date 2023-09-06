@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Knative Authors
+Copyright 2023 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,28 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package knativeservice
 
 import (
-	"errors"
-	"log"
-	"net/http"
-	"syscall"
+	"time"
 
-	"knative.dev/eventing/test/upgrade/prober/wathola/fetcher"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"knative.dev/reconciler-test/pkg/feature"
+	"knative.dev/reconciler-test/pkg/k8s"
 )
 
-func main() {
-	defer maybeQuitIstioProxy()
-	fetcher.New().FetchReport()
+func GVR() schema.GroupVersionResource {
+	return schema.GroupVersionResource{Group: "serving.knative.dev", Version: "v1", Resource: "services"}
 }
 
-func maybeQuitIstioProxy() {
-	req, _ := http.NewRequest(http.MethodPost, "http://localhost:15020/quitquitquit", nil)
-
-	_, err := http.DefaultClient.Do(req)
-
-	if err != nil && !errors.Is(err, syscall.ECONNREFUSED) {
-		log.Println("[Ignore this warning if Istio proxy is not used on this pod]", err)
-	}
+// IsReady tests to see if a knative Service becomes ready within the time given.
+func IsReady(name string, timings ...time.Duration) feature.StepFn {
+	return k8s.IsReady(GVR(), name, timings...)
 }

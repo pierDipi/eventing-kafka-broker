@@ -7,6 +7,8 @@ source $(dirname $0)/resolve.sh
 GITHUB_ACTIONS=true $(dirname $0)/../../hack/update-codegen.sh
 git apply openshift/patches/disable-ko-publish-rekt.patch
 git apply openshift/patches/autoscaler_fix.patch
+git apply openshift/patches/remove_resource_version_check.patch
+git apply openshift/patches/autoscaler_leader_log.patch
 
 chmod +x $(dirname $0)/../../vendor/k8s.io/code-generator/generate-groups.sh
 chmod +x $(dirname $0)/../../vendor/knative.dev/pkg/hack/generate-knative.sh

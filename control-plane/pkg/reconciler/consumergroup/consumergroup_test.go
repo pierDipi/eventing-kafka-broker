@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"testing"
+	"time"
 
 	"github.com/Shopify/sarama"
 	corev1 "k8s.io/api/core/v1"
@@ -34,6 +35,7 @@ import (
 
 	bindings "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/bindings/v1beta1"
 	sources "knative.dev/eventing-kafka-broker/control-plane/pkg/apis/sources/v1beta1"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
@@ -1643,7 +1645,7 @@ func TestReconcileKind(t *testing.T) {
 		_, exampleConfig := cm.ConfigMapsFromTestFile(t, configapis.FlagsConfigName)
 		store.OnConfigChanged(exampleConfig)
 
-		r := Reconciler{
+		r := &Reconciler{
 			SchedulerFunc: func(s string) Scheduler {
 				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
 				return Scheduler{
@@ -1675,6 +1677,8 @@ func TestReconcileKind(t *testing.T) {
 			SystemNamespace:                    systemNamespace,
 			AutoscalerConfig:                   "",
 			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
+			InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache(ctx, time.Second),
+			EnqueueKey:                         func(key string) {},
 		}
 
 		r.KafkaFeatureFlags = configapis.FromContext(store.ToContext(ctx))
@@ -1786,7 +1790,7 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 
 		ctx, _ = kedaclient.With(ctx)
 
-		r := Reconciler{
+		r := &Reconciler{
 			SchedulerFunc: func(s string) Scheduler {
 				ss := row.OtherTestData[testSchedulerKey].(scheduler.Scheduler)
 				return Scheduler{
@@ -1814,6 +1818,8 @@ func TestReconcileKindNoAutoscaler(t *testing.T) {
 			},
 			SystemNamespace:                    systemNamespace,
 			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
+			InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache(ctx, time.Second),
+			EnqueueKey:                         func(key string) {},
 		}
 
 		r.KafkaFeatureFlags = configapis.DefaultFeaturesConfig()
@@ -2198,6 +2204,7 @@ func TestFinalizeKind(t *testing.T) {
 			},
 			KafkaFeatureFlags:                  configapis.DefaultFeaturesConfig(),
 			DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
+			InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache(ctx, time.Second),
 		}
 
 		return consumergroup.NewReconciler(

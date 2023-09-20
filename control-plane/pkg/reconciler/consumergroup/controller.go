@@ -48,6 +48,7 @@ import (
 	"knative.dev/pkg/system"
 
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
 
 	statefulsetscheduler "knative.dev/eventing/pkg/scheduler/statefulset"
 
@@ -128,6 +129,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		KedaClient:                         kedaclient.Get(ctx),
 		AutoscalerConfig:                   env.AutoscalerConfigMap,
 		DeleteConsumerGroupMetadataCounter: counter.NewExpiringCounter(ctx),
+		InitOffsetLatestInitialOffsetCache: prober.NewLocalExpiringCache(ctx, 20*time.Minute),
 	}
 
 	consumerInformer := consumer.Get(ctx)
@@ -154,6 +156,13 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	})
 
 	r.Resolver = resolver.NewURIResolverFromTracker(ctx, impl.Tracker)
+	r.EnqueueKey = func(key string) {
+		parts := strings.SplitN(key, string(types.Separator), 3)
+		if len(parts) != 2 {
+			panic(fmt.Sprintf("Expected <namespace>/<name> format, got %s", key))
+		}
+		impl.EnqueueKey(types.NamespacedName{Namespace: parts[0], Name: parts[1]})
+	}
 
 	configStore := config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
 		r.KafkaFeatureFlags.Reset(value)
@@ -161,7 +170,16 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	})
 	configStore.WatchConfigs(watcher)
 
-	consumerGroupInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+	consumerGroupInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    impl.Enqueue,
+		UpdateFunc: controller.PassNew(impl.Enqueue),
+		DeleteFunc: func(obj interface{}) {
+			impl.Enqueue(obj)
+			if cg, ok := obj.(metav1.Object); ok && cg != nil {
+				r.InitOffsetLatestInitialOffsetCache.Expire(keyOf(cg))
+			}
+		},
+	})
 	consumerInformer.Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))
 
 	globalResync := func(interface{}) {

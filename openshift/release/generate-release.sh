@@ -30,6 +30,8 @@ eventing_kafka_broker="${artifacts_dir}eventing-kafka-broker.yaml"
 eventing_kafka_channel="${artifacts_dir}eventing-kafka-channel.yaml"
 eventing_kafka_sink="${artifacts_dir}eventing-kafka-sink.yaml"
 
+eventing_kafka_tls_networking="${artifacts_dir}eventing-kafka-tls-networking.yaml"
+
 eventing_kafka="${artifacts_dir}eventing-kafka.yaml"
 
 # the Broker Control Plane parts
@@ -46,6 +48,11 @@ resolve_resources data-plane/config/broker $eventing_kafka_broker "$image_prefix
 resolve_resources data-plane/config/sink $eventing_kafka_sink "$image_prefix"
 resolve_resources data-plane/config/source $eventing_kafka_source "$image_prefix"
 resolve_resources data-plane/config/channel $eventing_kafka_channel "$image_prefix"
+
+# TLS resources
+resolve_resources data-plane/config/broker-tls $eventing_kafka_tls_networking "$image_prefix"
+resolve_resources data-plane/config/channel-tls $eventing_kafka_tls_networking "$image_prefix"
+resolve_resources data-plane/config/sink-tls $eventing_kafka_tls_networking "$image_prefix"
 
 # Post-install jobs
 resolve_resources control-plane/config/post-install $eventing_kafka_post_install "$image_prefix"

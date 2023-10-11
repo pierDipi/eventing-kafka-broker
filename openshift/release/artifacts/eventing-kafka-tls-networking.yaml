@@ -41,6 +41,7 @@ spec:
 
   dnsNames:
     - kafka-broker-ingress.knative-eventing.svc.cluster.local
+    - kafka-broker-ingress.knative-eventing.svc
 
   issuerRef:
     name: selfsigned-ca-issuer
@@ -89,6 +90,7 @@ spec:
 
   dnsNames:
     - kafka-channel-ingress.knative-eventing.svc.cluster.local
+    - kafka-channel-ingress.knative-eventing.svc
 
   issuerRef:
     name: selfsigned-ca-issuer
@@ -138,6 +140,7 @@ spec:
 
   dnsNames:
     - kafka-sink-ingress.knative-eventing.svc.cluster.local
+    - kafka-sink-ingress.knative-eventing.svc
 
   issuerRef:
     name: selfsigned-ca-issuer

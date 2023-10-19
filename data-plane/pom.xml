@@ -60,7 +60,7 @@
     <kafka.version>3.2.3</kafka.version>
     <debezium.version>1.9.6.Final</debezium.version>
     <jib.version>3.2.1</jib.version>
-    <quarkus.version>2.13.7.Final</quarkus.version>
+    <quarkus.version>2.13.8.SP3-redhat-00001</quarkus.version>
   </properties>
 
   <modules>
@@ -95,7 +95,31 @@
     </profile>
   </profiles>
 
+  <pluginRepositories>
+    <pluginRepository>
+      <id>red-hat-enterprise-maven-repository</id>
+      <url>https://maven.repository.redhat.com/ga/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+
   <repositories>
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>redhat</id>
+      <url>https://maven.repository.redhat.com/ga</url>
+    </repository>
+
     <repository>
       <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
       <id>sonatype</id>
@@ -112,7 +136,7 @@
     <dependencies>
       <!-- Vertx -->
       <dependency>
-        <groupId>io.quarkus</groupId>
+        <groupId>com.redhat.quarkus.platform</groupId>
         <artifactId>quarkus-bom</artifactId>
         <version>${quarkus.version}</version>
         <type>pom</type>

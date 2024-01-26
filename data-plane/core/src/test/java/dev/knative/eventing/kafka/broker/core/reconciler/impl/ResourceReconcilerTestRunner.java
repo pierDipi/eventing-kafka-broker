@@ -23,6 +23,7 @@ import io.vertx.core.Future;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class ResourceReconcilerTestRunner {
 
@@ -111,7 +112,10 @@ public class ResourceReconcilerTestRunner {
     }
 
     public ReconcileStep expect() {
-        return this.reconcileSteps.getLast();
+        if (this.reconcileSteps.isEmpty()) {
+          throw new NoSuchElementException();
+        }
+        return this.reconcileSteps.get(this.reconcileSteps.size() - 1);
     }
 
     public ResourceReconcilerTestRunner enableIngressListener(final IngressReconcilerListenerMock mock) {

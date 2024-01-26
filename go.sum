@@ -625,8 +625,8 @@ github.com/onsi/gomega v1.10.2/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1y
 github.com/onsi/gomega v1.16.0/go.mod h1:HnhC7FXeEQY45zxNK3PPoIUhzk/80Xly9PcubAlGdZY=
 github.com/onsi/gomega v1.23.0 h1:/oxKu9c2HVap+F3PfKort2Hw5DEU+HGlW8n+tguWsys=
 github.com/onsi/gomega v1.23.0/go.mod h1:Z/NWtiqwBrwUt4/2loMmHL63EDLnYHmVbuBpDr2vQAg=
-github.com/openshift-knative/eventing v0.99.1-0.20231204165534-958f85c43970 h1:fcZVDFDjMgxG30PaSSjSE2pT9+TXqWD98KN6V2WYzY8=
-github.com/openshift-knative/eventing v0.99.1-0.20231204165534-958f85c43970/go.mod h1:Y+9JJFZt1ilIcjhPEbaMP/hWX2Fg9g3oixT7oQrOnkE=
+github.com/openshift-knative/eventing v0.99.1-0.20240126100517-8c8de08f5c0e h1:VXTtJX05cIaExxSxZKUqCBPIIfPv3iqgqvjJqOWYCyE=
+github.com/openshift-knative/eventing v0.99.1-0.20240126100517-8c8de08f5c0e/go.mod h1:tGTdE1ilz7HOHnOmielVlzBkS7/7mEi49LVMhMgS2fs=
 github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnhQw8ySjnjRyN4=
 github.com/openzipkin/zipkin-go v0.3.0 h1:XtuXmOLIXLjiU2XduuWREDT0LOKtSgos/g7i7RYyoZQ=
 github.com/openzipkin/zipkin-go v0.3.0/go.mod h1:4c3sLeE8xjNqehmF5RpAFLPLJxXscc0R4l6Zg0P1tTQ=

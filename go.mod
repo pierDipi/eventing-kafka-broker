@@ -165,4 +165,4 @@ require (
 
 replace github.com/cloudevents/sdk-go/sql/v2 => github.com/cloudevents/sdk-go/sql/v2 v2.0.0-20220930150014-52b12276cc4a
 
-replace knative.dev/eventing => github.com/openshift-knative/eventing v0.99.1-0.20231204165534-958f85c43970
+replace knative.dev/eventing => github.com/openshift-knative/eventing v0.99.1-0.20240126100517-8c8de08f5c0e

@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"knative.dev/eventing/test/rekt/features/featureflags"
+
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	. "github.com/cloudevents/sdk-go/v2/test"
 	cetest "github.com/cloudevents/sdk-go/v2/test"
@@ -517,6 +519,9 @@ func KafkaSourceTLSSink() *feature.Feature {
 	event.SetID(uuid.NewString())
 
 	f := feature.NewFeature()
+
+	f.Prerequisite("should not run when Istio is enabled", featureflags.IstioDisabled())
+
 	f.Setup("install kafka topic", kafkatopic.Install(topic))
 	f.Setup("topic is ready", kafkatopic.IsReady(topic))
 
@@ -564,6 +569,9 @@ func KafkaSourceTLSSinkTrustBundle() *feature.Feature {
 	event.SetID(uuid.NewString())
 
 	f := feature.NewFeature()
+
+	f.Prerequisite("should not run when Istio is enabled", featureflags.IstioDisabled())
+
 	f.Setup("install kafka topic", kafkatopic.Install(topic))
 	f.Setup("topic is ready", kafkatopic.IsReady(topic))
 

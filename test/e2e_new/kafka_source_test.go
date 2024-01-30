@@ -22,12 +22,14 @@ package e2e_new
 import (
 	"testing"
 
-	"knative.dev/eventing-kafka-broker/test/rekt/features"
 	"knative.dev/pkg/system"
 	"knative.dev/reconciler-test/pkg/environment"
+	"knative.dev/reconciler-test/pkg/eventshub"
 	"knative.dev/reconciler-test/pkg/feature"
 	"knative.dev/reconciler-test/pkg/k8s"
 	"knative.dev/reconciler-test/pkg/knative"
+
+	"knative.dev/eventing-kafka-broker/test/rekt/features"
 )
 
 func TestKafkaSourceCreateSecretsAfterKafkaSource(t *testing.T) {
@@ -221,4 +223,37 @@ func TestKafkaSourceUpdate(t *testing.T) {
 	// Kafka (through the same KafkaSink using same Kafka Topic). And verify that
 	// the new event is delivered properly.
 	env.Test(ctx, t, features.KafkaSourceWithEventAfterUpdate(kafkaSource, kafkaSink, topic))
+}
+
+func TestKafkaSourceTLSSink(t *testing.T) {
+
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
+		eventshub.WithTLS(t),
+		environment.Managed(t),
+	)
+
+	env.ParallelTest(ctx, t, features.KafkaSourceTLSSink())
+}
+
+func TestKafkaSourceTLSTrustBundle(t *testing.T) {
+
+	t.Parallel()
+
+	ctx, env := global.Environment(
+		knative.WithKnativeNamespace(system.Namespace()),
+		knative.WithLoggingConfig,
+		knative.WithTracingConfig,
+		k8s.WithEventListener,
+		environment.WithPollTimings(PollInterval, PollTimeout),
+		environment.Managed(t),
+	)
+
+	env.ParallelTest(ctx, t, features.KafkaSourceTLSSinkTrustBundle())
 }

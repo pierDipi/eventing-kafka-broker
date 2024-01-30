@@ -39,6 +39,10 @@ test-reconciler:
 	sh openshift/e2e-rekt-tests.sh
 .PHONY: test-reconciler
 
+test-reconciler-encryption-auth:
+	sh openshift/e2e-rekt-tests.sh
+.PHONY: test-reconciler
+
 # Requires ko 0.2.0 or newer.
 # Target used by github actions.
 test-images:

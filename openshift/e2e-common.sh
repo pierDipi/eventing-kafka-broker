@@ -7,6 +7,8 @@ export KNATIVE_DEFAULT_NAMESPACE=$EVENTING_NAMESPACE
 
 export SKIP_GENERATE_RELEASE=${SKIP_GENERATE_RELEASE:-false}
 
+export INSTALL_KEDA="${INSTALL_KEDA:-false}"
+
 default_test_image_template=$(
   cat <<-END
 {{- with .Name }}
@@ -72,12 +74,12 @@ EOF
   pushd $operator_dir || return $?
   export ON_CLUSTER_BUILDS=true
   export DOCKER_REPO_OVERRIDE=image-registry.openshift-image-registry.svc:5000/openshift-marketplace
-  if [[ "${INSTALL_KEDA:-'false'}" != "true" ]]; then
+  if [[ ${INSTALL_KEDA} == "true" ]]; then
   	make OPENSHIFT_CI="true" TRACING_BACKEND=zipkin \
-	  generated-files images install-tracing install-kafka || failed=$?
+	    generated-files images install-tracing install-kafka-with-keda || failed=$?
   else
-	make OPENSHIFT_CI="true" TRACING_BACKEND=zipkin \
-	  generated-files images install-tracing install-kafka-with-keda || failed=$?
+    make OPENSHIFT_CI="true" TRACING_BACKEND=zipkin \
+      generated-files images install-tracing install-kafka || failed=$?
   fi
   popd || return $?
 

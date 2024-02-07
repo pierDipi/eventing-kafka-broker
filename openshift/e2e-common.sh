@@ -84,33 +84,6 @@ EOF
   oc apply -f openshift/knative-eventing.yaml
   oc wait --for=condition=Ready knativeeventing.operator.knative.dev knative-eventing -n knative-eventing --timeout=900s
 
-  local openshift_version=$(oc version -o yaml | yq read - openshiftVersion)
-  local cert_manager_namespace="cert-manager"
-  if printf '%s\n4.12\n' "${openshift_version}" | sort --version-sort -C; then
-      # OCP version is older as 4.12 and thus cert-manager-operator is only available as tech-preview in this version (cert-manager-operator GA'ed in OCP 4.12)
-      echo "Running on OpenShift ${openshift_version} which supports cert-manager-operator only in tech-preview"
-      cert_manager_namespace="openshift-cert-manager"
-  else
-    echo "Running on OpenShift ${openshift_version} which supports GA'ed cert-manager-operator"
-  fi
-
-  oc apply \
-    -f "${SCRIPT_DIR}/tls/issuers/eventing-ca-issuer.yaml" \
-    -f "${SCRIPT_DIR}/tls/issuers/selfsigned-issuer.yaml" || return $?
-
-  oc apply -n "${cert_manager_namespace}" -f "${SCRIPT_DIR}/tls/issuers/ca-certificate.yaml" || return $?
-
-  local ca_cert_tls_secret="knative-eventing-ca"
-  echo "Waiting until secrets: ${ca_cert_tls_secret} exist in ${cert_manager_namespace}"
-  wait_until_object_exists secret "${ca_cert_tls_secret}" "${cert_manager_namespace}" || return $?
-
-  oc get secret -n "${cert_manager_namespace}" "${ca_cert_tls_secret}" -o=jsonpath='{.data.tls\.crt}' | base64 -d > tls.crt || return $?
-  oc get secret -n "${cert_manager_namespace}" "${ca_cert_tls_secret}" -o=jsonpath='{.data.ca\.crt}' | base64 -d > ca.crt || return $?
-  oc create configmap -n knative-eventing knative-eventing-bundle --from-file=tls.crt --from-file=ca.crt \
-    --dry-run=client -o yaml | kubectl apply -n knative-eventing -f - || return $?
-
-  oc label configmap -n knative-eventing knative-eventing-bundle networking.knative.dev/trust-bundle=true
-
   return $failed
 }
 

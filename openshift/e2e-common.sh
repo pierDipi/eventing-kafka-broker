@@ -162,7 +162,7 @@ function run_e2e_encryption_auth_tests(){
       local run_command="-run ^(${test_name})$"
   fi
   # check for test flags
-  RUN_FLAGS="-timeout=1h -parallel=20 -run ${regex}"
+  RUN_FLAGS="-timeout=1h -run ${regex}"
   go_test_e2e ${RUN_FLAGS} ./test/e2e_new --images.producer.file="${images_file}" || failed=$?
 
   return $failed

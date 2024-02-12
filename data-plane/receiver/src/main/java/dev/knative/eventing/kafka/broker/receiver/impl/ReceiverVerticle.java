@@ -128,15 +128,13 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
         this.httpServer = vertx.createHttpServer(this.httpServerOptions);
 
-        // check whether the secret volume is mounted
-        File secretVolume = new File(secretVolumePath);
-        if (secretVolume.exists()) {
-            // The secret volume is mounted, we should start the https server
-            // check whether the tls.key and tls.crt files exist
-            File tlsKeyFile = new File(tlsKeyFilePath);
-            File tlsCrtFile = new File(tlsCrtFilePath);
+        // The secret volume is mounted, we should start the https server
+        // check whether the tls.key and tls.crt files exist
+        File tlsKeyFile = new File(tlsKeyFilePath);
+        File tlsCrtFile = new File(tlsCrtFilePath);
+        if (tlsKeyFile.exists() && tlsCrtFile.exists()) {
 
-            if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+            if (tlsKeyFile.exists() && tlsCrtFile.exists()) {
                 PemKeyCertOptions keyCertOptions =
                         new PemKeyCertOptions().setKeyPath(tlsKeyFile.getPath()).setCertPath(tlsCrtFile.getPath());
                 this.httpsServerOptions.setSsl(true).setPemKeyCertOptions(keyCertOptions);
@@ -160,6 +158,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                                     .listen(this.httpsServerOptions.getPort(), this.httpsServerOptions.getHost()))
                     .<Void>mapEmpty()
                     .onComplete(startPromise);
+            setupSecretWatcher();
         } else {
             this.httpServer
                     .requestHandler(handler)
@@ -169,7 +168,6 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
                     .onComplete(startPromise);
         }
 
-        setupSecretWatcher();
     }
 
     // Set up the secret watcher
@@ -238,7 +236,7 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         File tlsCrtFile = new File(tlsCrtFilePath);
 
         // Check whether the tls.key and tls.crt files exist
-        if (tlsKeyFile.exists() && tlsCrtFile.exists() && httpsServerOptions != null) {
+        if (tlsKeyFile.exists() && tlsCrtFile.exists()) {
             try {
                 // Update SSL configuration by passing the new value of the certificate and key
                 // Have to use value instead of path here otherwise the changes won't be applied

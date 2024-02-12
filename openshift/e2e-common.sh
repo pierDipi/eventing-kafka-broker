@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+if [[ -n "${ARTIFACT_DIR:-}" ]]; then
+  BUILD_NUMBER=${BUILD_NUMBER:-$(head -c 128 < /dev/urandom | base64 | fold -w 8 | head -n 1)}
+  ARTIFACTS="${ARTIFACT_DIR}/build-${BUILD_NUMBER}"
+  export ARTIFACTS
+  mkdir -p "${ARTIFACTS}"
+fi
+
 export EVENTING_NAMESPACE="${EVENTING_NAMESPACE:-knative-eventing}"
 export SYSTEM_NAMESPACE=$EVENTING_NAMESPACE
 export TRACING_NAMESPACE=$EVENTING_NAMESPACE

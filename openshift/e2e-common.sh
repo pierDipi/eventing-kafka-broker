@@ -151,6 +151,8 @@ function run_e2e_new_tests() {
 function run_e2e_encryption_auth_tests(){
   header "Running E2E Encryption and Auth Tests"
 
+  export BROKER_CLASS="Kafka"
+
   oc patch knativeeventing --type merge -n "${EVENTING_NAMESPACE}" knative-eventing --patch-file "${SCRIPT_DIR}/knative-eventing-encryption-auth.yaml"
 
   images_file=$(dirname $(realpath "$0"))/images.yaml

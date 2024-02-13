@@ -41,6 +41,7 @@ import io.vertx.core.net.SSLOptions;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,6 +91,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
 
     private FileWatcher secretWatcher;
 
+    private AtomicReference<String> keyCache;
+    private AtomicReference<String> certCache;
+
     public ReceiverVerticle(
             final ReceiverEnv env,
             final HttpServerOptions httpServerOptions,
@@ -113,6 +117,9 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         this.secretVolumePath = secretVolumePath;
         this.tlsKeyFilePath = secretVolumePath + "/tls.key";
         this.tlsCrtFilePath = secretVolumePath + "/tls.crt";
+
+        this.keyCache = new AtomicReference<>("");
+        this.certCache = new AtomicReference<>("");
     }
 
     public HttpServerOptions getHttpsServerOptions() {
@@ -238,15 +245,26 @@ public class ReceiverVerticle extends AbstractVerticle implements Handler<HttpSe
         // Check whether the tls.key and tls.crt files exist
         if (tlsKeyFile.exists() && tlsCrtFile.exists()) {
             try {
+                final var cert = java.nio.file.Files.readString(tlsCrtFile.toPath());
+                final var key = java.nio.file.Files.readString(tlsKeyFile.toPath());
+
+                if (cert.isEmpty() || key.isEmpty() || (this.certCache.get().equals(cert) && this.keyCache.get().equals(key))) {
+                  return;
+                }
+
                 // Update SSL configuration by passing the new value of the certificate and key
                 // Have to use value instead of path here otherwise the changes won't be applied
                 final var keyCertOptions = new PemKeyCertOptions()
-                        .setCertValue(Buffer.buffer(java.nio.file.Files.readString(tlsCrtFile.toPath())))
-                        .setKeyValue(Buffer.buffer(java.nio.file.Files.readString(tlsKeyFile.toPath())));
+                  .setCertValue(Buffer.buffer(cert))
+                  .setKeyValue(Buffer.buffer(key));
 
                 httpsServer
                         .updateSSLOptions(new SSLOptions().setKeyCertOptions(keyCertOptions))
-                        .onSuccess(v -> logger.info("Succeeded to update TLS key pair"))
+                        .onSuccess(v -> {
+                          this.certCache.set(cert);
+                          this.keyCache.set(key);
+                          logger.info("Succeeded to update TLS key pair");
+                        })
                         .onFailure(
                                 e -> logger.error("Failed to update TLS key pair while executing updateSSLOptions", e));
 

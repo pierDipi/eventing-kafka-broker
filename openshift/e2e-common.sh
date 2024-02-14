@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
 
+if [[ -n "${ARTIFACT_DIR:-}" ]]; then
+  BUILD_NUMBER=${BUILD_NUMBER:-$(head -c 128 < /dev/urandom | base64 | fold -w 8 | head -n 1)}
+  ARTIFACTS="${ARTIFACT_DIR}/build-${BUILD_NUMBER}"
+  export ARTIFACTS
+  mkdir -p "${ARTIFACTS}"
+fi
+
 export EVENTING_NAMESPACE="${EVENTING_NAMESPACE:-knative-eventing}"
 export SYSTEM_NAMESPACE=$EVENTING_NAMESPACE
 export TRACING_NAMESPACE=$EVENTING_NAMESPACE
 export KNATIVE_DEFAULT_NAMESPACE=$EVENTING_NAMESPACE
 
 export SKIP_GENERATE_RELEASE=${SKIP_GENERATE_RELEASE:-false}
+
+export INSTALL_KEDA="${INSTALL_KEDA:-false}"
 
 default_test_image_template=$(
   cat <<-END
@@ -72,12 +81,12 @@ EOF
   pushd $operator_dir || return $?
   export ON_CLUSTER_BUILDS=true
   export DOCKER_REPO_OVERRIDE=image-registry.openshift-image-registry.svc:5000/openshift-marketplace
-  if [[ "${INSTALL_KEDA:-'false'}" != "true" ]]; then
+  if [[ ${INSTALL_KEDA} == "true" ]]; then
   	make OPENSHIFT_CI="true" TRACING_BACKEND=zipkin \
-	  generated-files images install-tracing install-kafka || failed=$?
+	    generated-files images install-tracing install-kafka-with-keda || failed=$?
   else
-	make OPENSHIFT_CI="true" TRACING_BACKEND=zipkin \
-	  generated-files images install-tracing install-kafka-with-keda || failed=$?
+    make OPENSHIFT_CI="true" TRACING_BACKEND=zipkin \
+      generated-files images install-tracing install-kafka || failed=$?
   fi
   popd || return $?
 
@@ -142,6 +151,8 @@ function run_e2e_new_tests() {
 function run_e2e_encryption_auth_tests(){
   header "Running E2E Encryption and Auth Tests"
 
+  export BROKER_CLASS="Kafka"
+
   oc patch knativeeventing --type merge -n "${EVENTING_NAMESPACE}" knative-eventing --patch-file "${SCRIPT_DIR}/knative-eventing-encryption-auth.yaml"
 
   images_file=$(dirname $(realpath "$0"))/images.yaml
@@ -160,7 +171,7 @@ function run_e2e_encryption_auth_tests(){
       local run_command="-run ^(${test_name})$"
   fi
   # check for test flags
-  RUN_FLAGS="-timeout=1h -parallel=20 -run ${regex}"
+  RUN_FLAGS="-timeout=1h -run ${regex}"
   go_test_e2e ${RUN_FLAGS} ./test/e2e_new --images.producer.file="${images_file}" || failed=$?
 
   return $failed

@@ -1,0 +1,290 @@
+components:
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-images/event_display/Dockerfile
+    imageName: knative-eventing-kafka-broker-event-display
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-event-display
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-images/heartbeats/Dockerfile
+    imageName: knative-eventing-kafka-broker-heartbeats
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-heartbeats
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-images/kafka-controller/Dockerfile
+    imageName: knative-eventing-kafka-broker-kafka-controller
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-kafka-controller
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-images/kafka-source-controller/Dockerfile
+    imageName: knative-eventing-kafka-broker-kafka-source-controller
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-kafka-source-controller
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-images/migrate/Dockerfile
+    imageName: knative-eventing-kafka-broker-migrate
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-migrate
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-images/post-install/Dockerfile
+    imageName: knative-eventing-kafka-broker-post-install
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-post-install
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-images/webhook-kafka/Dockerfile
+    imageName: knative-eventing-kafka-broker-webhook-kafka
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-webhook-kafka
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/committed-offset/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-committed-offset
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-committed-offset
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/consumer-group-lag-provider-test/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-consumer-group-lag-provider-test
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-consumer-group-lag-provider-test
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/event-sender/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-event-sender
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-event-sender
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/eventshub/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-eventshub
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-eventshub
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/kafka-consumer/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-kafka-consumer
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-kafka-consumer
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/logs-exporter/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-logs-exporter
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-logs-exporter
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/performance/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-performance
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-performance
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/print/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-print
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-print
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/recordevents/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-recordevents
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-recordevents
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/request-sender/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-request-sender
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-request-sender
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/watch-cm/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-watch-cm
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-watch-cm
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/wathola-fetcher/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-wathola-fetcher
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-wathola-fetcher
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/wathola-forwarder/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-wathola-forwarder
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-wathola-forwarder
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/wathola-receiver/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-wathola-receiver
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-wathola-receiver
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/knative-test-images/wathola-sender/Dockerfile
+    imageName: knative-eventing-kafka-broker-test-wathola-sender
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-test-wathola-sender
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/source-image/Dockerfile
+    imageName: knative-eventing-kafka-broker-source-image
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-source-image
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/static-images/dispatcher/Dockerfile
+    imageName: knative-eventing-kafka-broker-dispatcher
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-dispatcher
+- componentType: Image
+  image:
+    autoBuild: false
+    dockerfile:
+      buildContext: .
+      rootRequired: false
+      srcType: Uri
+      uri: openshift/ci-operator/static-images/receiver/Dockerfile
+    imageName: knative-eventing-kafka-broker-receiver
+    imageType: Dockerfile
+  name: knative-eventing-kafka-broker-receiver
+metadata:
+  name: openshift-knative-eventing-kafka-broker-release-v1.13
+  version: 2.2.0
+projects:
+- clonePath: openshift-knative/eventing-kafka-broker/release-v1.13
+  git:
+    checkoutFrom:
+      remote: midstream
+      revision: release-v1.13
+    remotes:
+      midstream: https://github.com/openshift-knative/eventing-kafka-broker.git
+  name: openshift-knative-eventing-kafka-broker-release-v1.13
+  sourceType: Git
+schemaVersion: 2.2.0

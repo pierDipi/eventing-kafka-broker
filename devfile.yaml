@@ -1,3 +1,104 @@
+commands:
+- apply:
+    component: knative-eventing-kafka-broker-event-display
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-event-display
+- apply:
+    component: knative-eventing-kafka-broker-heartbeats
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-heartbeats
+- apply:
+    component: knative-eventing-kafka-broker-kafka-controller
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-kafka-controller
+- apply:
+    component: knative-eventing-kafka-broker-kafka-source-controller
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-kafka-source-controller
+- apply:
+    component: knative-eventing-kafka-broker-migrate
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-migrate
+- apply:
+    component: knative-eventing-kafka-broker-post-install
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-post-install
+- apply:
+    component: knative-eventing-kafka-broker-webhook-kafka
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-webhook-kafka
+- apply:
+    component: knative-eventing-kafka-broker-test-committed-offset
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-committed-offset
+- apply:
+    component: knative-eventing-kafka-broker-test-consumer-group-lag-provider-test
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-consumer-group-lag-provider-test
+- apply:
+    component: knative-eventing-kafka-broker-test-event-sender
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-event-sender
+- apply:
+    component: knative-eventing-kafka-broker-test-eventshub
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-eventshub
+- apply:
+    component: knative-eventing-kafka-broker-test-kafka-consumer
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-kafka-consumer
+- apply:
+    component: knative-eventing-kafka-broker-test-logs-exporter
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-logs-exporter
+- apply:
+    component: knative-eventing-kafka-broker-test-performance
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-performance
+- apply:
+    component: knative-eventing-kafka-broker-test-print
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-print
+- apply:
+    component: knative-eventing-kafka-broker-test-recordevents
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-recordevents
+- apply:
+    component: knative-eventing-kafka-broker-test-request-sender
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-request-sender
+- apply:
+    component: knative-eventing-kafka-broker-test-watch-cm
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-watch-cm
+- apply:
+    component: knative-eventing-kafka-broker-test-wathola-fetcher
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-wathola-fetcher
+- apply:
+    component: knative-eventing-kafka-broker-test-wathola-forwarder
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-wathola-forwarder
+- apply:
+    component: knative-eventing-kafka-broker-test-wathola-receiver
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-wathola-receiver
+- apply:
+    component: knative-eventing-kafka-broker-test-wathola-sender
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-test-wathola-sender
+- apply:
+    component: knative-eventing-kafka-broker-source-image
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-source-image
+- apply:
+    component: knative-eventing-kafka-broker-dispatcher
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-dispatcher
+- apply:
+    component: knative-eventing-kafka-broker-receiver
+  commandType: Apply
+  id: build-knative-eventing-kafka-broker-receiver
 components:
 - componentType: Image
   image:

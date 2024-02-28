@@ -1,0 +1,17 @@
+apiVersion: appstudio.redhat.com/v1alpha1
+kind: Component
+metadata:
+  annotations:
+    image.redhat.com/generate: "true"
+    appstudio.openshift.io/pac-provision: request
+  name: knative-eventing-kafka-broker-kafka-controller
+spec:
+  componentName: knative-eventing-kafka-broker-kafka-controller
+  application: eventing-kafka-broker
+  targetPort: 8080
+  source:
+    git:
+      url: github.com/pierdipi/eventing-kafka-broker
+      context: ./
+      dockerfileUrl: openshift/ci-operator/knative-images/kafka-controller/Dockerfile
+      revision: devfile

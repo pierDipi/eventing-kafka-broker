@@ -171,9 +171,14 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		impl.EnqueueKey(types.NamespacedName{Namespace: parts[0], Name: parts[1]})
 	}
 
+	globalResync := func(reason string) {
+		logger.Info("Global resync consumergroups", zap.String("reason", reason))
+		impl.GlobalResync(consumerGroupInformer.Informer())
+	}
+
 	configStore := config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
 		r.KafkaFeatureFlags.Reset(value)
-		impl.GlobalResync(consumerGroupInformer.Informer())
+		globalResync("config-kafka-features changed")
 	})
 	configStore.WatchConfigs(watcher)
 
@@ -189,11 +194,9 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	})
 	consumerInformer.Informer().AddEventHandler(controller.HandleAll(enqueueConsumerGroupFromConsumer(impl.EnqueueKey)))
 
-	globalResync := func(interface{}) {
-		impl.GlobalResync(consumerGroupInformer.Informer())
-	}
-
-	ResyncOnStatefulSetChange(ctx, globalResync)
+	ResyncOnStatefulSetChange(ctx, func(obj interface{}) {
+		globalResync("statefulset changed")
+	})
 
 	//Todo: ScaledObject informer when KEDA is installed
 

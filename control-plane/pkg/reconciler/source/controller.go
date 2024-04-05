@@ -19,6 +19,7 @@ package source
 import (
 	"context"
 
+	"go.uber.org/zap"
 	"knative.dev/eventing/pkg/apis/feature"
 	"knative.dev/pkg/logging"
 
@@ -48,12 +49,14 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
 	serviceaccountInformer := serviceaccountinformer.Get(ctx)
 
+	logger := logging.FromContext(ctx).Desugar()
+
 	sources.RegisterAlternateKafkaConditionSet(conditionSet)
 
-	var globalResync func()
+	var globalResync func(reason string)
 	featureStore := feature.NewStore(logging.FromContext(ctx).Named("feature-config-store"), func(name string, value interface{}) {
 		if globalResync != nil {
-			globalResync()
+			globalResync("config-features changed")
 		}
 	})
 	featureStore.WatchConfigs(watcher)
@@ -73,7 +76,8 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		}
 	})
 
-	globalResync = func() {
+	globalResync = func(reason string) {
+		logger.Info("Global resync kafkasources", zap.String("reason", reason))
 		impl.GlobalResync(kafkaInformer.Informer())
 	}
 
@@ -81,7 +85,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 
 	configStore := config.NewStore(ctx, func(name string, value *config.KafkaFeatureFlags) {
 		r.KafkaFeatureFlags.Reset(value)
-		globalResync()
+		globalResync("config-kafka-features changed")
 	})
 	configStore.WatchConfigs(watcher)
 

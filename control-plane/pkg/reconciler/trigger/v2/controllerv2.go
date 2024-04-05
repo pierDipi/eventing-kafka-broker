@@ -67,7 +67,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	consumerGroupInformer := consumergroupinformer.Get(ctx)
 	oidcServiceAccountInformer := serviceaccountinformer.Get(ctx, auth.OIDCLabelSelector)
 
-	var globalResync func()
+	var globalResync func(reason string)
 
 	flagsHolder := trigger.FlagsHolder{}
 
@@ -79,7 +79,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 			flagsHolder.Flags = flags
 		}
 		if globalResync != nil {
-			globalResync()
+			globalResync("config-features changed")
 		}
 	})
 	featureStore.WatchConfigs(watcher)
@@ -110,12 +110,13 @@ func NewController(ctx context.Context, watcher configmap.Watcher, configs *conf
 	kafkaFeatureStore := apisconfig.NewStore(ctx, func(_ string, value *apisconfig.KafkaFeatureFlags) {
 		reconciler.KafkaFeatureFlags.Reset(value)
 		if globalResync != nil {
-			globalResync()
+			globalResync("config-kafka-features changed")
 		}
 	})
 	kafkaFeatureStore.WatchConfigs(watcher)
 
-	globalResync = func() {
+	globalResync = func(reason string) {
+		logger.Info("Global resync triggers", zap.String("reason", reason))
 		impl.FilteredGlobalResync(filterTriggers(reconciler.BrokerLister), triggerInformer.Informer())
 	}
 

@@ -52,7 +52,10 @@ import org.slf4j.LoggerFactory;
 public class Main {
 
     static {
-        System.setProperty("logback.configurationFile", "/etc/logging/config.xml");
+        if (System.getProperty("logback.configurationFile") == null
+                || System.getProperty("logback.configurationFile").isEmpty()) {
+            System.setProperty("logback.configurationFile", "/etc/logging/config.xml");
+        }
     }
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -109,7 +112,7 @@ public class Main {
                     .toCompletionStage()
                     .toCompletableFuture()
                     .get();
-        } catch (ExecutionException ex) {
+        } catch (Exception ex) {
             if (featuresConfig.isAuthenticationOIDC()) {
                 logger.error("Could not load OIDC config while OIDC authentication feature is enabled.");
                 throw ex;

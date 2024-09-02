@@ -74,6 +74,11 @@ EOF
   KNATIVE_EVENTING_KAFKA_BROKER_MANIFESTS_DIR="$(pwd)/openshift/release/artifacts"
   export KNATIVE_EVENTING_KAFKA_BROKER_MANIFESTS_DIR
 
+  USE_IMAGE_RELEASE_TAG="$(yq r "${SCRIPT_DIR}/project.yaml" project.tag)"
+  export USE_IMAGE_RELEASE_TAG
+
+  echo "Tag: ${USE_IMAGE_RELEASE_TAG}"
+
   local operator_dir=/tmp/serverless-operator
   git clone --branch main https://github.com/openshift-knative/serverless-operator.git $operator_dir
   export GOPATH=/tmp/go

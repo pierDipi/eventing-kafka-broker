@@ -28,6 +28,8 @@ spec:
       value: quay.io/redhat-user-workloads/ocp-serverless-tenant/serverless-operator-release-135/knative-eventing-kafka-broker-receiver:on-pr-{{revision}}
     - name: revision
       value: '{{revision}}'
+    - name: hermetic
+      value: "true"
   pipelineRef:
     name: docker-build
   taskRunTemplate: {}

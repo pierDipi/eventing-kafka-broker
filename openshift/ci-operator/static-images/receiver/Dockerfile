@@ -28,16 +28,15 @@ COPY /data-plane/receiver-loom/pom.xml receiver-loom/pom.xml
 COPY /data-plane/dispatcher/pom.xml dispatcher/pom.xml
 COPY /data-plane/dispatcher-loom/pom.xml dispatcher-loom/pom.xml
 COPY /data-plane/contract/pom.xml contract/pom.xml
-COPY /data-plane/mvnw .
-COPY /data-plane/.mvn/wrapper .mvn/wrapper
+COPY /third_party/maven /third_party/maven
 
 # Install dependencies. Note: don't build a single submodule (receiver or dispatcher) since it just slows down
 # consecutive builds.
-RUN ./mvnw install -am -DskipTests -Drelease -Dlicense.skip -Deditorconfig.skip --no-transfer-progress
+RUN mvn -Dmaven.repo.local=/third_party/maven --offline install -am -DskipTests -Drelease -Dlicense.skip -Deditorconfig.skip --no-transfer-progress
 
 COPY /data-plane/ .
 
-RUN ./mvnw package -pl=receiver-loom -Drelease -am -DskipTests -Deditorconfig.skip --no-transfer-progress
+RUN mvn -Dmaven.repo.local=/third_party/maven --offline package -pl=receiver-loom -Drelease -am -DskipTests -Deditorconfig.skip --no-transfer-progress
 
 RUN mkdir /app && cp /build/receiver-loom/target/receiver-loom-1.0-SNAPSHOT.jar /app/app.jar
 

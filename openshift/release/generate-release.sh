@@ -2,7 +2,15 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 source $(dirname $0)/resolve.sh
+
+pushd data-plane
+./mvnw package -DskipTests dependency:go-offline -Dmaven.repo.local="${SCRIPT_DIR}/../../third_party/maven"
+popd
+# shellcheck disable=SC2038
+find third_party/maven/ -path "*_remote.repositories" | xargs -I{} rm {}
 
 GITHUB_ACTIONS=true $(dirname $0)/../../hack/update-codegen.sh
 git apply openshift/patches/rekt-serviceaccounts-delete.patch

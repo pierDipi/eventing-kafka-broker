@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (c) 2011-2014 The original author or authors
+  ~
+  ~  All rights reserved. This program and the accompanying materials
+  ~  are made available under the terms of the Eclipse Public License v1.0
+  ~  and Apache License v2.0 which accompanies this distribution.
+  ~
+  ~      The Eclipse Public License is available at
+  ~      http://www.eclipse.org/legal/epl-v10.html
+  ~
+  ~      The Apache License v2.0 is available at
+  ~      http://www.opensource.org/licenses/apache2.0.php
+  ~
+  ~  You may elect to redistribute this code under either of these licenses.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.vertx</groupId>
+    <artifactId>vertx-parent</artifactId>
+    <version>19.0.0.redhat-00054</version>
+  </parent>
+
+  <artifactId>vertx-ext</artifactId>
+  <version>38.0.0.redhat-00054</version>
+  <packaging>pom</packaging>
+
+  <name>Vert.x Ext</name>
+
+  <scm>
+    <connection>scm:git:git@github.com:vert-x3/vertx-ext-parent.git</connection>
+    <developerConnection>scm:git:git@github.com:vert-x3/vertx-ext-parent.git</developerConnection>
+    <url>git@github.com:vert-x3/vertx-ext-parent.git</url>
+  </scm>
+
+  <modules>
+    <module>resources</module>
+    <module>parent</module>
+  </modules>
+
+  <build>
+    <pluginManagement />
+  </build>
+
+  <profiles>
+    <profile>
+      <id>vertx-redhat-javadoc</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.2.0</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+                <configuration>
+                  <additionalparam>-Xdoclint:none --allow-script-in-comments</additionalparam>
+                  <notimestamp>true</notimestamp>
+                  <sourceFileExcludes>
+                    <exclude>**/impl/**</exclude>
+                    <exclude>**/package-info.java</exclude>
+                    <exclude>io/vertx/groovy/*</exclude>
+                    <exclude>examples/**</exclude>
+                  </sourceFileExcludes>
+                  <sourceFileIncludes>
+                    <sourceFileInclude>io/vertx/**/*.java</sourceFileInclude>
+                    <sourceFileInclude>${project.basedir}/src/main/generated</sourceFileInclude>
+                  </sourceFileIncludes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>std-redhat-javadoc</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.2.0</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+                <configuration>
+                  <additionalparam>-Xdoclint:none</additionalparam>
+                  <notimestamp>true</notimestamp>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>std-redhat-source</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>3.0.1</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+</project>
+<!--
+Modified by POM Manipulation Extension for Maven 4.16 ( SHA: 352ae4a7 )
+-->

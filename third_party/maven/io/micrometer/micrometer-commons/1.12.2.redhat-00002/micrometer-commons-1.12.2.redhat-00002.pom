@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.micrometer</groupId>
+  <artifactId>micrometer-commons</artifactId>
+  <version>1.12.2.redhat-00002</version>
+  <name>micrometer-commons</name>
+  <description>Module containing common code</description>
+  <url>https://code.engineering.redhat.com/gerrit/micrometer-metrics/micrometer</url>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>shakuzen</id>
+      <name>Tommy Ludwig</name>
+      <email>tludwig@vmware.com</email>
+    </developer>
+  </developers>
+  <scm>
+    <url>https://code.engineering.redhat.com/gerrit/micrometer-metrics/micrometer.git</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+      <version>3.0.2.redhat-00016</version>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.2.13</version>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjweaver</artifactId>
+      <version>1.9.21</version>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
+  <properties>
+    <nebula_Manifest_Version>1.0</nebula_Manifest_Version>
+    <nebula_Implementation_Title>io.micrometer#micrometer-commons;1.12.2.redhat-00002</nebula_Implementation_Title>
+    <nebula_Implementation_Version>1.12.2.redhat-00002</nebula_Implementation_Version>
+    <nebula_Built_Status>release</nebula_Built_Status>
+    <nebula_Built_By>worker</nebula_Built_By>
+    <nebula_Built_OS>Linux</nebula_Built_OS>
+    <nebula_Build_Timezone>UTC</nebula_Build_Timezone>
+    <nebula_Build_Date_UTC>2024-01-29T17:44:06.811751Z</nebula_Build_Date_UTC>
+    <nebula_Build_Date>2024-01-29_17:44:06</nebula_Build_Date>
+    <nebula_Gradle_Version>8.0.2</nebula_Gradle_Version>
+    <nebula_Module_Source>/micrometer-commons</nebula_Module_Source>
+    <nebula_Module_Origin>https://code.engineering.redhat.com/gerrit/micrometer-metrics/micrometer.git</nebula_Module_Origin>
+    <nebula_Change>4409609</nebula_Change>
+    <nebula_Full_Change>44096096b744dd8ce096cea4d8f720b8d48172a9</nebula_Full_Change>
+    <nebula_Branch>HEAD</nebula_Branch>
+    <nebula_Build_Host>pnc-ba-pod-a567tv7y2tyaa-e1dcfd</nebula_Build_Host>
+    <nebula_Build_Job>LOCAL</nebula_Build_Job>
+    <nebula_Build_Number>LOCAL</nebula_Build_Number>
+    <nebula_Build_Id>LOCAL</nebula_Build_Id>
+    <nebula_Build_Url>pnc-ba-pod-a567tv7y2tyaa-e1dcfd/LOCAL</nebula_Build_Url>
+    <nebula_Created_By>11.0.15+10-LTS (Red Hat, Inc.)</nebula_Created_By>
+    <nebula_Module_Owner>tludwig@vmware.com</nebula_Module_Owner>
+    <nebula_Module_Email>tludwig@vmware.com</nebula_Module_Email>
+    <nebula_X_Compile_Target_JDK>1.8</nebula_X_Compile_Target_JDK>
+    <nebula_X_Compile_Source_JDK>1.8</nebula_X_Compile_Source_JDK>
+    <nebula_Build_Java_Version>11</nebula_Build_Java_Version>
+  </properties>
+</project>

@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>io.smallrye</groupId>
+        <artifactId>smallrye-parent</artifactId>
+		<version>39.0.0.redhat-00001</version>
+	</parent>
+
+	<artifactId>smallrye-context-propagation-parent</artifactId>
+	<version>2.1.0.redhat-00001</version>
+	<packaging>pom</packaging>
+
+	<name>SmallRye Context Propagation</name>
+	<url>https://github.com/smallrye/smallrye-context-propagation</url>
+	<description>A pluggable library for context propagation in reactive libraries</description>
+
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<issueManagement>
+		<system>GitHub</system>
+		<url>https://github.com/smallrye/smallrye-context-propagation/issues</url>
+	</issueManagement>
+
+	<scm>
+		<connection>scm:git:git@github.com:smallrye/smallrye-context-propagation.git</connection>
+		<developerConnection>scm:git:git@github.com:smallrye/smallrye-context-propagation.git</developerConnection>
+		<url>git@github.com:smallrye/smallrye-context-propagation.git</url>
+		<tag>2.1.0</tag>
+	</scm>
+
+	<properties>
+        <version.microprofile.context-propagation>1.3.0.redhat-00001</version.microprofile.context-propagation>
+        <version.microprofile.config>3.0.2</version.microprofile.config>
+
+        <version.weld-api>5.0.0.SP3-redhat-00001</version.weld-api>
+        <version.jboss.threads>3.4.2.Final-redhat-00001</version.jboss.threads>
+        <version.jta>2.0.1.redhat-00002</version.jta>
+        <version.narayana>6.0.0.Final-redhat-00001</version.narayana>
+        <version.rxjava2>2.2.21.redhat-00001</version.rxjava2>
+        <version.rxjava1>1.3.8.redhat-00001</version.rxjava1>
+
+        <maven.javadoc.failOnWarnings>false</maven.javadoc.failOnWarnings>
+    </properties>
+
+	  <developers>
+        <developer>
+          <name>Stéphane Épardaud</name>
+          <email>stef@epardaud.fr</email>
+        </developer>
+        <developer>
+            <name>Matěj Novotný</name>
+            <email>manovotn@redhat.com</email>
+        </developer>
+    </developers>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- MicroProfile / Jakarta Dependencies -->
+            <dependency>
+                <groupId>org.eclipse.microprofile.context-propagation</groupId>
+                <artifactId>microprofile-context-propagation-api</artifactId>
+                <version>${version.microprofile.context-propagation}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.microprofile.context-propagation</groupId>
+                <artifactId>microprofile-context-propagation-tck</artifactId>
+                <version>${version.microprofile.context-propagation}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.microprofile.config</groupId>
+                <artifactId>microprofile-config-api</artifactId>
+                <version>${version.microprofile.config}</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.enterprise</groupId>
+                <artifactId>jakarta.enterprise.cdi-api</artifactId>
+                <version>${version.jakarta.enterprise.cdi.api}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.transaction</groupId>
+                <artifactId>jakarta.transaction-api</artifactId>
+                <version>${version.jta}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Internal Dependencies -->
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>smallrye-context-propagation-api</artifactId>
+                <version>2.1.0.redhat-00001</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>smallrye-context-propagation</artifactId>
+                <version>2.1.0.redhat-00001</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>smallrye-context-propagation-storage</artifactId>
+                <version>2.1.0.redhat-00001</version>
+            </dependency>
+
+            <!-- External Dependencies -->
+            <dependency>
+                <groupId>org.jboss.weld</groupId>
+                <artifactId>weld-spi</artifactId>
+                <version>${version.weld-api}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.threads</groupId>
+                <artifactId>jboss-threads</artifactId>
+                <version>${version.jboss.threads}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.reactivex.rxjava2</groupId>
+                <artifactId>rxjava</artifactId>
+                <version>${version.rxjava2}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.reactivex</groupId>
+                <artifactId>rxjava</artifactId>
+                <version>${version.rxjava1}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <modules>
+        <module>api</module>
+        <module>core</module>
+        <module>cdi</module>
+        <module>jta</module>
+        <module>application</module>
+        <module>propagators-rxjava1</module>
+        <module>propagators-rxjava2</module>
+        <module>storage</module>
+        <module>testsuite</module>
+    </modules>
+
+  <build>
+    <plugins>
+      <plugin>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <version>3.1.0</version>
+          <executions>
+              <execution>
+                  <id>enforce-versions</id>
+                  <goals>
+                      <goal>enforce</goal>
+                  </goals>
+                  <configuration>
+                      <rules>
+                          <requireJavaVersion>
+                              <version>12</version>
+                              <message>This project must be built with Java 12 or later.</message>
+                          </requireJavaVersion>
+                      </rules>
+                  </configuration>
+              </execution>
+          </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <index>true</index>
+            <manifest>
+              <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+        <configuration>
+          <archive>
+            <index>true</index>
+            <manifest>
+              <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+    <pluginManagement />
+  </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <activation>
+                <property>
+                    <name>!release.maven.bug.always.be.active</name>
+                </property>
+            </activation>
+            <modules>
+                <module>release</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>coverage</id>
+            <properties>
+                <argLine>@{jacocoArgLine}</argLine>
+                <!--suppress UnresolvedMavenProperty -->
+                <sonar.coverage.jacoco.xmlReportPaths>
+                    ${maven.multiModuleProjectDirectory}/coverage/target/site/jacoco-aggregate/jacoco.xml
+                </sonar.coverage.jacoco.xmlReportPaths>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+            <modules>
+                <module>coverage</module>
+            </modules>
+        </profile>
+    </profiles>
+</project>
+<!--
+Modified by POM Manipulation Extension for Maven 4.15 ( SHA: 2abd964c )
+-->

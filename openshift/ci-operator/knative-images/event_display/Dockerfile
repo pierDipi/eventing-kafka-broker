@@ -15,12 +15,9 @@ FROM $GO_RUNTIME
 
 ARG VERSION=knative-v1.15
 
-# Install zoneinfo.
-RUN microdnf install tzdata
+COPY --from=builder /usr/bin/main /usr/bin/event_display
 
 USER 65532
-
-COPY --from=builder /usr/bin/main /usr/bin/main
 
 LABEL \
       com.redhat.component="openshift-serverless-1-eventing-kafka-broker-event-display-rhel8-container" \
@@ -31,4 +28,4 @@ LABEL \
       description="Red Hat OpenShift Serverless 1 Eventing Kafka Broker Event Display" \
       io.k8s.display-name="Red Hat OpenShift Serverless 1 Eventing Kafka Broker Event Display"
 
-ENTRYPOINT ["/usr/bin/main"]
+ENTRYPOINT ["/usr/bin/event_display"]

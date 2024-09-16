@@ -15,12 +15,9 @@ FROM $GO_RUNTIME
 
 ARG VERSION=knative-v1.15
 
-# Install zoneinfo.
-RUN microdnf install tzdata
+COPY --from=builder /usr/bin/main /usr/bin/kafka-consumer
 
 USER 65532
-
-COPY --from=builder /usr/bin/main /usr/bin/main
 
 LABEL \
       com.redhat.component="openshift-serverless-1-eventing-kafka-broker-test-test-images-kafka-consumer-rhel8-container" \
@@ -31,4 +28,4 @@ LABEL \
       description="Red Hat OpenShift Serverless 1 Eventing Kafka Broker Test Test Images Kafka Consumer" \
       io.k8s.display-name="Red Hat OpenShift Serverless 1 Eventing Kafka Broker Test Test Images Kafka Consumer"
 
-ENTRYPOINT ["/usr/bin/main"]
+ENTRYPOINT ["/usr/bin/kafka-consumer"]

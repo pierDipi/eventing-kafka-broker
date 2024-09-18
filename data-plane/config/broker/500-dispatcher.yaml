@@ -30,6 +30,7 @@ spec:
   selector:
     matchLabels:
       app: kafka-broker-dispatcher
+      app.kubernetes.io/kind: kafka-dispatcher
   template:
     metadata:
       name: kafka-broker-dispatcher

@@ -30,8 +30,10 @@ spec:
       value: quay.io/redhat-user-workloads/ocp-serverless-tenant/serverless-operator-135/kn-ekb-dispatcher:on-pr-{{revision}}
     - name: revision
       value: '{{revision}}'
+    - name: hermetic
+      value: "true"
   pipelineRef:
-    name: docker-build
+    name: java-docker-build
   taskRunTemplate: {}
   workspaces:
     - name: workspace

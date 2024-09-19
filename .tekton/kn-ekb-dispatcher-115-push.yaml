@@ -29,8 +29,10 @@ spec:
       value: '{{revision}}'
     - name: additional-tags
       value: [ release-1.35,  latest, ]
+    - name: hermetic
+      value: "true"
   pipelineRef:
-    name: docker-build
+    name: java-docker-build
   taskRunTemplate: {}
   workspaces:
     - name: workspace

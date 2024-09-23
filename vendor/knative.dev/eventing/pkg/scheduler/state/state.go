@@ -22,7 +22,6 @@ import (
 	"errors"
 	"math"
 	"strconv"
-	"time"
 
 	"go.uber.org/zap"
 	v1 "k8s.io/api/core/v1"
@@ -30,7 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/apimachinery/pkg/util/wait"
 	corev1 "k8s.io/client-go/listers/core/v1"
 
 	"knative.dev/pkg/logging"
@@ -42,7 +40,7 @@ type StateAccessor interface {
 	// State returns the current state (snapshot) about placed vpods
 	// Take into account reserved vreplicas and update `reserved` to reflect
 	// the current state.
-	State(reserved map[types.NamespacedName]map[string]int32) (*State, error)
+	State(ctx context.Context, reserved map[types.NamespacedName]map[string]int32) (*State, error)
 }
 
 // state provides information about the current scheduling of all vpods
@@ -183,7 +181,9 @@ func NewStateBuilder(ctx context.Context, namespace, sfsname string, lister sche
 	}
 }
 
-func (s *stateBuilder) State(reserved map[types.NamespacedName]map[string]int32) (*State, error) {
+func (s *stateBuilder) State(ctx context.Context, reserved map[types.NamespacedName]map[string]int32) (*State, error) {
+
+	logger := logging.FromContext(ctx).With(zap.String("subcomponent", "statebuilder"))
 	vpods, err := s.vpodLister()
 	if err != nil {
 		return nil, err
@@ -235,15 +235,15 @@ func (s *stateBuilder) State(reserved map[types.NamespacedName]map[string]int32)
 	}
 
 	for podId := int32(0); podId < scale.Spec.Replicas && s.podLister != nil; podId++ {
-		var pod *v1.Pod
-		wait.PollUntilContextTimeout(context.Background(), 50*time.Millisecond, 5*time.Second, true, func(ctx context.Context) (bool, error) {
-			pod, err = s.podLister.Get(PodNameFromOrdinal(s.statefulSetName, podId))
-			return err == nil, nil
-		})
-
+		pod, err := s.podLister.Get(PodNameFromOrdinal(s.statefulSetName, podId))
+		if err != nil {
+			logger.Warnw("Failed to get pod", zap.Int32("ordinal", podId), zap.Error(err))
+			continue
+		}
 		if pod != nil {
 			if isPodUnschedulable(pod) {
 				// Pod is marked for eviction - CANNOT SCHEDULE VREPS on this pod.
+				logger.Debugw("Pod is unschedulable", zap.Any("pod", pod))
 				continue
 			}
 
@@ -254,6 +254,7 @@ func (s *stateBuilder) State(reserved map[types.NamespacedName]map[string]int32)
 
 			if isNodeUnschedulable(node) {
 				// Node is marked as Unschedulable - CANNOT SCHEDULE VREPS on a pod running on this node.
+				logger.Debugw("Pod is on an unschedulable node", zap.Any("pod", node))
 				continue
 			}
 
@@ -290,13 +291,8 @@ func (s *stateBuilder) State(reserved map[types.NamespacedName]map[string]int32)
 
 			withPlacement[vpod.GetKey()][podName] = true
 
-			var pod *v1.Pod
-			wait.PollUntilContextTimeout(context.Background(), 50*time.Millisecond, 5*time.Second, true, func(ctx context.Context) (bool, error) {
-				pod, err = s.podLister.Get(podName)
-				return err == nil, nil
-			})
-
-			if pod != nil && schedulablePods.Has(OrdinalFromPodName(pod.GetName())) {
+			pod, err := s.podLister.Get(podName)
+			if err != nil && pod != nil && schedulablePods.Has(OrdinalFromPodName(pod.GetName())) {
 				nodeName := pod.Spec.NodeName       //node name for this pod
 				zoneName := nodeToZoneMap[nodeName] //zone name for this pod
 				podSpread[vpod.GetKey()][podName] = podSpread[vpod.GetKey()][podName] + vreplicas
@@ -315,13 +311,8 @@ func (s *stateBuilder) State(reserved map[types.NamespacedName]map[string]int32)
 					continue
 				}
 
-				var pod *v1.Pod
-				wait.PollUntilContextTimeout(context.Background(), 50*time.Millisecond, 5*time.Second, true, func(ctx context.Context) (bool, error) {
-					pod, err = s.podLister.Get(podName)
-					return err == nil, nil
-				})
-
-				if pod != nil && schedulablePods.Has(OrdinalFromPodName(pod.GetName())) {
+				pod, err := s.podLister.Get(podName)
+				if err != nil && pod != nil && schedulablePods.Has(OrdinalFromPodName(pod.GetName())) {
 					nodeName := pod.Spec.NodeName       //node name for this pod
 					zoneName := nodeToZoneMap[nodeName] //zone name for this pod
 					podSpread[key][podName] = podSpread[key][podName] + rvreplicas
@@ -468,11 +459,7 @@ func (s *State) MarshalJSON() ([]byte, error) {
 		NodeToZoneMap   map[string]string             `json:"nodeToZoneMap"`
 		StatefulSetName string                        `json:"statefulSetName"`
 		PodSpread       map[string]map[string]int32   `json:"podSpread"`
-		NodeSpread      map[string]map[string]int32   `json:"nodeSpread"`
-		ZoneSpread      map[string]map[string]int32   `json:"zoneSpread"`
 		SchedulerPolicy scheduler.SchedulerPolicyType `json:"schedulerPolicy"`
-		SchedPolicy     *scheduler.SchedulerPolicy    `json:"schedPolicy"`
-		DeschedPolicy   *scheduler.SchedulerPolicy    `json:"deschedPolicy"`
 		Pending         map[string]int32              `json:"pending"`
 	}
 
@@ -487,11 +474,7 @@ func (s *State) MarshalJSON() ([]byte, error) {
 		NodeToZoneMap:   s.NodeToZoneMap,
 		StatefulSetName: s.StatefulSetName,
 		PodSpread:       toJSONable(s.PodSpread),
-		NodeSpread:      toJSONable(s.NodeSpread),
-		ZoneSpread:      toJSONable(s.ZoneSpread),
 		SchedulerPolicy: s.SchedulerPolicy,
-		SchedPolicy:     s.SchedPolicy,
-		DeschedPolicy:   s.DeschedPolicy,
 		Pending:         toJSONablePending(s.Pending),
 	}
 

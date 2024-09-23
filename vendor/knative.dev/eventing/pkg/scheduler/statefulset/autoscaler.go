@@ -139,10 +139,21 @@ func (a *autoscaler) Start(ctx context.Context) {
 			a.logger.Infow("Triggering scale up", zap.Bool("isLeader", a.isLeader.Load()))
 			attemptScaleDown = false
 		}
-
+		defer func() {
+			if err := recover(); err != nil {
+				a.logger.Errorw("Panic during autoscaling", zap.Any("error", err))
+			}
+		}()
+		
 		// Retry a few times, just so that we don't have to wait for the next beat when
 		// a transient error occurs
-		a.syncAutoscale(ctx, attemptScaleDown)
+		if err := a.syncAutoscale(logging.WithLogger(ctx, a.logger), attemptScaleDown); err != nil {
+			a.logger.Errorw("Failed to sync autoscale", zap.Error(err))
+			go func() {
+				time.Sleep(time.Second)
+				a.Autoscale(ctx)
+			}()
+		}
 	}
 }
 
@@ -151,33 +162,29 @@ func (a *autoscaler) Autoscale(ctx context.Context) {
 	// We trigger the autoscaler asynchronously by using the channel so that the scale down refresh
 	// period is reset.
 	case a.trigger <- struct{}{}:
+		a.logger.Debugw("Triggering autoscale")
 	default:
 		// We don't want to block if the channel's buffer is full, it will be triggered eventually.
-
+		a.logger.Debugw("Skipping autoscale since autoscale is in progress")
 	}
 }
 
 func (a *autoscaler) syncAutoscale(ctx context.Context, attemptScaleDown bool) error {
 	a.lock.Lock()
 	defer a.lock.Unlock()
-
-	var lastErr error
-	wait.Poll(500*time.Millisecond, 5*time.Second, func() (bool, error) {
-		err := a.doautoscale(ctx, attemptScaleDown)
-		if err != nil {
-			logging.FromContext(ctx).Errorw("Failed to autoscale", zap.Error(err))
-		}
-		lastErr = err
-		return err == nil, nil
-	})
-	return lastErr
+	
+	err := a.doautoscale(ctx, attemptScaleDown)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (a *autoscaler) doautoscale(ctx context.Context, attemptScaleDown bool) error {
 	if !a.isLeader.Load() {
 		return nil
 	}
-	state, err := a.stateAccessor.State(a.getReserved())
+	state, err := a.stateAccessor.State(ctx, a.getReserved())
 	if err != nil {
 		a.logger.Info("error while refreshing scheduler state (will retry)", zap.Error(err))
 		return err
@@ -191,6 +198,7 @@ func (a *autoscaler) doautoscale(ctx context.Context, attemptScaleDown bool) err
 	}
 
 	a.logger.Debugw("checking adapter capacity",
+		zap.String("statefulset", state.StatefulSetName),
 		zap.Int32("replicas", scale.Spec.Replicas),
 		zap.Any("state", state))
 

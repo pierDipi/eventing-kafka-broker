@@ -195,13 +195,13 @@ func newStatefulSetScheduler(ctx context.Context,
 	return scheduler
 }
 
-func (s *StatefulSetScheduler) Schedule(vpod scheduler.VPod) ([]duckv1alpha1.Placement, error) {
+func (s *StatefulSetScheduler) Schedule(ctx context.Context, vpod scheduler.VPod) ([]duckv1alpha1.Placement, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.reservedMu.Lock()
 	defer s.reservedMu.Unlock()
 
-	placements, err := s.scheduleVPod(vpod)
+	placements, err := s.scheduleVPod(ctx, vpod)
 	if placements == nil {
 		return placements, err
 	}
@@ -216,11 +216,11 @@ func (s *StatefulSetScheduler) Schedule(vpod scheduler.VPod) ([]duckv1alpha1.Pla
 	return placements, err
 }
 
-func (s *StatefulSetScheduler) scheduleVPod(vpod scheduler.VPod) ([]duckv1alpha1.Placement, error) {
-	logger := s.logger.With("key", vpod.GetKey(), zap.String("component", "scheduler"))
+func (s *StatefulSetScheduler) scheduleVPod(ctx context.Context, vpod scheduler.VPod) ([]duckv1alpha1.Placement, error) {
+	logger := logging.FromContext(ctx).With("key", vpod.GetKey(), zap.String("component", "scheduler"))
 	// Get the current placements state
 	// Quite an expensive operation but safe and simple.
-	state, err := s.stateAccessor.State(s.reserved)
+	state, err := s.stateAccessor.State(ctx, s.reserved)
 	if err != nil {
 		logger.Debug("error while refreshing scheduler state (will retry)", zap.Error(err))
 		return nil, err
@@ -258,12 +258,14 @@ func (s *StatefulSetScheduler) scheduleVPod(vpod scheduler.VPod) ([]duckv1alpha1
 			}
 
 			// Handle overcommitted pods.
-			if state.FreeCap[ordinal] < 0 {
+			if state.Free(ordinal) < 0 {
 				// vr > free => vr: 9, overcommit 4 -> free: 0, vr: 5, pending: +4
 				// vr = free => vr: 4, overcommit 4 -> free: 0, vr: 0, pending: +4
 				// vr < free => vr: 3, overcommit 4 -> free: -1, vr: 0, pending: +3
 
 				overcommit := -state.FreeCap[ordinal]
+
+				logger.Debugw("overcommit", zap.Any("overcommit", overcommit), zap.Any("placement", p))
 
 				if p.VReplicas >= overcommit {
 					state.SetFree(ordinal, 0)
@@ -311,7 +313,9 @@ func (s *StatefulSetScheduler) scheduleVPod(vpod scheduler.VPod) ([]duckv1alpha1
 		}
 
 		// Need more => scale up
-		logger.Debugw("scaling up", zap.Int32("vreplicas", tr), zap.Int32("new vreplicas", vpod.GetVReplicas()))
+		logger.Debugw("scaling up", zap.Int32("vreplicas", tr), zap.Int32("new vreplicas", vpod.GetVReplicas()),
+			zap.Any("placements", placements),
+			zap.Any("existingPlacements", existingPlacements))
 
 		placements, left = s.addReplicas(state, vpod.GetVReplicas()-tr, placements)
 
@@ -319,7 +323,7 @@ func (s *StatefulSetScheduler) scheduleVPod(vpod scheduler.VPod) ([]duckv1alpha1
 		// Need less => scale down
 		if tr > vpod.GetVReplicas() && state.DeschedPolicy != nil {
 			logger.Infow("scaling down", zap.Int32("vreplicas", tr), zap.Int32("new vreplicas", vpod.GetVReplicas()))
-			placements = s.removeReplicasWithPolicy(vpod, tr-vpod.GetVReplicas(), placements)
+			placements = s.removeReplicasWithPolicy(ctx, vpod, tr-vpod.GetVReplicas(), placements)
 
 			// Do not trigger the autoscaler to avoid unnecessary churn
 
@@ -332,7 +336,7 @@ func (s *StatefulSetScheduler) scheduleVPod(vpod scheduler.VPod) ([]duckv1alpha1
 			// rebalancing needed for all vreps most likely since there are pending vreps from previous reconciliation
 			// can fall here when vreps scaled up or after eviction
 			logger.Infow("scaling up with a rebalance (if needed)", zap.Int32("vreplicas", tr), zap.Int32("new vreplicas", vpod.GetVReplicas()))
-			placements, left = s.rebalanceReplicasWithPolicy(vpod, vpod.GetVReplicas(), placements)
+			placements, left = s.rebalanceReplicasWithPolicy(ctx, vpod, vpod.GetVReplicas(), placements)
 		}
 	}
 
@@ -346,7 +350,7 @@ func (s *StatefulSetScheduler) scheduleVPod(vpod scheduler.VPod) ([]duckv1alpha1
 			s.autoscaler.Autoscale(s.ctx)
 		}
 
-		if state.SchedPolicy != nil {
+		if state.SchedulerPolicy == "" && state.SchedPolicy != nil {
 			logger.Info("reverting to previous placements")
 			s.reservePlacements(vpod, existingPlacements)           // rebalancing doesn't care about new placements since all vreps will be re-placed
 			return existingPlacements, s.notEnoughPodReplicas(left) // requeue to wait for the autoscaler to do its job
@@ -368,19 +372,19 @@ func toJSONable(pending map[types.NamespacedName]int32) map[string]int32 {
 	return r
 }
 
-func (s *StatefulSetScheduler) rebalanceReplicasWithPolicy(vpod scheduler.VPod, diff int32, placements []duckv1alpha1.Placement) ([]duckv1alpha1.Placement, int32) {
+func (s *StatefulSetScheduler) rebalanceReplicasWithPolicy(ctx context.Context, vpod scheduler.VPod, diff int32, placements []duckv1alpha1.Placement) ([]duckv1alpha1.Placement, int32) {
 	s.makeZeroPlacements(vpod, placements)
-	placements, diff = s.addReplicasWithPolicy(vpod, diff, make([]duckv1alpha1.Placement, 0)) //start fresh with a new placements list
+	placements, diff = s.addReplicasWithPolicy(ctx, vpod, diff, make([]duckv1alpha1.Placement, 0)) //start fresh with a new placements list
 
 	return placements, diff
 }
 
-func (s *StatefulSetScheduler) removeReplicasWithPolicy(vpod scheduler.VPod, diff int32, placements []duckv1alpha1.Placement) []duckv1alpha1.Placement {
+func (s *StatefulSetScheduler) removeReplicasWithPolicy(ctx context.Context, vpod scheduler.VPod, diff int32, placements []duckv1alpha1.Placement) []duckv1alpha1.Placement {
 	logger := s.logger.Named("remove replicas with policy")
 	numVreps := diff
 
 	for i := int32(0); i < numVreps; i++ { //deschedule one vreplica at a time
-		state, err := s.stateAccessor.State(s.reserved)
+		state, err := s.stateAccessor.State(ctx, s.reserved)
 		if err != nil {
 			logger.Info("error while refreshing scheduler state (will retry)", zap.Error(err))
 			return placements
@@ -443,13 +447,13 @@ func (s *StatefulSetScheduler) removeSelectionFromPlacements(placementPodID int3
 	return newPlacements
 }
 
-func (s *StatefulSetScheduler) addReplicasWithPolicy(vpod scheduler.VPod, diff int32, placements []duckv1alpha1.Placement) ([]duckv1alpha1.Placement, int32) {
+func (s *StatefulSetScheduler) addReplicasWithPolicy(ctx context.Context, vpod scheduler.VPod, diff int32, placements []duckv1alpha1.Placement) ([]duckv1alpha1.Placement, int32) {
 	logger := s.logger.Named("add replicas with policy")
 
 	numVreps := diff
 	for i := int32(0); i < numVreps; i++ { //schedule one vreplica at a time (find most suitable pod placement satisying predicates with high score)
 		// Get the current placements state
-		state, err := s.stateAccessor.State(s.reserved)
+		state, err := s.stateAccessor.State(ctx, s.reserved)
 		if err != nil {
 			logger.Info("error while refreshing scheduler state (will retry)", zap.Error(err))
 			return placements, diff

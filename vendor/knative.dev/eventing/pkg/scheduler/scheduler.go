@@ -92,7 +92,7 @@ type Evictor func(pod *corev1.Pod, vpod VPod, from *duckv1alpha1.Placement) erro
 // Scheduler is responsible for placing VPods into real Kubernetes pods
 type Scheduler interface {
 	// Schedule computes the new set of placements for vpod.
-	Schedule(vpod VPod) ([]duckv1alpha1.Placement, error)
+	Schedule(ctx context.Context, vpod VPod) ([]duckv1alpha1.Placement, error)
 }
 
 // SchedulerFunc type is an adapter to allow the use of

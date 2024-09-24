@@ -43,7 +43,7 @@ import (
 	"knative.dev/pkg/client/injection/kube/informers/apps/v1/statefulset"
 	configmapinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/configmap"
 	nodeinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/node"
-	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
+	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod/filtered"
 	secretinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/secret"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
@@ -105,7 +105,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		logger.Panicf("unable to process required environment variables: %v", err)
 	}
 
-	dispatcherPodInformer := podinformer.Get(ctx, eventing.DispatcherLabelSelectorStr)
+	dispatcherPodInformer := podinformer.Get(ctx, "app.kubernetes.io/kind=kafka-dispatcher")
 	dispatcherPodLister := dispatcherPodInformer.Lister()
 
 	c := SchedulerConfig{
@@ -126,7 +126,7 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 		InternalsClient:                    internalsclient.Get(ctx).InternalV1alpha1(),
 		SecretLister:                       secretinformer.Get(ctx).Lister(),
 		ConfigMapLister:                    configmapinformer.Get(ctx).Lister(),
-		PodLister:                          podinformer.Get(ctx).Lister(),
+		PodLister:                          dispatcherPodLister,
 		KubeClient:                         kubeclient.Get(ctx),
 		NameGenerator:                      names.SimpleNameGenerator,
 		InitOffsetsFunc:                    offset.InitOffsets,

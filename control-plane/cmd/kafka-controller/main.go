@@ -70,6 +70,7 @@ func main() {
 	ctx = filteredFactory.WithSelectors(ctx,
 		eventingtls.TrustBundleLabelSelector,
 		auth.OIDCLabelSelector,
+		"app.kubernetes.io/kind=kafka-dispatcher",
 	)
 
 	if v := os.Getenv("ENABLE_SARAMA_LOGGER"); strings.EqualFold(v, "true") {

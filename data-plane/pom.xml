@@ -431,6 +431,10 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>3.8.0</version>
+        </plugin>
+        <plugin>
           <groupId>com.google.cloud.tools</groupId>
           <artifactId>jib-maven-plugin</artifactId>
           <version>${jib.version}</version>
@@ -461,33 +465,12 @@
           </configuration>
         </plugin>
         <plugin>
-          <groupId>org.ec4j.maven</groupId>
-          <artifactId>editorconfig-maven-plugin</artifactId>
-          <version>${maven.editorconfig.plugin.version}</version>
-          <executions>
-            <execution>
-              <id>check</id>
-              <phase>verify</phase>
-              <goals>
-                <goal>check</goal>
-              </goals>
-            </execution>
-          </executions>
-          <configuration>
-            <excludes>
-              <exclude>.dockerignore</exclude>
-              <exclude>config/***</exclude>
-              <exclude>.mvn/***</exclude>
-            </excludes>
-          </configuration>
-        </plugin>
-        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${maven.surefire.plugin.version}</version>
           <configuration>
             <systemPropertyVariables>
-                <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
+              <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
             </systemPropertyVariables>
             <!-- This is required for the jacoco maven plugin -->
             <argLine>${argLine}</argLine>

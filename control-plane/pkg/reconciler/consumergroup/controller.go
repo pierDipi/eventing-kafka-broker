@@ -27,6 +27,7 @@ import (
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -34,6 +35,7 @@ import (
 	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 
+	"knative.dev/eventing-kafka-broker/control-plane/pkg/apis/internals/kafka/eventing"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/clientpool"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/kafka/offset"
 	"knative.dev/eventing-kafka-broker/control-plane/pkg/prober"
@@ -202,6 +204,47 @@ func NewController(ctx context.Context, watcher configmap.Watcher) *controller.I
 	}
 
 	ResyncOnStatefulSetChange(ctx, globalResync)
+
+	dispatcherPodInformer.Informer().AddEventHandler(controller.HandleAll(func(obj interface{}) {
+		pod, ok := obj.(*corev1.Pod)
+		if !ok {
+			return
+		}
+
+		kind, ok := kafkainternals.GetOwnerKindFromStatefulSetPrefix(pod.Name)
+		if !ok {
+			return
+		}
+
+		cmName, err := eventing.ConfigMapNameFromPod(pod)
+		if err != nil {
+			logger.Warnw("Failed to get ConfigMap name from pod", zap.String("pod", pod.Name), zap.Error(err))
+			return
+		}
+		if err := r.ensureContractConfigMapExists(ctx, pod, cmName); err != nil {
+			logger.Warnw("Failed to ensure ConfigMap for pod exists", zap.String("pod", pod.Name), zap.String("configmap", cmName), zap.Error(err))
+			return
+		}
+
+		impl.FilteredGlobalResync(
+			func(obj interface{}) bool {
+				cg, ok := obj.(*kafkainternals.ConsumerGroup)
+				if !ok {
+					return false
+				}
+
+				uf := cg.GetUserFacingResourceRef()
+				if uf == nil {
+					return false
+				}
+				if strings.EqualFold(kind, uf.Kind) {
+					return true
+				}
+				return false
+			},
+			consumerGroupInformer.Informer(),
+		)
+	}))
 
 	//Todo: ScaledObject informer when KEDA is installed
 

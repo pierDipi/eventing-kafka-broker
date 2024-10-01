@@ -140,7 +140,7 @@ func NewValidationAdmissionController(ctx context.Context, cmw configmap.Watcher
 		ctxFunc,
 
 		// Whether to disallow unknown fields.
-		true,
+		false,
 	)
 }
 

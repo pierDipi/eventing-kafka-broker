@@ -33,7 +33,7 @@ spec:
     - name: revision
       value: '{{revision}}'
   pipelineRef:
-    name: docker-build
+    name: docker-java-build
   taskRunTemplate: {}
   workspaces:
     - name: workspace

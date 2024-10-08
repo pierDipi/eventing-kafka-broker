@@ -32,7 +32,7 @@ spec:
     - name: additional-tags
       value: [ release-1.35,  latest, ]
   pipelineRef:
-    name: docker-build
+    name: docker-java-build
   taskRunTemplate: {}
   workspaces:
     - name: workspace

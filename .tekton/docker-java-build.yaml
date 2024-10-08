@@ -28,6 +28,15 @@ spec:
             value: task
         resolver: bundles
   params:
+    - default:
+        - linux/x86_64
+        - linux/arm64
+        - linux/ppc64le
+        - linux/s390x
+      description: List of platforms to build the container images on. The available
+        set of values is determined by the configuration of the multi-platform-controller.
+      name: build-platforms
+      type: array
     - default: --all-projects --org=3e1a4cca-ebfb-495f-b64c-3cc960d566b4 --exclude=test*,vendor,third_party
       description: Append arguments to Snyk code command.
       name: snyk-args
@@ -96,13 +105,6 @@ spec:
       description: Path to a file with build arguments for buildah, see https://www.mankier.com/1/buildah-build#--build-arg-file
       name: build-args-file
       type: string
-    - default:
-        - linux/x86_64
-        - linux/arm64
-      description: List of platforms to build the container images on. The available
-        set of values is determined by the configuration of the multi-platform-controller.
-      name: build-platforms
-      type: array
   results:
     - description: ""
       name: IMAGE_URL
@@ -117,7 +119,12 @@ spec:
       name: CHAINS-GIT_COMMIT
       value: $(tasks.clone-repository.results.commit)
   tasks:
-    - name: build-images-deps
+    - matrix:
+        params:
+          - name: PLATFORM
+            value:
+              - $(params.build-platforms)
+      name: build-images-deps
       params:
         - name: IMAGE
           value: $(params.output-image)-deps
@@ -160,6 +167,35 @@ spec:
           operator: in
           values:
             - "true"
+    - name: build-image-index-deps
+      params:
+        - name: IMAGE
+          value: $(params.output-image)-deps
+        - name: COMMIT_SHA
+          value: $(tasks.clone-repository.results.commit)
+        - name: IMAGE_EXPIRES_AFTER
+          value: $(params.image-expires-after)
+        - name: ALWAYS_BUILD_INDEX
+          value: $(params.build-image-index)
+        - name: IMAGES
+          value:
+            - $(tasks.build-images-deps.results.IMAGE_REF[*])
+      runAfter:
+        - build-images-deps
+      taskRef:
+        params:
+          - name: name
+            value: build-image-index
+          - name: bundle
+            value: quay.io/konflux-ci/tekton-catalog/task-build-image-index:0.1@sha256:e4871851566d8b496966b37bcb8c5ce9748a52487f116373d96c6cd28ef684c6
+          - name: kind
+            value: task
+        resolver: bundles
+      when:
+        - input: $(tasks.init.results.build)
+          operator: in
+          values:
+            - "true"
     - matrix:
         params:
           - name: PLATFORM
@@ -169,7 +205,7 @@ spec:
       params:
         - name: BUILD_ARGS
           value:
-            - DEPS_IMAGE=$(tasks.build-images-deps.results.IMAGE_URL)@$(tasks.build-images-deps.results.IMAGE_DIGEST)
+            - DEPS_IMAGE=$(tasks.build-image-index-deps.results.IMAGE_URL)@$(tasks.build-image-index-deps.results.IMAGE_DIGEST)
             - $(params.build-args[*])
         - name: IMAGE
           value: $(params.output-image)
@@ -194,7 +230,7 @@ spec:
         - name: IMAGE_APPEND_PLATFORM
           value: "true"
       runAfter:
-        - build-images-deps
+        - build-image-index-deps
       taskRef:
         params:
           - name: name

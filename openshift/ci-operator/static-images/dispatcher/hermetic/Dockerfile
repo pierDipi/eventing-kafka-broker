@@ -29,6 +29,8 @@ WORKDIR /build
 
 COPY --from=deps /third_party/maven/ /third_party/maven/
 
+RUN ls -alR /third_party/maven
+
 COPY /data-plane .
 
 RUN mvn -Dmaven.repo.local=/third_party/maven --offline package -pl=dispatcher-loom -Drelease -am -DskipTests --no-transfer-progress

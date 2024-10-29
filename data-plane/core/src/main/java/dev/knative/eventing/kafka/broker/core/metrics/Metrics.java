@@ -172,6 +172,8 @@ public class Metrics {
 
     private static final double[] LATENCY_SLOs = new double[] {50, 100, 500, 1000, 5000, 10000};
 
+    private static final double[] DISPATCH_LATENCY_SLOs = new double[] {50, 100, 500, 1000, 5000, 10000, 60000 /* 1 minute */, 60000*5 /* 5 minutes */, 60000*10 /* 10 minutes */ };
+
     /**
      * Get metrics options from the given metrics configurations.
      *
@@ -323,10 +325,10 @@ public class Metrics {
 
     public static DistributionSummary.Builder eventDispatchLatency(final io.micrometer.core.instrument.Tags tags) {
         return DistributionSummary.builder(EVENT_DISPATCH_LATENCY)
-                .description("The time spent dispatching an event to Kafka")
+                .description("The time spent dispatching an event to Kafka (for receiver) or subscriber (for dispatcher)")
                 .tags(tags)
                 .baseUnit(BaseUnits.MILLISECONDS)
-                .serviceLevelObjectives(LATENCY_SLOs);
+                .serviceLevelObjectives(DISPATCH_LATENCY_SLOs);
     }
 
     public static Gauge.Builder<Supplier<Number>> eventDispatchInFlightCount(

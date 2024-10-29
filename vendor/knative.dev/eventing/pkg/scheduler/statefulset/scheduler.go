@@ -127,8 +127,34 @@ var (
 
 // Promote implements reconciler.LeaderAware.
 func (s *StatefulSetScheduler) Promote(b reconciler.Bucket, enq func(reconciler.Bucket, types.NamespacedName)) error {
+	if !b.Has(ephemeralLeaderElectionObject) {
+		return nil
+	}
+
 	if v, ok := s.autoscaler.(reconciler.LeaderAware); ok {
 		return v.Promote(b, enq)
+	}
+	if err := s.initReserved(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *StatefulSetScheduler) initReserved() error {
+	s.reservedMu.Lock()
+	defer s.reservedMu.Unlock()
+
+	vPods, err := s.vpodLister()
+	if err != nil {
+		return fmt.Errorf("failed to list vPods during init: %w", err)
+	}
+
+	s.reserved = make(map[types.NamespacedName]map[string]int32, len(vPods))
+	for _, vPod := range vPods {
+		s.reserved[vPod.GetKey()] = make(map[string]int32, len(vPod.GetPlacements()))
+		for _, placement := range vPod.GetPlacements() {
+			s.reserved[vPod.GetKey()][placement.PodName] += placement.VReplicas
+		}
 	}
 	return nil
 }
@@ -215,21 +241,36 @@ func (s *StatefulSetScheduler) scheduleVPod(ctx context.Context, vpod scheduler.
 		return nil, err
 	}
 
-	logger.Debugw("scheduling", zap.Any("state", state))
-
-	existingPlacements := vpod.GetPlacements()
-
 	reservedByPodName := make(map[string]int32, 2)
-	for k, v := range s.reserved {
-		if k.Namespace == vpod.GetKey().Namespace && k.Name == vpod.GetKey().Name {
-			// Skip adding reserved for our vpod.
-			continue
-		}
+	for _, v := range s.reserved {
 		for podName, vReplicas := range v {
 			v, _ := reservedByPodName[podName]
 			reservedByPodName[podName] = vReplicas + v
 		}
 	}
+
+	// Use reserved placements as starting point, if we have them.
+	existingPlacements := make([]duckv1alpha1.Placement, 0)
+	if placements, ok := s.reserved[vpod.GetKey()]; ok {
+		existingPlacements = make([]duckv1alpha1.Placement, 0, len(placements))
+		for podName, n := range placements {
+			existingPlacements = append(existingPlacements, duckv1alpha1.Placement{
+				PodName:   podName,
+				VReplicas: n,
+			})
+		}
+	}
+
+	sort.SliceStable(existingPlacements, func(i int, j int) bool {
+		return st.OrdinalFromPodName(existingPlacements[i].PodName) < st.OrdinalFromPodName(existingPlacements[j].PodName)
+	})
+
+	logger.Debugw("scheduling state",
+		zap.Any("state", state),
+		zap.Any("reservedByPodName", reservedByPodName),
+		zap.Any("reserved", st.ToJSONable(s.reserved)),
+		zap.Any("vpod", vpod),
+	)
 
 	// Remove unschedulable or adjust overcommitted pods from placements
 	var placements []duckv1alpha1.Placement
@@ -244,25 +285,26 @@ func (s *StatefulSetScheduler) scheduleVPod(ctx context.Context, vpod scheduler.
 			}
 
 			// Handle overcommitted pods.
-			f := state.Free(ordinal)
 			reserved, _ := reservedByPodName[p.PodName]
-			if f-reserved < 0 {
+			if state.Capacity-reserved < 0 {
 				// vr > free => vr: 9, overcommit 4 -> free: 0, vr: 5, pending: +4
 				// vr = free => vr: 4, overcommit 4 -> free: 0, vr: 0, pending: +4
 				// vr < free => vr: 3, overcommit 4 -> free: -1, vr: 0, pending: +3
 
-				overcommit := -(f - reserved)
+				overcommit := -(state.Capacity - reserved)
 
 				logger.Debugw("overcommit", zap.Any("overcommit", overcommit), zap.Any("placement", p))
 
 				if p.VReplicas >= overcommit {
 					state.SetFree(ordinal, 0)
 					state.Pending[vpod.GetKey()] += overcommit
+					reservedByPodName[p.PodName] -= overcommit
 
 					p.VReplicas = p.VReplicas - overcommit
 				} else {
 					state.SetFree(ordinal, p.VReplicas-overcommit)
 					state.Pending[vpod.GetKey()] += p.VReplicas
+					reservedByPodName[p.PodName] -= p.VReplicas
 
 					p.VReplicas = 0
 				}
@@ -361,15 +403,15 @@ func (s *StatefulSetScheduler) addReplicas(states *st.State, reservedByPodName m
 	foundFreeCandidate := true
 	for diff > 0 && foundFreeCandidate {
 		foundFreeCandidate = false
-		for _, podName := range candidates {
+		for _, ordinal := range candidates {
 			if diff <= 0 {
 				break
 			}
 
-			ordinal := st.OrdinalFromPodName(podName)
+			podName := st.PodNameFromOrdinal(states.StatefulSetName, ordinal)
 			reserved, _ := reservedByPodName[podName]
 			// Is there space?
-			if f := states.Free(ordinal); f-reserved > 0 {
+			if states.Capacity-reserved > 0 {
 				foundFreeCandidate = true
 				allocation := int32(1)
 
@@ -379,7 +421,7 @@ func (s *StatefulSetScheduler) addReplicas(states *st.State, reservedByPodName m
 				})
 
 				diff -= allocation
-				states.SetFree(ordinal, f-allocation)
+				reservedByPodName[podName] += allocation
 			}
 		}
 	}
@@ -390,21 +432,28 @@ func (s *StatefulSetScheduler) addReplicas(states *st.State, reservedByPodName m
 	return newPlacements, diff
 }
 
-func (s *StatefulSetScheduler) candidatesOrdered(states *st.State, vpod scheduler.VPod, placements []duckv1alpha1.Placement) []string {
+func (s *StatefulSetScheduler) candidatesOrdered(states *st.State, vpod scheduler.VPod, placements []duckv1alpha1.Placement) []int32 {
 	existingPlacements := sets.New[string]()
-	candidates := make([]string, states.Replicas)
+	candidates := make([]int32, states.Replicas)
 
 	firstIdx := 0
 	lastIdx := states.Replicas - 1
 
 	// De-prioritize existing placements pods, add existing placements to the tail of the candidates.
-	for _, placement := range placements {
+	// Start from the last one so that within the "existing replicas" group, we prioritize lower ordinals
+	// to reduce compaction.
+	for i := len(placements) - 1; i >= 0; i-- {
+		placement := placements[i]
+		ordinal := st.OrdinalFromPodName(placement.PodName)
+		if !states.IsSchedulablePod(ordinal) {
+			continue
+		}
 		// This should really never happen as placements are de-duped, however, better to handle
 		// edge cases in case the prerequisite doesn't hold in the future.
 		if existingPlacements.Has(placement.PodName) {
 			continue
 		}
-		candidates[lastIdx] = placement.PodName
+		candidates[lastIdx] = ordinal
 		lastIdx--
 		existingPlacements.Insert(placement.PodName)
 	}
@@ -412,10 +461,13 @@ func (s *StatefulSetScheduler) candidatesOrdered(states *st.State, vpod schedule
 	// Prioritize reserved placements that don't appear in the committed placements.
 	if reserved, ok := s.reserved[vpod.GetKey()]; ok {
 		for podName := range reserved {
+			if !states.IsSchedulablePod(st.OrdinalFromPodName(podName)) {
+				continue
+			}
 			if existingPlacements.Has(podName) {
 				continue
 			}
-			candidates[firstIdx] = podName
+			candidates[firstIdx] = st.OrdinalFromPodName(podName)
 			firstIdx++
 			existingPlacements.Insert(podName)
 		}
@@ -424,11 +476,14 @@ func (s *StatefulSetScheduler) candidatesOrdered(states *st.State, vpod schedule
 	// Add all the ordinals to the candidates list.
 	// De-prioritize the last ordinals over lower ordinals so that we reduce the chances for compaction.
 	for ordinal := s.replicas - 1; ordinal >= 0; ordinal-- {
+		if !states.IsSchedulablePod(ordinal) {
+			continue
+		}
 		podName := st.PodNameFromOrdinal(states.StatefulSetName, ordinal)
 		if existingPlacements.Has(podName) {
 			continue
 		}
-		candidates[lastIdx] = podName
+		candidates[lastIdx] = ordinal
 		lastIdx--
 	}
 	return candidates

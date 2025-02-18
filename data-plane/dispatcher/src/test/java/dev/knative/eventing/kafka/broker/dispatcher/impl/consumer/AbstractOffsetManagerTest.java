@@ -44,7 +44,9 @@ import org.assertj.core.api.MapAssert;
 public abstract class AbstractOffsetManagerTest {
 
     abstract RecordDispatcherListener createOffsetManager(
-            final Vertx vertx, final ReactiveKafkaConsumer<?, ?> consumer);
+            final Vertx vertx,
+            final ReactiveKafkaConsumer<?, ?> consumer,
+            Collection<TopicPartition> partitionsConsumed);
 
     protected static ConsumerRecord<String, CloudEvent> record(String topic, int partition, long offset) {
         return new ConsumerRecord<>(topic, partition, offset, null, null);
@@ -79,7 +81,18 @@ public abstract class AbstractOffsetManagerTest {
                 .when(vertxConsumer)
                 .commit(any(Map.class));
 
-        final var offsetManager = createOffsetManager(Vertx.vertx(), vertxConsumer);
+        doAnswer(invocation -> {
+                    if (failureFlag.get()) {
+                        return Future.failedFuture("some failure");
+                    }
+                    // If you don't want to lose hours in debugging, please don't remove this FQCNs :)
+                    final Set<TopicPartition> topicsPartitions = invocation.getArgument(0);
+                    return Future.succeededFuture(mockConsumer.committed(topicsPartitions));
+                })
+                .when(vertxConsumer)
+                .committed(any(Set.class));
+
+        final var offsetManager = createOffsetManager(Vertx.vertx(), vertxConsumer, partitionsConsumed);
         testExecutor.accept(offsetManager, failureFlag);
 
         try {

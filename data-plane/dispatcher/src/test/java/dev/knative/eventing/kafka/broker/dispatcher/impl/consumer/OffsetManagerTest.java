@@ -31,6 +31,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,8 +49,13 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 public class OffsetManagerTest extends AbstractOffsetManagerTest {
 
     @Override
-    RecordDispatcherListener createOffsetManager(final Vertx vertx, final ReactiveKafkaConsumer<?, ?> consumer) {
-        return new OffsetManager(vertx, consumer, null, 100L);
+    RecordDispatcherListener createOffsetManager(
+            final Vertx vertx,
+            final ReactiveKafkaConsumer<?, ?> consumer,
+            Collection<TopicPartition> partitionsConsumed) {
+        final var om = new OffsetManager(vertx, consumer, null, 100L);
+        om.getPartitionAssignedHandler().partitionAssigned(partitionsConsumed);
+        return om;
     }
 
     @Test
